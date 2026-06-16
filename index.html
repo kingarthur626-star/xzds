@@ -7,7 +7,7 @@
   <style>
     body { font-family: "Microsoft JhengHei", Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 90%; max-width: 500px; box-sizing: border-box; }
-    .wide-container { max-width: 900px; }
+    .wide-container { max-width: 900px; width: 95%; } /* 💡 自動偵測手機：寬度改用百分比動態調整 */
     h2 { color: #1a1a1a; margin-top: 0; text-align: center; margin-bottom: 20px; font-size: 24px; }
     .form-group { margin-bottom: 18px; text-align: left; }
     label { display: block; margin-bottom: 6px; color: #444; font-weight: bold; font-size: 14px; }
@@ -15,7 +15,7 @@
     input:focus { border-color: #1877f2; outline: none; }
     .btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; color: white; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .btn:hover { background-color: #166fe5; }
-    .btn-back { background-color: #65676b; margin-top: 15px; }
+    .btn-back { width: 100%; padding: 12px; background-color: #65676b; border: none; color: white; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; }
     .btn-back:hover { background-color: #545659; }
     .links-group { margin-top: 20px; display: flex; justify-content: space-between; font-size: 14px; }
     .links-group a { color: #1877f2; text-decoration: none; cursor: pointer; }
@@ -27,17 +27,25 @@
     .msg { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center; display: none; }
     .error { background-color: #ffebe9; color: #ce1c24; border: 1px solid #ffc6c3; }
     
-    /* 💡 這裡幫您把表格的整體字體從 15px 微調小到 13.5px，精緻好閱讀 */
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 13.5px; }
-    th, td { border: 1px solid #dee2e6; padding: 8px 6px; text-align: center; }
+    /* 💡 自動偵測手機防爆版：當手機畫面太窄時，表格會自動允許在手機內左右滑動，字體不縮水不跑版 */
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 15px; border-radius: 6px; border: 1px solid #dee2e6; }
+    table { width: 100%; border-collapse: collapse; background: white; font-size: 13.5px; min-width: 600px; } /* 設定最小寬度防文字被擠壓 */
+    th, td { border: 1px solid #dee2e6; padding: 10px 6px; text-align: center; }
     th { background-color: #f1f3f5; font-weight: bold; color: #495057; }
-    .total-row { background-color: #e8f4fd; font-weight: bold; }
+    
+    /* 💡 隔行變色（斑馬紋）：偶數行自動帶入極淡的清新灰色，閱讀超輕鬆 */
+    table tr:nth-child(even) { background-color: #f8f9fa; }
+    /* 💡 滑鼠滑過或手指點到時，該行會自動亮起淡藍色，方便視線追蹤 */
+    table tr:hover { background-color: #f1f8ff; }
+    
+    .total-row { background-color: #e8f4fd !important; font-weight: bold; }
     .spinner { display: none; text-align: center; margin: 20px 0; color: #1877f2; font-weight: bold; font-size: 16px; }
     hr { border: 0; height: 1px; background: #eee; margin: 25px 0; }
   </style>
 </head>
 <body>
 
+<!-- 頁面一：登入 -->
 <div class="container" id="loginPage">
   <h2>新莊區 道務統計</h2>
   <div class="msg error" id="loginError"></div>
@@ -57,6 +65,7 @@
   </div>
 </div>
 
+<!-- 頁面二：主選單 -->
 <div class="container" id="mainMenuPage" style="display:none;">
   <h2>新莊區 道務統計選單</h2>
   
@@ -71,16 +80,19 @@
   <button class="btn btn-back" onclick="logout()">登出系統</button>
 </div>
 
+<!-- 頁面三：報表輸出 -->
 <div class="container wide-container" id="reportPage" style="display:none;">
   <h2 id="reportTitle">道務報表</h2>
   <div class="spinner" id="loadingSpinner">雲端資料庫連線中，請稍候...</div>
-  <div id="reportContent"></div>
+  <!-- 💡 這裡包裹了一層響應式容器 -->
+  <div class="table-responsive">
+    <div id="reportContent"></div>
+  </div>
   <button class="btn btn-back" onclick="backToMenu()">返回主選單</button>
 </div>
 
 <script>
   // ==================== 系統核心連線設定 ====================
-  // 💡 提示：更換新部署網址時，請更新下面這行長網址
   var GAS_API_URL = "https://script.google.com/macros/s/AKfycby9us1_0j0g2WqBt_H5y-MPdAXgwk8oMxCU9VzLpesq8EQ3w8elAnS0pdlasU8pWOopgQ/exec";
   // ========================================================
 
@@ -178,7 +190,6 @@
       if(!response.success) { alert(response.message); return; }
       
       var data = response.data;
-      // 💡 這裡把表頭的「達成率」全部改成「達成」
       var html = "<table><tr><th>年度</th><th>求道</th><th>目標</th><th>達成</th><th>法會</th><th>目標</th><th>達成</th></tr>";
       
       var years = ['2022', '2023', '2024', '2025', '2026'];
