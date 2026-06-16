@@ -78,7 +78,7 @@
 
 <script>
   // ==================== 系統核心連線設定 ====================
-  // 💡 請記得：如果您重新建了新的部署，要把下面這串網址換成最新的網址
+  // 💡 提示：如果建立全新部署，請記得更換下面這行長網址
   var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzbVY0uMROLJumiDpqHwxIGSMFMnQRQIlCHYmjLvYaTZpKRQlcTX0wGFHPmbPaa7oAEZw/exec";
   // ========================================================
 
@@ -178,7 +178,6 @@
       var data = response.data;
       var html = "<table><tr><th>年度</th><th>求道總人數</th><th>法會總人數</th><th>新民班總人數</th></tr>";
       
-      // 加入 2022 年循環顯示
       var years = ['2022', '2024', '2025', '2026'];
       years.forEach(function(yr) {
         if(data[yr]) {
