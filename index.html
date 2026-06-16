@@ -36,6 +36,7 @@
 </head>
 <body>
 
+<!-- 頁面一：登入 -->
 <div class="container" id="loginPage">
   <h2>新莊區 道務統計</h2>
   <div class="msg error" id="loginError"></div>
@@ -55,6 +56,7 @@
   </div>
 </div>
 
+<!-- 頁面二：主選單 -->
 <div class="container" id="mainMenuPage" style="display:none;">
   <h2>新莊區 道務統計選單</h2>
   
@@ -69,6 +71,7 @@
   <button class="btn btn-back" onclick="logout()">登出系統</button>
 </div>
 
+<!-- 頁面三：報表輸出 -->
 <div class="container wide-container" id="reportPage" style="display:none;">
   <h2 id="reportTitle">道務報表</h2>
   <div class="spinner" id="loadingSpinner">雲端資料庫連線中，請稍候...</div>
@@ -78,7 +81,7 @@
 
 <script>
   // ==================== 系統核心連線設定 ====================
-  // 💡 提示：更換新部署網址時，請更新下面這行網址
+  // 💡 提示：更換新部署網址時，請更新下面這行長網址
   var GAS_API_URL = "https://script.google.com/macros/s/AKfycbztyXj9CUwRW1SuOehfJn1taon2Oa68aIpVRMHJNRIePwo4VZoDdBuEdoaPf4wKCzXAFA/exec";
   // ========================================================
 
@@ -176,10 +179,9 @@
       if(!response.success) { alert(response.message); return; }
       
       var data = response.data;
-      // 移除新民班表頭
-      var html = "<table><tr><th>年度</th><th>求道總人數</th><th>法會總人數</th></tr>";
+      // 💡 移除「總人數」三個字
+      var html = "<table><tr><th>年度</th><th>求道</th><th>法會</th></tr>";
       
-      // 包含 2022、2023、2024、2025、2026 年
       var years = ['2022', '2023', '2024', '2025', '2026'];
       years.forEach(function(yr) {
         if(data[yr]) {
@@ -189,8 +191,8 @@
           var dispQ = (q === 0) ? "" : q;
           var dispF = (f === 0) ? "" : f;
           
-          // 只呈現求道與法會兩欄
-          html += "<tr><td>" + yr + " 年</td><td>" + dispQ + "</td><td>" + dispF + "</td></tr>";
+          // 💡 移除「年」字，直接呈現純年份數字（例如 2022）
+          html += "<tr><td>" + yr + "</td><td>" + dispQ + "</td><td>" + dispF + "</td></tr>";
         }
       });
       
