@@ -27,7 +27,21 @@
     .msg { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center; display: none; }
     .error { background-color: #ffebe9; color: #ce1c24; border: 1px solid #ffc6c3; }
     
-    /* 滑動容器優化 */
+    /* 💡 整合型選單列：美化外觀 */
+    .selector-title-box { text-align: center; margin-bottom: 15px; font-size: 22px; font-weight: bold; color: #1a1a1a; display: none; }
+    .selector-title-box select { 
+      padding: 6px 12px; 
+      font-size: 20px; 
+      font-weight: bold;
+      border-radius: 6px; 
+      border: 2px solid #a8d08d; 
+      background-color: #e2f0d9; 
+      color: #385723;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* 表格滾動外框 */
     .table-responsive { 
       width: 100%;
       overflow-x: auto; 
@@ -37,13 +51,12 @@
       -webkit-overflow-scrolling: touch;
     }
     
-    /* 💡 預設寬度 100%（讓電腦平板自動撐滿對稱），在手機上若內容多則允許滑動 */
     table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; font-size: 14px; } 
     th, td { border-right: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; padding: 12px 8px; text-align: center; white-space: nowrap; }
     th { border-top: 1px solid #dee2e6; }
     th:first-child, td:first-child { border-left: 1px solid #dee2e6; }
     
-    /* 💡 雙系統通用：釘死第一欄 */
+    /* 釘死第一欄 */
     table tr th:first-child,
     table tr td:first-child {
       position: -webkit-sticky !important;
@@ -52,7 +65,7 @@
       z-index: 10 !important;
     }
 
-    /* 💡 斑馬紋底色 */
+    /* 斑馬紋 */
     table tr:nth-child(odd) td { background-color: #ffffff; }
     table tr:nth-child(even) td { background-color: #f8f9fa; }
 
@@ -62,6 +75,7 @@
 </head>
 <body>
 
+<!-- 頁面一：登入 -->
 <div class="container" id="loginPage">
   <h2>新莊區 道務統計</h2>
   <div class="msg error" id="loginError"></div>
@@ -81,6 +95,7 @@
   </div>
 </div>
 
+<!-- 頁面二：主選單 -->
 <div class="container" id="mainMenuPage" style="display:none;">
   <h2>新莊區 道務統計選單</h2>
   
@@ -89,14 +104,25 @@
       <h3 id="opt1Title">2026 壇名 道務</h3>
     </div>
     <div class="menu-item" onclick="loadThreeYearAnalysis()">
-      <h3 id="opt2Title">壇名 歷年道務分析</h3>
+      <h3>各壇 歷年道務分析</h3>
     </div>
   </div>
   <button class="btn btn-back" onclick="logout()">登出系統</button>
 </div>
 
+<!-- 頁面三：報表輸出 -->
 <div class="container wide-container" id="reportPage" style="display:none;">
+  <!-- 💡 標報標題區：平時是不顯示的，但在分析表會變成可以點選切換的下拉鈕 -->
   <h2 id="reportTitle">道務報表</h2>
+  
+  <div class="selector-title-box" id="titleSelectBox">
+    <!-- 💡 當點擊這裡時，可以直接自由切換其他佛堂 -->
+    <select id="tanSelect" onchange="onTanSelectChange()">
+      <!-- 由 JavaScript 自動動態注入工作表上的所有佛堂清單 -->
+    </select>
+    <span> 歷年道務分析</span>
+  </div>
+
   <div class="spinner" id="loadingSpinner">雲端資料庫連線中，請稍候...</div>
   <div class="table-responsive">
     <div id="reportContent"></div>
@@ -109,7 +135,20 @@
   var GAS_API_URL = "https://script.google.com/macros/s/AKfycby9us1_0j0g2WqBt_H5y-MPdAXgwk8oMxCU9VzLpesq8EQ3w8elAnS0pdlasU8pWOopgQ/exec";
   // ========================================================
 
+  // 💡 自 10 張工作表對應的「壇名」完整清單提取
+  var ALL_TANS = [
+    "1A_瑩德","1A_選德","1A_聯德","1A_均德","1A_樹德","1A_閎德","1A_禛德",
+    "1B_益德","1B_捷德","1B_仝德","1B_愿德","1B_永德","1B_代德","1B_茁德","1B_根德",
+    "1C_秝德","1C_如德","1C_誠德","1C_信德","1C_覺德","1C_怡德","1C_德德",
+    "2A_明德","2A_意德","2A_震德","2A_巽德","2A_離德","2A_坤德","2A_兌德","2A_乾德","2A_坎德","2A_艮德",
+    "2B_厚德","2B_集德","2B_慈德","2B_慧德","2B_智德","2B_廣德","2B_崇德","2B_裕德","2B_懿德",
+    "3A_新德","3A_普德","3A_齊德","3A_治德","3A_平德",
+    "3B_隆德","3B_盛德","3B_昌德","3B_茂德","3B_興德","3B_榮德","3B_華德","3B_豐德",
+    "3C_顓德","3C_立德","3C_宣德","3C_修德","3C_遵德","3C_培德","3C_遵前","3C_彰德","3C_顯德","3C_達德"
+  ];
+
   var currentUser = { username: "", tanName: "", group: "" };
+  var selectedTanName = ""; 
 
   function callBackend(data, callback) {
     fetch(GAS_API_URL, {
@@ -154,7 +193,9 @@
         
         var pureTanName = currentUser.tanName.split("_")[1] || currentUser.tanName;
         document.getElementById("opt1Title").textContent = "2026 " + pureTanName + " 道務";
-        document.getElementById("opt2Title").textContent = pureTanName + " 歷年道務分析";
+        
+        // 預先動態生成下拉選單
+        initTanSelectOptions();
       } else {
         errorBox.textContent = result.message;
         errorBox.style.display = "block";
@@ -162,7 +203,21 @@
     });
   }
 
+  function initTanSelectOptions() {
+    var selectEl = document.getElementById("tanSelect");
+    selectEl.innerHTML = "";
+    ALL_TANS.forEach(function(tan) {
+      var opt = document.createElement("option");
+      opt.value = tan;
+      opt.textContent = tan.split("_")[1] || tan;
+      selectEl.appendChild(opt);
+    });
+  }
+
   function load2026Overview() {
+    document.getElementById("reportTitle").style.display = "block";
+    document.getElementById("titleSelectBox").style.display = "none"; 
+    
     var pureTanName = currentUser.tanName.split("_")[1] || currentUser.tanName;
     showReportPage("2026 " + pureTanName + " 全年道務月報表");
     
@@ -171,7 +226,6 @@
       if(!response.success) { alert(response.message); return; }
       
       var stats = response.data;
-      // 💡 修正 2026 月報表：第一行改為「淡綠色 (#d4edda)」背景，固定欄位的交界處用稍深的淡綠 (#c3e6cb) 確保蓋住後方
       var html = "<table><thead><tr style='background-color:#d4edda; color:#155724; font-weight:bold;'><th style='background-color:#c3e6cb; color:#155724; position:-webkit-sticky; position:sticky; left:0;'>月份</th><th>求道人數</th><th>法會人數</th></tr></thead><tbody>";
       
       var totalQ = 0, totalF = 0;
@@ -205,16 +259,35 @@
     });
   }
 
+  // 💡 入口：點擊「各壇 歷年道務分析」
   function loadThreeYearAnalysis() {
-    var pureTanName = currentUser.tanName.split("_")[1] || currentUser.tanName;
-    showReportPage(pureTanName + " 歷年道務分析");
+    document.getElementById("reportTitle").style.display = "none";
+    document.getElementById("titleSelectBox").style.display = "block"; // 💡 開啟下拉選單式標頭
     
-    callBackend({ action: 'getAnalysis', tanName: currentUser.tanName, group: currentUser.group }, function(response) {
+    // 1. 【主動帶入】預設填好目前登入使用者的屬佛堂（例如：顓德）
+    selectedTanName = currentUser.tanName; 
+    document.getElementById("tanSelect").value = selectedTanName;
+    
+    fetchAnalysisData();
+  }
+
+  // 💡 當點擊下拉選單切換成其他佛堂時
+  function onTanSelectChange() {
+    selectedTanName = document.getElementById("tanSelect").value;
+    fetchAnalysisData();
+  }
+
+  function fetchAnalysisData() {
+    document.getElementById("loadingSpinner").style.display = "block";
+    document.getElementById("reportContent").innerHTML = "";
+    
+    var calculatedGroup = selectedTanName.split("_")[0] || currentUser.group;
+
+    callBackend({ action: 'getAnalysis', tanName: selectedTanName, group: calculatedGroup }, function(response) {
       document.getElementById("loadingSpinner").style.display = "none";
       if(!response.success) { alert(response.message); return; }
       
       var data = response.data;
-      // 💡 修正歷年分析表：第一行（年度、求道、目標...）全面改為「淡綠色 (#d4edda)」底色、深綠色字
       var html = "<table><thead><tr style='background-color:#d4edda; color:#155724; font-weight:bold;'><th style='background-color:#c3e6cb; color:#155724; position:-webkit-sticky; position:sticky; left:0;'>年度</th><th>求道</th><th>目標</th><th>達成</th><th>法會</th><th>目標</th><th>達成</th></tr></thead><tbody>";
       
       var years = ['2022', '2023', '2024', '2025', '2026'];
@@ -262,7 +335,6 @@
     document.getElementById("mainMenuPage").style.display = "none";
     document.getElementById("reportPage").style.display = "block";
     document.getElementById("reportTitle").textContent = title;
-    document.getElementById("reportContent").innerHTML = "";
     document.getElementById("loadingSpinner").style.display = "block";
   }
 
