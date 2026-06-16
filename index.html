@@ -7,7 +7,7 @@
   <style>
     body { font-family: "Microsoft JhengHei", Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 90%; max-width: 500px; box-sizing: border-box; }
-    .wide-container { max-width: 800px; }
+    .wide-container { max-width: 850px; }
     h2 { color: #1a1a1a; margin-top: 0; text-align: center; margin-bottom: 20px; font-size: 24px; }
     .form-group { margin-bottom: 18px; text-align: left; }
     label { display: block; margin-bottom: 6px; color: #444; font-weight: bold; font-size: 14px; }
@@ -36,7 +36,6 @@
 </head>
 <body>
 
-<!-- 頁面一：登入 -->
 <div class="container" id="loginPage">
   <h2>新莊區 道務統計</h2>
   <div class="msg error" id="loginError"></div>
@@ -56,7 +55,6 @@
   </div>
 </div>
 
-<!-- 頁面二：主選單 -->
 <div class="container" id="mainMenuPage" style="display:none;">
   <h2>新莊區 道務統計選單</h2>
   
@@ -71,7 +69,6 @@
   <button class="btn btn-back" onclick="logout()">登出系統</button>
 </div>
 
-<!-- 頁面三：報表輸出 -->
 <div class="container wide-container" id="reportPage" style="display:none;">
   <h2 id="reportTitle">道務報表</h2>
   <div class="spinner" id="loadingSpinner">雲端資料庫連線中，請稍候...</div>
@@ -82,7 +79,7 @@
 <script>
   // ==================== 系統核心連線設定 ====================
   // 💡 提示：更換新部署網址時，請更新下面這行長網址
-  var GAS_API_URL = "https://script.google.com/macros/s/AKfycbztyXj9CUwRW1SuOehfJn1taon2Oa68aIpVRMHJNRIePwo4VZoDdBuEdoaPf4wKCzXAFA/exec";
+  var GAS_API_URL = "https://script.google.com/macros/s/AKfycby9us1_0j0g2WqBt_H5y-MPdAXgwk8oMxCU9VzLpesq8EQ3w8elAnS0pdlasU8pWOopgQ/exec";
   // ========================================================
 
   var currentUser = { username: "", tanName: "", group: "" };
@@ -179,20 +176,38 @@
       if(!response.success) { alert(response.message); return; }
       
       var data = response.data;
-      // 💡 移除「總人數」三個字
-      var html = "<table><tr><th>年度</th><th>求道</th><th>法會</th></tr>";
+      // 💡 調整表頭：求道後面放達成率、法會後面放達成率
+      var html = "<table><tr><th>年度</th><th>求道</th><th>求道達成率</th><th>法會</th><th>法會達成率</th></tr>";
       
       var years = ['2022', '2023', '2024', '2025', '2026'];
       years.forEach(function(yr) {
         if(data[yr]) {
           var q = data[yr].qiudao;
           var f = data[yr].fahui;
+          var qTar = data[yr].qiudaoTarget;
+          var fTar = data[yr].fahuiTarget;
           
           var dispQ = (q === 0) ? "" : q;
           var dispF = (f === 0) ? "" : f;
           
-          // 💡 移除「年」字，直接呈現純年份數字（例如 2022）
-          html += "<tr><td>" + yr + "</td><td>" + dispQ + "</td><td>" + dispF + "</td></tr>";
+          // 計算達成率，若無資料、或目標為 0 則不顯示
+          var dispQRate = "";
+          if (q > 0 && qTar > 0) {
+            dispQRate = Math.round((q / qTar) * 100) + "%";
+          }
+          
+          var dispFRate = "";
+          if (f > 0 && fTar > 0) {
+            dispFRate = Math.round((f / fTar) * 100) + "%";
+          }
+          
+          html += "<tr>" +
+                  "<td>" + yr + "</td>" +
+                  "<td>" + dispQ + "</td>" +
+                  "<td>" + dispQRate + "</td>" +
+                  "<td>" + dispF + "</td>" +
+                  "<td>" + dispFRate + "</td>" +
+                  "</tr>";
         }
       });
       
