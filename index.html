@@ -136,7 +136,7 @@
     });
   }
 
-  function load2026Overview() {
+function load2026Overview() {
     var pureTanName = currentUser.tanName.split("_")[1] || currentUser.tanName;
     showReportPage("2026 " + pureTanName + " 全年道務月報表");
     
@@ -152,9 +152,19 @@
         var qCount = stats[m].qiudao;
         var fCount = stats[m].fahui;
         totalQ += qCount; totalF += fCount;
-        html += "<tr><td>" + m + " 月</td><td>" + qCount + " 人</td><td>" + fCount + " 人</td></tr>";
+        
+        // 判斷：如果是 0 就顯示空白字串 ""，否則直接顯示純數字
+        var displayQ = (qCount === 0) ? "" : qCount;
+        var displayF = (fCount === 0) ? "" : fCount;
+        
+        html += "<tr><td>" + m + " 月</td><td>" + displayQ + "</td><td>" + displayF + "</td></tr>";
       }
-      html += "<tr class='total-row'><td>年度加總</td><td>" + totalQ + " 人</td><td>" + totalF + " 人</td></tr>";
+      
+      // 下方年度加總欄位：同樣如果是 0 就顯示空白，否則顯示純數字（不加人）
+      var displayTotalQ = (totalQ === 0) ? "" : totalQ;
+      var displayTotalF = (totalF === 0) ? "" : totalF;
+      
+      html += "<tr class='total-row'><td>年度加總</td><td>" + displayTotalQ + "</td><td>" + displayTotalF + "</td></tr>";
       html += "</table>";
       document.getElementById("reportContent").innerHTML = html;
     });
