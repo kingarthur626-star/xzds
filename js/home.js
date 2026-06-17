@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('homeContent').innerHTML = `
     <div class="menu-area">
       <a class="menu-btn" href="annual.html">${escapeHtml(user.temple)} 今年道務</a>
+      <a class="menu-btn" href="history.html">各壇近年道務</a>
     </div>
   `;
 
