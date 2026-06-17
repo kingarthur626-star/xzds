@@ -105,9 +105,11 @@ function renderRecentDutyStats(result) {
     return `
       <tr>
         <td>${escapeHtml(row.year)}</td>
+
         <td>${escapeHtml(formatZeroAsBlank(row.qiudao.target))}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.qiudao.total))}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.qiudao.achievementRate))}</td>
+
         <td>${escapeHtml(formatZeroAsBlank(row.fahui.target))}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.fahui.total))}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.fahui.achievementRate))}</td>
@@ -123,13 +125,18 @@ function renderRecentDutyStats(result) {
         <table class="stat-table history-table">
           <thead>
             <tr>
-              <th>年度</th>
-              <th>求道目標</th>
+              <th rowspan="2">年度</th>
+              <th colspan="3">求道</th>
+              <th colspan="3">法會</th>
+            </tr>
+            <tr>
+              <th>目標</th>
               <th>累計</th>
-              <th>達成%</th>
-              <th>法會目標</th>
+              <th>達成</th>
+
+              <th>目標</th>
               <th>累計</th>
-              <th>達成%</th>
+              <th>達成</th>
             </tr>
           </thead>
           <tbody>
