@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>新莊區 道務檢視</title>
 
   <style>
@@ -32,7 +33,6 @@
       padding: 28px 24px 36px;
       border-radius: 8px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-      position: relative;
     }
 
     h1 {
@@ -81,7 +81,7 @@
 
     select:disabled {
       background: #f7f8fa;
-      color: #999;
+      color: #999999;
     }
 
     .hint {
@@ -159,6 +159,7 @@
       font-size: 15px;
       margin-bottom: 18px;
       line-height: 1.5;
+      word-break: break-word;
     }
 
     .message.success {
@@ -186,16 +187,24 @@
       color: #164568;
     }
 
+    .small-text {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      margin-top: 16px;
+      text-align: center;
+    }
+
     @media (max-width: 480px) {
+      .page {
+        padding: 0;
+        background: #ffffff;
+      }
+
       .card {
         box-shadow: none;
         border-radius: 0;
         padding: 24px 20px 34px;
-      }
-
-      .page {
-        padding: 0;
-        background: #ffffff;
       }
     }
   </style>
@@ -212,12 +221,22 @@
 
       <div class="form-group">
         <label for="loginAccount">登入帳號</label>
-        <input id="loginAccount" type="email" placeholder="請輸入帳號" autocomplete="username" />
+        <input
+          id="loginAccount"
+          type="email"
+          placeholder="請輸入帳號"
+          autocomplete="username"
+        />
       </div>
 
       <div class="form-group">
         <label for="loginPassword">登入密碼</label>
-        <input id="loginPassword" type="password" placeholder="請輸入密碼" autocomplete="current-password" />
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="請輸入密碼"
+          autocomplete="current-password"
+        />
       </div>
 
       <button class="btn" id="loginBtn" onclick="handleLogin()">登入</button>
@@ -235,6 +254,7 @@
 
       <div class="form-group">
         <div class="label">組別：</div>
+
         <div class="radio-row">
           <label class="radio-item">
             <input type="radio" name="group" value="1" onchange="handleGroupChange()" />
@@ -262,17 +282,32 @@
 
       <div class="form-group">
         <label for="registerName">姓名：</label>
-        <input id="registerName" type="text" placeholder="請輸入真實姓名" />
+        <input
+          id="registerName"
+          type="text"
+          placeholder="請輸入真實姓名"
+          autocomplete="name"
+        />
       </div>
 
       <div class="form-group">
         <label for="registerAccount">帳號：</label>
-        <input id="registerAccount" type="email" placeholder="例如: example@gmail.com" />
+        <input
+          id="registerAccount"
+          type="email"
+          placeholder="例如: example@gmail.com"
+          autocomplete="email"
+        />
       </div>
 
       <div class="form-group">
         <label for="registerPassword">密碼：</label>
-        <input id="registerPassword" type="password" placeholder="例如: 912345678" />
+        <input
+          id="registerPassword"
+          type="password"
+          placeholder="例如: 912345678"
+          inputmode="numeric"
+        />
         <div class="hint">請輸入手機號碼，開頭不含0</div>
       </div>
 
@@ -283,7 +318,7 @@
       </div>
     </div>
 
-    <!-- 登入後簡易畫面 -->
+    <!-- 登入成功畫面 -->
     <div class="card hidden" id="homePage">
       <h1>新莊區 道務檢視</h1>
 
@@ -295,18 +330,57 @@
   </div>
 
   <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwkH4Wcby-clYLI9yzCClYLXdiGGq2KnB0tJ5Gte5Rkmy0ObbMFO92zx_rzzXPhdUdYIw/exec';
+    // 這裡一定要換成你的 Apps Script Web App URL
+    // 格式應該是：https://script.google.com/macros/s/你的部署ID/exec
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyw628uSOoW2OwhzInAmtISkzdNm5pGGShZ2-5tqek5udNBDp-Lvf_T4kKPCm9RBvZ1Zg/exec';
 
-    async function callApi(payload) {
-      const formData = new URLSearchParams();
-      formData.append('payload', JSON.stringify(payload));
+    function callApi(payload) {
+      return new Promise(function(resolve, reject) {
+        if (!GAS_URL || GAS_URL.includes('請貼上')) {
+          reject(new Error('尚未設定 Apps Script Web App URL'));
+          return;
+        }
 
-      const response = await fetch(GAS_URL, {
-        method: 'POST',
-        body: formData
+        const callbackName = 'gasCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+        payload.callback = callbackName;
+        payload._t = Date.now();
+
+        const params = new URLSearchParams(payload);
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('連線逾時，請確認 Apps Script 是否已部署為 Web App'));
+        }, 15000);
+
+        window[callbackName] = function(result) {
+          cleanup();
+          resolve(result);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Apps Script，請確認網址與部署權限'));
+        };
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (err) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        script.src = GAS_URL + '?' + params.toString();
+        document.body.appendChild(script);
       });
-
-      return await response.json();
     }
 
     function showMessage(elementId, type, text) {
@@ -325,6 +399,7 @@
       document.getElementById('loginPage').classList.remove('hidden');
       document.getElementById('registerPage').classList.add('hidden');
       document.getElementById('homePage').classList.add('hidden');
+
       clearMessage('loginMessage');
       clearMessage('registerMessage');
     }
@@ -333,6 +408,7 @@
       document.getElementById('loginPage').classList.add('hidden');
       document.getElementById('registerPage').classList.remove('hidden');
       document.getElementById('homePage').classList.add('hidden');
+
       clearMessage('registerMessage');
     }
 
@@ -344,6 +420,7 @@
       document.getElementById('homeContent').innerHTML = `
         <p>登入成功</p>
         <p>${escapeHtml(user.temple)}　${escapeHtml(user.name)}</p>
+        <p class="small-text">帳號：${escapeHtml(user.account)}</p>
       `;
     }
 
@@ -364,16 +441,22 @@
       try {
         const result = await callApi({
           action: 'getTemples',
-          group
+          group: group
         });
 
         if (!result.success) {
           templeSelect.innerHTML = '<option value="">請先圈選組別...</option>';
-          showMessage('registerMessage', 'error', result.message);
+          showMessage('registerMessage', 'error', result.message || '壇名讀取失敗');
           return;
         }
 
         templeSelect.innerHTML = '<option value="">請選擇壇名</option>';
+
+        if (!result.temples || result.temples.length === 0) {
+          templeSelect.innerHTML = '<option value="">此組別目前沒有壇名</option>';
+          templeSelect.disabled = true;
+          return;
+        }
 
         result.temples.forEach(function(temple) {
           const option = document.createElement('option');
@@ -386,7 +469,7 @@
 
       } catch (err) {
         templeSelect.innerHTML = '<option value="">請先圈選組別...</option>';
-        showMessage('registerMessage', 'error', '壇名讀取失敗，請稍後再試');
+        showMessage('registerMessage', 'error', err.message || '壇名讀取失敗，請稍後再試');
       }
     }
 
@@ -408,18 +491,18 @@
       try {
         const result = await callApi({
           action: 'login',
-          account,
-          password
+          account: account,
+          password: password
         });
 
         if (result.success) {
           showHomePage(result.user);
         } else {
-          showMessage('loginMessage', 'error', result.message);
+          showMessage('loginMessage', 'error', result.message || '登入失敗');
         }
 
       } catch (err) {
-        showMessage('loginMessage', 'error', '系統連線失敗，請稍後再試');
+        showMessage('loginMessage', 'error', err.message || '系統連線失敗，請稍後再試');
       } finally {
         btn.disabled = false;
         btn.textContent = '登入';
@@ -468,26 +551,26 @@
       try {
         const result = await callApi({
           action: 'register',
-          group,
-          temple,
-          name,
-          account,
-          password
+          group: group,
+          temple: temple,
+          name: name,
+          account: account,
+          password: password
         });
 
         if (result.success) {
-          showMessage('registerMessage', 'success', result.message);
+          showMessage('registerMessage', 'success', result.message || '帳號申請成功');
 
           document.getElementById('registerName').value = '';
           document.getElementById('registerAccount').value = '';
           document.getElementById('registerPassword').value = '';
 
         } else {
-          showMessage('registerMessage', 'error', result.message);
+          showMessage('registerMessage', 'error', result.message || '申請失敗');
         }
 
       } catch (err) {
-        showMessage('registerMessage', 'error', '系統連線失敗，請稍後再試');
+        showMessage('registerMessage', 'error', err.message || '系統連線失敗，請稍後再試');
       } finally {
         btn.disabled = false;
         btn.textContent = '送出申請';
@@ -497,17 +580,28 @@
     function logout() {
       document.getElementById('loginAccount').value = '';
       document.getElementById('loginPassword').value = '';
+
       showLoginPage();
     }
 
     function escapeHtml(text) {
-      return String(text)
+      return String(text || '')
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
     }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter') return;
+
+      if (!document.getElementById('loginPage').classList.contains('hidden')) {
+        handleLogin();
+      } else if (!document.getElementById('registerPage').classList.contains('hidden')) {
+        handleRegister();
+      }
+    });
   </script>
 </body>
 </html>
