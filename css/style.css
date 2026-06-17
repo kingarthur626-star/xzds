@@ -435,3 +435,24 @@ select:disabled {
 .legend-total {
   background: #2563eb;
 }
+
+.title-select-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.title-select-row h1 {
+  margin: 0;
+  font-size: 26px;
+  white-space: nowrap;
+}
+
+.title-temple-select {
+  width: 125px !important;
+  height: 42px;
+  padding: 0 8px;
+  font-size: 15px;
+}
