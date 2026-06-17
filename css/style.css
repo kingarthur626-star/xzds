@@ -329,25 +329,24 @@ select:disabled {
   white-space: normal;
   padding: 8px 4px;
   font-size: 14px;
+  word-break: keep-all;
 }
 
-.history-table th,
-.history-table td {
-  white-space: nowrap;
-}
-
+/* 選擇壇名：下拉選單同一行 */
 .inline-select-row {
-  display: flex;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  column-gap: 10px;
 }
 
 .inline-select-row label {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
   white-space: nowrap;
   font-size: 17px;
 }
 
 .inline-select-row select {
-  flex: 1;
+  width: 100% !important;
+  min-width: 0;
 }
