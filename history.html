@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>各壇近年道務</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <div class="page">
+    <div class="card wide-card">
+      <h1>各壇近年道務</h1>
+
+      <div id="historyMessage" class="message"></div>
+
+      <div class="form-group">
+        <label for="historyTempleSelect">選擇壇名：</label>
+        <select id="historyTempleSelect">
+          <option value="">讀取中...</option>
+        </select>
+      </div>
+
+      <div id="historyStatsArea" class="stat-area">
+        <div class="small-text">讀取中...</div>
+      </div>
+
+      <button class="btn btn-secondary" id="backBtn" type="button">返回首頁</button>
+      <button class="btn btn-secondary" id="logoutBtn" type="button">登出</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>
