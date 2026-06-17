@@ -6,22 +6,21 @@
 
   <title>各壇近年道務</title>
 
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
   <div class="page">
     <div class="card wide-card">
-      <h1>各壇近年道務</h1>
-
-      <div id="historyMessage" class="message"></div>
-
-      <div class="form-group inline-select-row">
-		<label for="historyTempleSelect">選擇壇名：</label>
-		<select id="historyTempleSelect">
+    <div class="title-select-row">
+		<select id="historyTempleSelect" class="title-temple-select">
 			<option value="">讀取中...</option>
 		</select>
-	  </div>
+
+		<h1>近年道務</h1>
+	</div>
+
+	<div id="historyMessage" class="message"></div>  
 
       <div id="historyStatsArea" class="stat-area">
         <div class="small-text">讀取中...</div>
@@ -35,6 +34,6 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/common.js"></script>
-  <script src="js/history.js?v=5"></script>
+  <script src="js/history.js"></script>
 </body>
 </html>
