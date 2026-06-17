@@ -6,45 +6,40 @@
     <title>新莊區 道務檢視</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: "Microsoft JhengHei", sans-serif; }
-        .card { width: 100%; max-width: 400px; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 30px; background: #fff; }
-        .form-label { font-weight: bold; color: #333; }
-        .btn-primary { background-color: #4a8deb; border: none; width: 100%; padding: 10px; font-size: 16px; border-radius: 6px; }
-        .btn-primary:hover { background-color: #3b75c4; }
-        .bottom-link { text-align: right; margin-top: 15px; }
-        .bottom-link a { text-decoration: none; color: #0d6efd; cursor: pointer; font-size: 14px; }
-        .bottom-link a:hover { text-decoration: underline; }
-        .hint-text { font-size: 12px; color: #888; margin-top: 5px; }
+        body { background-color: #f8f9fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: "Microsoft JhengHei", sans-serif; }
+        .login-card { width: 100%; max-width: 450px; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .blue-link { color: #0d6efd; text-decoration: none; cursor: pointer; }
+        .blue-link:hover { text-decoration: underline; }
+        .hint-text { font-size: 0.85em; color: #6c757d; }
     </style>
 </head>
 <body>
 
-<div class="card" id="app">
-    
-    <div id="login-view">
-        <h4 class="text-center mb-4 fw-bold">新莊區 道務檢視</h4>
+<div class="login-card">
+    <div id="loginSection">
+        <h3 class="text-center mb-4">新莊區 道務檢視</h3>
         <form id="loginForm">
             <div class="mb-3">
                 <label class="form-label">登入帳號：</label>
-                <input type="email" id="loginAcc" class="form-control" required>
+                <input type="email" id="l_acc" class="form-control" required>
             </div>
             <div class="mb-3">
                 <label class="form-label">登入密碼：</label>
-                <input type="password" id="loginPwd" class="form-control" required>
+                <input type="password" id="l_pwd" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary fw-bold mt-2" id="loginBtn">登 入</button>
+            <button type="submit" class="btn btn-primary w-100" id="l_btn">登 入</button>
         </form>
-        <div class="bottom-link">
-            <a onclick="toggleView('register')">申請帳號</a>
+        <div class="text-end mt-3">
+            <a class="blue-link" onclick="switchView('register')">申請帳號</a>
         </div>
     </div>
 
-    <div id="register-view" style="display: none;">
-        <h4 class="text-center mb-4 fw-bold">申請帳號</h4>
+    <div id="registerSection" class="d-none">
+        <h3 class="text-center mb-4">申請帳號</h3>
         <form id="regForm">
             <div class="mb-3">
                 <label class="form-label">組別：</label>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex gap-3">
                     <label><input type="radio" name="group" value="1" required> 第1組</label>
                     <label><input type="radio" name="group" value="2"> 第2組</label>
                     <label><input type="radio" name="group" value="3"> 第3組</label>
@@ -52,121 +47,104 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">壇名：</label>
-                <select id="regAltar" class="form-select" required>
+                <select id="r_altar" class="form-select" required>
                     <option value="">請先圈選組別...</option>
                 </select>
             </div>
             <div class="mb-3">
                 <label class="form-label">姓名：</label>
-                <input type="text" id="regName" class="form-control" placeholder="請輸入真實姓名" required>
+                <input type="text" id="r_name" class="form-control" placeholder="請輸入真實姓名" required>
             </div>
             <div class="mb-3">
                 <label class="form-label">帳號：</label>
-                <input type="email" id="regAcc" class="form-control" placeholder="例如: example@gmail.com" required>
+                <input type="email" id="r_acc" class="form-control" placeholder="例如: example@gmail.com" required>
             </div>
             <div class="mb-3">
                 <label class="form-label">密碼：</label>
-                <input type="text" id="regPwd" class="form-control" placeholder="例如: 912345678" required>
-                <div class="hint-text">請輸入手機號碼，開頭不含0</div>
+                <input type="text" id="r_pwd" class="form-control" placeholder="例如: 912345678" required>
+                <div class="hint-text mt-1">請輸入手機號碼，開頭不含0</div>
             </div>
-            <button type="submit" class="btn btn-primary fw-bold mt-2" id="regBtn">送出申請</button>
+            <button type="submit" class="btn btn-primary w-100" id="r_btn">送出申請</button>
         </form>
-        <div class="bottom-link">
-            <a onclick="toggleView('login')">返回登入</a>
+        <div class="text-end mt-3">
+            <a class="blue-link" onclick="switchView('login')">返回登入</a>
         </div>
     </div>
-
 </div>
 
 <script>
-    // ！！！請將下方的 URL 替換為您的 Google Apps Script 網頁應用程式網址！！！
-    const API_URL = "https://script.google.com/macros/s/AKfycbxr7DrEORVism1qQFAvXdiN2DzFHlXmxdTbN5otqJk6icJWZFTzNFakSXVAl5IdhdkTbw/exec"; 
-    
-    let altarList = { '1': [], '2': [], '3': [] };
+    // 填入部署後的 GAS 網址
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzYy9E5wpf6FhXYHMriLWbsiMrcjKPqQUSyyP2sqBPNyRGDe6ZuhD6mjvd-JMAPcPK2Hg/exec'; 
+    let altarsData = { '1': [], '2': [], '3': [] };
 
-    // 載入壇名資料 (完全依照工作表順序)
-    fetch(`${API_URL}?action=getData`)
+    // 取得壇名資料
+    fetch(`${API_URL}?action=getAltars`)
         .then(res => res.json())
-        .then(data => {
-            if(data.success) altarList = data.altars;
-        });
+        .then(data => { if(data.success) altarsData = data.altars; });
 
-    function toggleView(view) {
-        document.getElementById('login-view').style.display = view === 'login' ? 'block' : 'none';
-        document.getElementById('register-view').style.display = view === 'register' ? 'block' : 'none';
+    // 切換畫面
+    function switchView(view) {
+        document.getElementById('loginSection').classList.toggle('d-none', view !== 'login');
+        document.getElementById('registerSection').classList.toggle('d-none', view !== 'register');
     }
 
-    // 依據組別切換壇名下拉選單
+    // 連動下拉選單
     document.querySelectorAll('input[name="group"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const groupNum = e.target.value;
-            const altarSelect = document.getElementById('regAltar');
-            altarSelect.innerHTML = '<option value="">請選擇壇名...</option>';
-            
-            if (altarList[groupNum]) {
-                altarList[groupNum].forEach(altar => {
-                    const option = document.createElement('option');
-                    option.value = altar;
-                    option.textContent = altar;
-                    altarSelect.appendChild(option);
+        radio.addEventListener('change', e => {
+            const select = document.getElementById('r_altar');
+            select.innerHTML = '<option value="">請選擇壇名...</option>';
+            const group = e.target.value;
+            if (altarsData[group]) {
+                altarsData[group].forEach(name => {
+                    select.add(new Option(name, name));
                 });
             }
         });
     });
 
-    // 註冊送出
-    document.getElementById('regForm').addEventListener('submit', function(e) {
+    // 處理登入
+    document.getElementById('loginForm').onsubmit = e => {
         e.preventDefault();
-        document.getElementById('regBtn').innerText = "處理中...";
-        document.getElementById('regBtn').disabled = true;
-
-        const params = new URLSearchParams({
-            action: 'register',
-            altar: document.getElementById('regAltar').value,
-            name: document.getElementById('regName').value,
-            account: document.getElementById('regAcc').value,
-            password: document.getElementById('regPwd').value
-        });
-
-        fetch(`${API_URL}?${params.toString()}`)
-            .then(res => res.json())
-            .then(res => {
-                alert(res.message);
-                if(res.success) {
-                    this.reset();
-                    toggleView('login');
-                }
-            }).finally(() => {
-                document.getElementById('regBtn').innerText = "送出申請";
-                document.getElementById('regBtn').disabled = false;
-            });
-    });
-
-    // 登入送出
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        document.getElementById('loginBtn').innerText = "驗證中...";
-        document.getElementById('loginBtn').disabled = true;
-
+        const btn = document.getElementById('l_btn');
+        btn.disabled = true; btn.innerText = '處理中...';
+        
         const params = new URLSearchParams({
             action: 'login',
-            account: document.getElementById('loginAcc').value,
-            password: document.getElementById('loginPwd').value
+            account: document.getElementById('l_acc').value,
+            password: document.getElementById('l_pwd').value
         });
 
-        fetch(`${API_URL}?${params.toString()}`)
+        fetch(`${API_URL}?${params}`)
             .then(res => res.json())
-            .then(res => {
-                if(res.success) {
-                    alert('登入成功！');
-                } else {
-                    alert(res.message);
+            .then(data => alert(data.message))
+            .finally(() => { btn.disabled = false; btn.innerText = '登 入'; });
+    };
+
+    // 處理註冊
+    document.getElementById('regForm').onsubmit = e => {
+        e.preventDefault();
+        const btn = document.getElementById('r_btn');
+        btn.disabled = true; btn.innerText = '處理中...';
+        
+        const params = new URLSearchParams({
+            action: 'register',
+            altar: document.getElementById('r_altar').value,
+            name: document.getElementById('r_name').value,
+            account: document.getElementById('r_acc').value,
+            password: document.getElementById('r_pwd').value
+        });
+
+        fetch(`${API_URL}?${params}`)
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    document.getElementById('regForm').reset();
+                    switchView('login');
                 }
-            }).finally(() => {
-                document.getElementById('loginBtn').innerText = "登 入";
-                document.getElementById('loginBtn').disabled = false;
-            });
-    });
+            })
+            .finally(() => { btn.disabled = false; btn.innerText = '送出申請'; });
+    };
 </script>
 </body>
 </html>
