@@ -53,10 +53,8 @@ async function loadAnnualStats(user) {
 function renderAnnualStats(result) {
   const area = document.getElementById('annualStatsArea');
 
-  // 不顯示「2A_顓德｜2026 年 1月到6月 統計」
-  area.innerHTML = `
-    ${renderCombinedStats(result)}
-  `;
+  // 不顯示「壇名｜2026 年 1月到6月 統計」
+  area.innerHTML = renderCombinedStats(result);
 }
 
 function renderCombinedStats(result) {
@@ -66,12 +64,12 @@ function renderCombinedStats(result) {
   const monthRows = [];
 
   for (let month = 1; month <= result.monthLimit; month++) {
-    const qiudaoValue = getMonthValue(qiudao, month);
-    const fahuiValue = getMonthValue(fahui, month);
+    const qiudaoValue = formatZeroAsBlank(getMonthValue(qiudao, month));
+    const fahuiValue = formatZeroAsBlank(getMonthValue(fahui, month));
 
     monthRows.push(`
       <tr>
-        <td>${month}月</td>
+        <td>${month}</td>
         <td>${escapeHtml(qiudaoValue)}</td>
         <td>${escapeHtml(fahuiValue)}</td>
       </tr>
@@ -85,32 +83,32 @@ function renderCombinedStats(result) {
       <div class="stat-summary">
         <div class="stat-box">
           <div class="stat-label">求道年度目標</div>
-          <div class="stat-value">${escapeHtml(getStatValue(qiudao, 'annualTarget'))}</div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-label">求道今年累計</div>
-          <div class="stat-value">${escapeHtml(getStatValue(qiudao, 'ytdTotal'))}</div>
+          <div class="stat-value">${escapeHtml(formatZeroAsBlank(getStatValue(qiudao, 'annualTarget')))}</div>
         </div>
 
         <div class="stat-box">
           <div class="stat-label">法會年度目標</div>
-          <div class="stat-value">${escapeHtml(getStatValue(fahui, 'annualTarget'))}</div>
+          <div class="stat-value">${escapeHtml(formatZeroAsBlank(getStatValue(fahui, 'annualTarget')))}</div>
         </div>
 
         <div class="stat-box">
-          <div class="stat-label">法會今年累計</div>
-          <div class="stat-value">${escapeHtml(getStatValue(fahui, 'ytdTotal'))}</div>
+          <div class="stat-label">求道累計</div>
+          <div class="stat-value">${escapeHtml(formatZeroAsBlank(getStatValue(qiudao, 'ytdTotal')))}</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">法會累計</div>
+          <div class="stat-value">${escapeHtml(formatZeroAsBlank(getStatValue(fahui, 'ytdTotal')))}</div>
         </div>
 
         <div class="stat-box">
           <div class="stat-label">求道達成率</div>
-          <div class="stat-value">${escapeHtml(getStatValue(qiudao, 'achievementRate'))}</div>
+          <div class="stat-value">${escapeHtml(formatZeroAsBlank(getStatValue(qiudao, 'achievementRate')))}</div>
         </div>
 
         <div class="stat-box">
           <div class="stat-label">法會達成率</div>
-          <div class="stat-value">${escapeHtml(getStatValue(fahui, 'achievementRate'))}</div>
+          <div class="stat-value">${escapeHtml(formatZeroAsBlank(getStatValue(fahui, 'achievementRate')))}</div>
         </div>
       </div>
 
@@ -132,7 +130,7 @@ function renderCombinedStats(result) {
 
 function getMonthValue(item, month) {
   if (!item || !item.found || !item.months) {
-    return '0';
+    return '';
   }
 
   const monthData = item.months.find(function(m) {
@@ -140,16 +138,39 @@ function getMonthValue(item, month) {
   });
 
   if (!monthData) {
-    return '0';
+    return '';
   }
 
-  return monthData.value || '0';
+  return monthData.value || '';
 }
 
 function getStatValue(item, key) {
   if (!item || !item.found) {
-    return '0';
+    return '';
   }
 
-  return item[key] || '0';
+  return item[key] || '';
+}
+
+function formatZeroAsBlank(value) {
+  const text = String(value || '').trim();
+
+  if (!text) return '';
+
+  const normalized = text
+    .replace(/,/g, '')
+    .replace(/\s/g, '');
+
+  if (
+    normalized === '0' ||
+    normalized === '0.0' ||
+    normalized === '0.00' ||
+    normalized === '0%' ||
+    normalized === '0.0%' ||
+    normalized === '0.00%'
+  ) {
+    return '';
+  }
+
+  return text;
 }
