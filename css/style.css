@@ -469,20 +469,30 @@ select:disabled {
 
 .captcha-row {
   display: grid;
-  grid-template-columns: 1fr 150px auto;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 115px 72px;
+  gap: 6px;
   align-items: center;
 }
 
+.captcha-row input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 10px;
+  font-size: 15px;
+}
+
 .captcha-image {
-  width: 150px;
+  width: 115px;
   height: 48px;
   border: 1px solid #d7dde6;
   border-radius: 6px;
   background: #ffffff;
+  display: block;
 }
 
 .captcha-refresh {
+  width: 72px;
   height: 48px;
   border: 1px solid #7c3aed;
   border-radius: 6px;
@@ -490,25 +500,11 @@ select:disabled {
   color: #7c3aed;
   font-size: 14px;
   font-weight: 700;
-  padding: 0 10px;
+  padding: 0;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .captcha-refresh:hover {
   background: #f5f3ff;
-}
-
-@media (max-width: 480px) {
-  .captcha-row {
-    grid-template-columns: 1fr;
-  }
-
-  .captcha-image {
-    width: 150px;
-  }
-
-  .captcha-refresh {
-    width: 150px;
-  }
 }
