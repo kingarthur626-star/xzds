@@ -3,7 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!user) return;
 
-  document.getElementById('annualTitle').textContent = user.temple + ' 今年道務';
+  // 移除上方「2A_顓德 今年道務」
+  const annualTitle = document.getElementById('annualTitle');
+  if (annualTitle) {
+    annualTitle.style.display = 'none';
+  }
 
   // 不顯示「壇名　姓名」
   const userInfo = document.getElementById('userInfo');
@@ -53,13 +57,14 @@ async function loadAnnualStats(user) {
 function renderAnnualStats(result) {
   const area = document.getElementById('annualStatsArea');
 
-  // 不顯示「壇名｜2026 年 1月到6月 統計」
   area.innerHTML = renderCombinedStats(result);
 }
 
 function renderCombinedStats(result) {
   const qiudao = result.data.qiudao;
   const fahui = result.data.fahui;
+
+  const displayTemple = getDisplayTempleName(result.temple);
 
   const monthRows = [];
 
@@ -78,7 +83,7 @@ function renderCombinedStats(result) {
 
   return `
     <div class="stat-card">
-      <h2>2026道務統計</h2>
+      <h2>2026道務統計 - ${escapeHtml(displayTemple)}</h2>
 
       <div class="stat-summary">
         <div class="stat-box">
@@ -173,4 +178,10 @@ function formatZeroAsBlank(value) {
   }
 
   return text;
+}
+
+function getDisplayTempleName(temple) {
+  return String(temple || '')
+    .trim()
+    .replace(/^[123][ABCabc][_－\-\s]*/g, '');
 }
