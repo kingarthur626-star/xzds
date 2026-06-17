@@ -125,7 +125,7 @@ function renderRecentDutyStats(result) {
 
   area.innerHTML = `
     <div class="stat-card">
-      <h2>2022-2026 求道 - ${escapeHtml(getDisplayTempleName(result.temple))}</h2>
+      <h2>2022-2026 <span class="title-qiudao">求道</span> - ${escapeHtml(getDisplayTempleName(result.temple))}</h2>
 
       ${renderLineChart(result.rows, 'qiudao', '求道')}
 
@@ -147,7 +147,7 @@ function renderRecentDutyStats(result) {
     </div>
 
     <div class="stat-card">
-      <h2>2022-2026 法會 - ${escapeHtml(getDisplayTempleName(result.temple))}</h2>
+      <h2>2022-2026 <span class="title-fahui">法會</span> - ${escapeHtml(getDisplayTempleName(result.temple))}</h2>
 
       ${renderLineChart(result.rows, 'fahui', '法會')}
 
