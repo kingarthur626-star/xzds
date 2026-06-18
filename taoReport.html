@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>道務即時更新</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: #1f3b57;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 430px;
+      background: #ffffff;
+      padding: 28px 24px 36px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin: 0 0 28px;
+      color: #173b5c;
+    }
+
+    label {
+      display: block;
+      font-size: 17px;
+      font-weight: 700;
+      color: #164568;
+      margin-bottom: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid #d7dde6;
+      border-radius: 6px;
+      font-size: 16px;
+      padding: 0 14px;
+      color: #1f3b57;
+      background: #ffffff;
+      outline: none;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 52px;
+      border: none;
+      border-radius: 6px;
+      background: #4a90e2;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      padding: 12px 14px;
+    }
+
+    .btn:disabled {
+      background: #9bbfe8;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .message.success {
+      display: block;
+      background: #e9f8ef;
+      color: #1d7a43;
+      border: 1px solid #bfe7cc;
+    }
+
+    .message.error {
+      display: block;
+      background: #fff0f0;
+      color: #b42318;
+      border: 1px solid #f3b8b5;
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>道務即時更新</h1>
+
+      <div id="message" class="message"></div>
+
+      <div class="form-group">
+        <label for="email">帳號</label>
+        <input id="email" type="email" placeholder="請輸入登入帳號">
+      </div>
+
+      <div class="form-group">
+        <label for="password">密碼</label>
+        <input id="password" type="password" placeholder="請輸入登入密碼">
+      </div>
+
+      <button id="updateBtn" class="btn" type="button">更新資料</button>
+
+      <div class="hint">
+        按下後會登入道務系統、切換新莊區道務組，並更新 Google Sheet。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbylgq6PCH_OerIQgNTEnTcYvp5bV59NnlmmZzejqQq2M-eATzv_TbCcMl3Il4iSdlFN8w/exec';
+
+    const updateBtn = document.getElementById('updateBtn');
+    const message = document.getElementById('message');
+
+    updateBtn.addEventListener('click', function() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!email || !password) {
+        showMessage('error', '請輸入帳號與密碼');
+        return;
+      }
+
+      updateBtn.disabled = true;
+      updateBtn.textContent = '更新中...';
+      showMessage('success', '正在登入並更新資料，請稍候...');
+
+      const callbackName = 'callback_' + Date.now();
+
+      window[callbackName] = function(result) {
+        updateBtn.disabled = false;
+        updateBtn.textContent = '更新資料';
+
+        if (result && result.success) {
+          showMessage(
+            'success',
+            result.message + '<br>求道筆數：' + result.qiudaoRows + '<br>法會筆數：' + result.fahuiRows + '<br>更新時間：' + result.updatedAt
+          );
+        } else {
+          showMessage('error', (result && result.message) ? result.message : '更新失敗');
+        }
+
+        delete window[callbackName];
+        script.remove();
+      };
+
+      const params =
+        '?action=updateTaoReport01ByLogin' +
+        '&email=' + encodeURIComponent(email) +
+        '&password=' + encodeURIComponent(password) +
+        '&callback=' + callbackName;
+
+      const script = document.createElement('script');
+      script.src = GAS_URL + params;
+      script.onerror = function() {
+        updateBtn.disabled = false;
+        updateBtn.textContent = '更新資料';
+        showMessage('error', '連線失敗，請稍後再試');
+        delete window[callbackName];
+        script.remove();
+      };
+
+      document.body.appendChild(script);
+    });
+
+    function showMessage(type, text) {
+      message.className = 'message ' + type;
+      message.innerHTML = text;
+    }
+  </script>
+</body>
+</html>
