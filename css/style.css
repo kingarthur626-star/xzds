@@ -947,72 +947,27 @@ select:disabled {
 }
 
 /* =========================
-   頁面小型操作列
+   App 固定式上方操作列
    annual.html / history.html 共用
 ========================= */
 
 .page-inner {
   width: 100%;
   max-width: 430px;
+  padding-top: calc(62px + env(safe-area-inset-top, 0px));
 }
 
 .page-action-bar {
-  width: 100%;
-  margin: 0 auto 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 0 2px;
-}
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
 
-.action-pill {
-  height: 40px;
-  min-width: 88px;
-  padding: 0 16px;
-  border: 1px solid #d7dde6;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #164568;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-}
-
-.action-pill:hover {
-  background: #f1f5f9;
-}
-
-.action-pill:active {
-  transform: scale(0.98);
-}
-
-.action-pill.logout {
-  background: #f8fafc;
-  color: #64748b;
-}
-
-.action-pill.logout:hover {
-  background: #eef2f7;
-}
-/* =========================
-   固定式頁面操作列
-   annual.html / history.html 共用
-========================= */
-
-.page-inner {
-  width: 100%;
+  width: calc(100% - 24px);
   max-width: 430px;
-}
 
-.page-action-bar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-
-  width: 100%;
-  margin: 0 auto 12px;
+  margin: 0;
   padding: 10px 2px 8px;
 
   display: flex;
@@ -1021,8 +976,10 @@ select:disabled {
   gap: 10px;
 
   background: rgba(245, 247, 251, 0.96);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-bottom: 1px solid rgba(215, 221, 230, 0.8);
 }
 
 .action-pill {
@@ -1055,3 +1012,10 @@ select:disabled {
 .action-pill.logout:hover {
   background: #eef2f7;
 }
+
+/* 減少手機上下拉時的彈跳感，讓畫面更像 App */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
