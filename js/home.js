@@ -56,7 +56,14 @@ async function loadTaoReportLastUpdate() {
 
   if (!area) return;
 
-  area.textContent = '最後更新：讀取中...';
+  // 先顯示手機/瀏覽器暫存的最後更新時間，讓畫面不要一直卡在「讀取中」
+  const cachedLastUpdate = localStorage.getItem('taoReportLastUpdate');
+
+  if (cachedLastUpdate) {
+    area.textContent = '最後更新：' + cachedLastUpdate;
+  } else {
+    area.textContent = '最後更新：讀取中...';
+  }
 
   try {
     const result = await callApi({
@@ -65,12 +72,20 @@ async function loadTaoReportLastUpdate() {
 
     if (result.success && result.lastUpdate) {
       area.textContent = '最後更新：' + result.lastUpdate;
+
+      // 存到本機，下次進首頁可以先快速顯示
+      localStorage.setItem('taoReportLastUpdate', result.lastUpdate);
+
     } else {
-      area.textContent = '最後更新：尚未更新';
+      if (!cachedLastUpdate) {
+        area.textContent = '最後更新：尚未更新';
+      }
     }
 
   } catch (err) {
-    area.textContent = '最後更新：讀取失敗';
+    if (!cachedLastUpdate) {
+      area.textContent = '最後更新：讀取失敗';
+    }
   }
 }
 
@@ -89,16 +104,25 @@ async function updateTaoReport() {
     });
 
     if (result.success) {
-      alert(
-        '更新完成\n\n' +
-        '求道筆數：' + result.qiudaoRows + '\n' +
-        '法會筆數：' + result.fahuiRows + '\n' +
-        '更新時間：' + result.updatedAt
-      );
+	if (result.updatedAt) {
+		localStorage.setItem('taoReportLastUpdate', result.updatedAt);
 
-      loadTaoReportLastUpdate();
+		const area = document.getElementById('lastUpdateText');
+    if (area) {
+      area.textContent = '最後更新：' + result.updatedAt;
+		}
+	}
 
-    } else {
+  alert(
+    '更新完成\n\n' +
+    '求道筆數：' + result.qiudaoRows + '\n' +
+    '法會筆數：' + result.fahuiRows + '\n' +
+    '更新時間：' + result.updatedAt
+  );
+
+  loadTaoReportLastUpdate();
+
+} else {
       alert(result.message || '更新失敗');
     }
 
