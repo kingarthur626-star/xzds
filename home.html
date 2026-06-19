@@ -1,28 +1,37 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<div class="home-page">
+  <div class="home-card">
+    <h1 class="home-title">新莊區 道務檢視</h1>
 
-  <title>新莊區 道務檢視</title>
-
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-
-<body>
-  <div class="page">
-    <div class="card">
-      <h1>新莊區 道務檢視</h1>
-
-      <div class="login-success" id="homeContent"></div>
-
-      <button class="btn btn-secondary" id="logoutBtn" type="button">登出</button>
+    <div class="home-user">
+      <div id="homeTempleName" class="home-temple">讀取中...</div>
     </div>
-  </div>
 
-  <script src="js/config.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/home.js"></script>
-</body>
-</html>
+    <div class="home-menu">
+      <button class="home-menu-btn" id="btnAnnual">
+        <span class="home-menu-main">今年道務</span>
+        <span class="home-menu-sub">年度統計</span>
+      </button>
+
+      <button class="home-menu-btn" id="btnHistory">
+        <span class="home-menu-main">近年道務</span>
+        <span class="home-menu-sub">歷年比較</span>
+      </button>
+
+      <button class="home-menu-btn update" id="btnUpdate">
+        <span class="home-menu-main">更新報表</span>
+        <span class="home-menu-sub">即時同步</span>
+      </button>
+
+      <button class="home-menu-btn disabled" id="btnMore">
+        <span class="home-menu-main">更多功能</span>
+        <span class="home-menu-sub">開發中</span>
+      </button>
+    </div>
+
+    <div id="lastUpdateText" class="home-update-time">
+      最後更新：讀取中...
+    </div>
+
+    <button class="home-logout-btn" id="btnLogout">登出</button>
+  </div>
+</div>
