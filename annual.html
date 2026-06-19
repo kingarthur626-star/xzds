@@ -6,30 +6,36 @@
 
   <title>今年道務</title>
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=20260620-1" />
 </head>
 
 <body>
   <div class="page">
-    <div class="card">
-      <h1 id="annualTitle">今年道務</h1>
+    <div class="page-inner">
 
-      <div class="small-text" id="userInfo"></div>
-
-      <div id="annualMessage" class="message"></div>
-
-      <div id="annualStatsArea" class="stat-area">
-        <div class="small-text">讀取中...</div>
+      <div class="page-action-bar">
+        <button class="action-pill" id="backBtn" type="button">← 首頁</button>
+        <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
       </div>
 
-      <button class="btn btn-secondary" id="backBtn" type="button">返回首頁</button>
-      <button class="btn btn-secondary" id="logoutBtn" type="button">登出</button>
+      <div class="card wide-card">
+        <h1 id="annualTitle">今年道務</h1>
+
+        <div class="small-text" id="userInfo"></div>
+
+        <div id="annualMessage" class="message"></div>
+
+        <div id="annualStatsArea" class="stat-area">
+          <div class="small-text">讀取中...</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <script src="js/config.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/annual.js"></script>
+  <script src="js/config.js?v=20260620-1"></script>
+  <script src="js/api.js?v=20260620-1"></script>
+  <script src="js/common.js?v=20260620-1"></script>
+  <script src="js/annual.js?v=20260620-1"></script>
 </body>
 </html>
