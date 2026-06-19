@@ -13,16 +13,15 @@ function initHomePage(user) {
     templeEl.textContent = user.temple || '未取得壇名';
   }
 
-	bindHomeButtons();
-	loadHomePermissions();
-	loadTaoReportLastUpdate();
+  bindHomeButtons();
+  loadHomePermissions();
+  loadTaoReportLastUpdate();
 }
 
 function bindHomeButtons() {
   const btnAnnual = document.getElementById('btnAnnual');
   const btnHistory = document.getElementById('btnHistory');
   const btnUpdate = document.getElementById('btnUpdate');
-  const btnMore = document.getElementById('btnMore');
   const btnLogout = document.getElementById('btnLogout');
 
   if (btnAnnual) {
@@ -41,14 +40,63 @@ function bindHomeButtons() {
     btnUpdate.addEventListener('click', updateTaoReport);
   }
 
-  if (btnMore) {
-    btnMore.addEventListener('click', function () {
-      alert('更多功能開發中');
-    });
-  }
-
   if (btnLogout) {
     btnLogout.addEventListener('click', logout);
+  }
+}
+
+async function loadHomePermissions() {
+  const btnUpdate = document.getElementById('btnUpdate');
+  const btnMore = document.getElementById('btnMore');
+
+  // 預設全部隱藏，避免沒有權限的人先看到按鈕
+  if (btnUpdate) {
+    btnUpdate.style.display = 'none';
+  }
+
+  if (btnMore) {
+    btnMore.style.display = 'none';
+  }
+
+  try {
+    const result = await callApi({
+      action: 'getMyPermissions'
+    });
+
+    if (!result.success) {
+      return;
+    }
+
+    const permissions = result.permissions || {};
+
+    // 有「更新即時報表」權限的人，才顯示更新報表
+    if (btnUpdate && permissions.updateTaoReport) {
+      btnUpdate.style.display = 'flex';
+    }
+
+    // 有「系統後台」權限的人，才顯示系統後台
+    if (btnMore && permissions.adminPanel) {
+      btnMore.style.display = 'flex';
+      btnMore.classList.remove('disabled');
+
+      btnMore.innerHTML = `
+        <span class="home-menu-main">系統後台</span>
+        <span class="home-menu-sub">權限管理</span>
+      `;
+
+      btnMore.onclick = function () {
+        location.href = 'admin.html';
+      };
+    }
+
+  } catch (err) {
+    if (btnUpdate) {
+      btnUpdate.style.display = 'none';
+    }
+
+    if (btnMore) {
+      btnMore.style.display = 'none';
+    }
   }
 }
 
@@ -57,7 +105,6 @@ async function loadTaoReportLastUpdate() {
 
   if (!area) return;
 
-  // 先顯示手機/瀏覽器暫存的最後更新時間，讓畫面不要一直卡在「讀取中」
   const cachedLastUpdate = localStorage.getItem('taoReportLastUpdate');
 
   if (cachedLastUpdate) {
@@ -73,10 +120,7 @@ async function loadTaoReportLastUpdate() {
 
     if (result.success && result.lastUpdate) {
       area.textContent = '最後更新：' + result.lastUpdate;
-
-      // 存到本機，下次進首頁可以先快速顯示
       localStorage.setItem('taoReportLastUpdate', result.lastUpdate);
-
     } else {
       if (!cachedLastUpdate) {
         area.textContent = '最後更新：尚未更新';
@@ -105,25 +149,25 @@ async function updateTaoReport() {
     });
 
     if (result.success) {
-	if (result.updatedAt) {
-		localStorage.setItem('taoReportLastUpdate', result.updatedAt);
+      if (result.updatedAt) {
+        localStorage.setItem('taoReportLastUpdate', result.updatedAt);
 
-		const area = document.getElementById('lastUpdateText');
-    if (area) {
-      area.textContent = '最後更新：' + result.updatedAt;
-		}
-	}
+        const area = document.getElementById('lastUpdateText');
+        if (area) {
+          area.textContent = '最後更新：' + result.updatedAt;
+        }
+      }
 
-  alert(
-    '更新完成\n\n' +
-    '求道筆數：' + result.qiudaoRows + '\n' +
-    '法會筆數：' + result.fahuiRows + '\n' +
-    '更新時間：' + result.updatedAt
-  );
+      alert(
+        '更新完成\n\n' +
+        '求道筆數：' + result.qiudaoRows + '\n' +
+        '法會筆數：' + result.fahuiRows + '\n' +
+        '更新時間：' + result.updatedAt
+      );
 
-  loadTaoReportLastUpdate();
+      loadTaoReportLastUpdate();
 
-} else {
+    } else {
       alert(result.message || '更新失敗');
     }
 
@@ -152,46 +196,5 @@ function setUpdateButtonLoading(btn, isLoading) {
       <span class="home-menu-main">更新報表</span>
       <span class="home-menu-sub">即時同步</span>
     `;
-  }
-}
-
-async function loadHomePermissions() {
-  const btnUpdate = document.getElementById('btnUpdate');
-  const btnMore = document.getElementById('btnMore');
-
-  try {
-    const result = await callApi({
-      action: 'getMyPermissions'
-    });
-
-    if (!result.success) {
-      if (btnUpdate) btnUpdate.style.display = 'none';
-      if (btnMore) btnMore.style.display = 'none';
-      return;
-    }
-
-    const permissions = result.permissions || {};
-
-    if (btnUpdate && !permissions.updateTaoReport) {
-      btnUpdate.style.display = 'none';
-    }
-
-    if (btnMore && permissions.adminPanel) {
-      btnMore.classList.remove('disabled');
-      btnMore.innerHTML = `
-        <span class="home-menu-main">系統後台</span>
-        <span class="home-menu-sub">權限管理</span>
-      `;
-
-      btnMore.onclick = function() {
-        location.href = 'admin.html';
-      };
-    } else if (btnMore) {
-      btnMore.style.display = 'none';
-    }
-
-  } catch (err) {
-    if (btnUpdate) btnUpdate.style.display = 'none';
-    if (btnMore) btnMore.style.display = 'none';
   }
 }
