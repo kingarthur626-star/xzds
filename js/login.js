@@ -4,20 +4,21 @@
 登入頁專用程式。
 主要功能：
 
-載入驗證碼
-顯示驗證碼載入中的佔位圖
-處理登入表單送出
+一開始隱藏驗證碼
+使用者先以帳號與密碼登入
+後端判斷登入失敗達 3 次後，才要求顯示驗證碼
+驗證碼顯示後才載入驗證碼圖片
+驗證碼載入中時，只在圖片位置顯示「產生中」
 登入成功後保存使用者資料與 token
-登入失敗時重新產生驗證碼
 
 注意：
-這一版主要改善「驗證碼圖片較慢出現」時的畫面體驗。
-因為 Apps Script API 可能有冷啟動時間，
-驗證碼不一定能瞬間回來，所以先顯示「產生中」。
+這支程式需要搭配 Auth.gs 的 requireCaptcha 回傳值。
+後端回傳 requireCaptcha: true 時，前端才會顯示驗證碼。
 ========================= */
 
 let currentCaptchaId = '';
 let isCaptchaReady = false;
+let isCaptchaRequired = false;
 
 /* =========================
 程式區塊：頁面初始化
@@ -27,7 +28,7 @@ let isCaptchaReady = false;
 綁定登入表單
 綁定更新驗證碼按鈕
 顯示申請成功或重設密碼成功訊息
-立即載入驗證碼
+一開始先隱藏驗證碼
 ========================= */
 document.addEventListener('DOMContentLoaded', function() {
 const loginForm = document.getElementById('loginForm');
@@ -52,16 +53,87 @@ if (params.get('reset') === 'success') {
 showMessage('loginMessage', 'success', '密碼已更新，請重新登入');
 }
 
-showCaptchaPlaceholder('產生中');
-loadCaptcha();
+hideCaptchaArea();
 });
+
+/* =========================
+函式名稱：handleLogin
+功能說明：
+處理登入表單送出。
+一開始只送帳號與密碼。
+如果後端回傳 requireCaptcha: true，
+才顯示驗證碼並載入驗證碼圖片。
+========================= */
+async function handleLogin(event) {
+event.preventDefault();
+
+clearMessage('loginMessage');
+
+const account = document.getElementById('loginAccount').value.trim();
+const password = document.getElementById('loginPassword').value.trim();
+const captchaInputEl = document.getElementById('captchaInput');
+const captchaInput = captchaInputEl ? captchaInputEl.value.trim() : '';
+
+if (!account || !password) {
+showMessage('loginMessage', 'error', '請輸入帳號與密碼');
+return;
+}
+
+if (isCaptchaRequired) {
+if (!isCaptchaReady || !currentCaptchaId) {
+showMessage('loginMessage', 'error', '驗證碼尚未載入完成，請稍候');
+return;
+}
+
+if (!captchaInput) {
+  showMessage('loginMessage', 'error', '請輸入驗證碼');
+  return;
+}
+
+}
+
+try {
+const result = await callApi({
+action: 'login',
+account: account,
+password: password,
+captchaId: currentCaptchaId,
+captchaInput: captchaInput
+});
+
+if (!result.success) {
+  showMessage('loginMessage', 'error', result.message || '登入失敗');
+
+  if (result.requireCaptcha) {
+    showCaptchaArea();
+    loadCaptcha();
+  } else {
+    hideCaptchaArea();
+  }
+
+  return;
+}
+
+hideCaptchaArea();
+saveCurrentUser(result.user, result.token);
+location.href = 'home.html';
+
+} catch (err) {
+showMessage('loginMessage', 'error', err.message || '系統連線失敗，請稍後再試');
+
+if (isCaptchaRequired) {
+  loadCaptcha();
+}
+
+}
+}
 
 /* =========================
 函式名稱：loadCaptcha
 功能說明：
 從後端取得新的驗證碼。
-在驗證碼尚未回來前，先顯示「產生中」，
-避免畫面出現破圖或「驗證碼圖片」文字。
+只有在需要驗證碼時才會呼叫。
+驗證碼圖片尚未回來前，圖片位置先顯示「產生中」。
 ========================= */
 async function loadCaptcha() {
 const captchaInput = document.getElementById('captchaInput');
@@ -111,62 +183,65 @@ refreshCaptchaBtn.textContent = '更新驗證碼';
 }
 
 /* =========================
-函式名稱：handleLogin
+函式名稱：showCaptchaArea
 功能說明：
-處理登入表單送出。
-送出前會檢查：
-
-帳號
-密碼
-驗證碼
-驗證碼是否已載入完成
+顯示驗證碼區。
+當後端回傳 requireCaptcha: true 時使用。
 ========================= */
-async function handleLogin(event) {
-event.preventDefault();
+function showCaptchaArea() {
+const captchaGroup = getCaptchaGroup();
 
-clearMessage('loginMessage');
+isCaptchaRequired = true;
 
-const account = document.getElementById('loginAccount').value.trim();
-const password = document.getElementById('loginPassword').value.trim();
-const captchaInput = document.getElementById('captchaInput').value.trim();
-
-if (!account || !password) {
-showMessage('loginMessage', 'error', '請輸入帳號與密碼');
-return;
+if (captchaGroup) {
+captchaGroup.style.display = '';
+}
 }
 
-if (!isCaptchaReady || !currentCaptchaId) {
-showMessage('loginMessage', 'error', '驗證碼尚未載入完成，請稍候');
-return;
+/* =========================
+函式名稱：hideCaptchaArea
+功能說明：
+隱藏驗證碼區，並清空目前驗證碼狀態。
+一般登入狀態下使用。
+========================= */
+function hideCaptchaArea() {
+const captchaGroup = getCaptchaGroup();
+const captchaInput = document.getElementById('captchaInput');
+
+isCaptchaRequired = false;
+isCaptchaReady = false;
+currentCaptchaId = '';
+
+if (captchaInput) {
+captchaInput.value = '';
 }
+
+if (captchaGroup) {
+captchaGroup.style.display = 'none';
+}
+}
+
+/* =========================
+函式名稱：getCaptchaGroup
+功能說明：
+取得整個驗證碼欄位區塊。
+如果 index.html 有 id="captchaGroup"，優先使用。
+若沒有，則用 captchaInput 往上找 form-group。
+========================= */
+function getCaptchaGroup() {
+const captchaGroup = document.getElementById('captchaGroup');
+
+if (captchaGroup) {
+return captchaGroup;
+}
+
+const captchaInput = document.getElementById('captchaInput');
 
 if (!captchaInput) {
-showMessage('loginMessage', 'error', '請輸入驗證碼');
-return;
+return null;
 }
 
-try {
-const result = await callApi({
-action: 'login',
-account: account,
-password: password,
-captchaId: currentCaptchaId,
-captchaInput: captchaInput
-});
-
-if (!result.success) {
-  showMessage('loginMessage', 'error', result.message || '登入失敗');
-  loadCaptcha();
-  return;
-}
-
-saveCurrentUser(result.user, result.token);
-location.href = 'home.html';
-
-} catch (err) {
-showMessage('loginMessage', 'error', err.message || '系統連線失敗，請稍後再試');
-loadCaptcha();
-}
+return captchaInput.closest('.form-group');
 }
 
 /* =========================
@@ -219,8 +294,9 @@ captchaImage.src = createCaptchaPlaceholderDataUri(text || '產生中');
 /* =========================
 函式名稱：createCaptchaPlaceholderDataUri
 功能說明：
-產生一張 SVG 佔位圖。
+使用 Canvas 產生一張 PNG 佔位圖。
 內容可以是「產生中」或「載入失敗」。
+使用 PNG 比 SVG 更穩，避免部分手機 PWA 顯示破圖。
 ========================= */
 function createCaptchaPlaceholderDataUri(text) {
 const safeText = String(text || '產生中');
@@ -252,6 +328,11 @@ ctx.fillText(safeText, 75, 24);
 return canvas.toDataURL('image/png');
 }
 
+/* =========================
+函式名稱：roundRect
+功能說明：
+Canvas 用的圓角矩形繪製工具。
+========================= */
 function roundRect(ctx, x, y, width, height, radius) {
 ctx.beginPath();
 ctx.moveTo(x + radius, y);
