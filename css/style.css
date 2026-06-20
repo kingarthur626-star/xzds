@@ -1121,3 +1121,326 @@ body {
     min-height: -webkit-fill-available;
   }
 }
+
+/* =========================
+程式區塊：滿版 App 登入頁
+功能說明：
+將 index.html 登入頁改成更接近手機 App 的滿版畫面。
+特色：
+
+1. 畫面滿版
+2. 上方品牌區
+3. 中間登入卡片
+4. 下方固定連結
+5. 手機鍵盤彈出時仍可捲動，不會擋住輸入框
+   ========================= */
+
+.app-login-page {
+min-height: 100vh;
+min-height: 100dvh;
+background:
+radial-gradient(circle at top left, rgba(47, 128, 237, 0.18) 0%, rgba(245, 247, 251, 0.96) 34%, #ffffff 100%);
+color: #1f3b57;
+overflow: hidden;
+}
+
+.app-login-shell {
+min-height: 100vh;
+min-height: 100dvh;
+width: 100%;
+max-width: 480px;
+margin: 0 auto;
+
+display: grid;
+grid-template-rows: auto minmax(0, 1fr) auto;
+
+padding:
+calc(24px + env(safe-area-inset-top, 0px))
+18px
+calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+/* =========================
+程式區塊：登入頁上方品牌區
+功能說明：
+顯示「道」字 Logo 與系統名稱。
+========================= */
+
+.app-login-header {
+text-align: center;
+padding-top: 4px;
+padding-bottom: 18px;
+}
+
+.app-login-logo {
+width: 68px;
+height: 68px;
+margin: 0 auto 14px;
+border-radius: 22px;
+
+background: linear-gradient(135deg, #2f80ed, #4a90e2);
+color: #ffffff;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+font-size: 32px;
+font-weight: 900;
+letter-spacing: 1px;
+
+box-shadow: 0 12px 24px rgba(47, 128, 237, 0.26);
+}
+
+.app-login-title-group {
+text-align: center;
+}
+
+.app-login-title {
+margin: 0;
+color: #143b63;
+font-size: 27px;
+font-weight: 900;
+letter-spacing: 1px;
+line-height: 1.25;
+}
+
+.app-login-subtitle {
+margin-top: 8px;
+color: #64748b;
+font-size: 14px;
+font-weight: 600;
+}
+
+/* =========================
+程式區塊：登入頁中間內容
+功能說明：
+放置登入卡片，並讓它在畫面中央偏上，
+看起來更像 App 登入畫面。
+========================= */
+
+.app-login-main {
+min-height: 0;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding: 4px 0 12px;
+}
+
+.app-login-card {
+width: 100%;
+background: rgba(255, 255, 255, 0.94);
+border: 1px solid rgba(226, 232, 240, 0.95);
+border-radius: 24px;
+padding: 22px 18px 20px;
+box-shadow: 0 18px 42px rgba(32, 84, 147, 0.13);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+}
+
+.app-form-group {
+margin-bottom: 16px;
+}
+
+.app-login-card label {
+font-size: 15px;
+font-weight: 800;
+color: #174869;
+margin-bottom: 8px;
+}
+
+.app-login-card input {
+height: 52px;
+border-radius: 14px;
+border: 1px solid #d7e1ec;
+background: #ffffff;
+font-size: 16px;
+}
+
+.app-login-card input:focus {
+border-color: #4a90e2;
+box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.14);
+}
+
+/* =========================
+程式區塊：登入頁驗證碼區
+功能說明：
+調整驗證碼輸入框、圖片與更新按鈕，
+讓手機畫面更整齊。
+========================= */
+
+.app-captcha-panel {
+display: grid;
+grid-template-columns: minmax(0, 1fr) 132px;
+gap: 10px;
+align-items: stretch;
+}
+
+.app-login-card .captcha-side {
+display: grid;
+grid-template-rows: 52px 52px;
+gap: 10px;
+}
+
+.app-login-card .captcha-image {
+width: 100%;
+height: 52px;
+border-radius: 14px;
+object-fit: cover;
+}
+
+.app-login-card .captcha-refresh {
+width: 100%;
+height: 52px;
+border-radius: 14px;
+font-size: 14px;
+font-weight: 900;
+}
+
+/* =========================
+程式區塊：登入按鈕
+功能說明：
+強化登入按鈕視覺，讓它更像 App 主要操作按鈕。
+========================= */
+
+.app-login-btn {
+min-height: 56px;
+border-radius: 16px;
+margin-top: 4px;
+background: linear-gradient(135deg, #2f80ed, #4a90e2);
+font-size: 19px;
+font-weight: 900;
+box-shadow: 0 12px 22px rgba(47, 128, 237, 0.22);
+}
+
+.app-login-btn:hover {
+background: linear-gradient(135deg, #2675df, #4189dc);
+}
+
+.app-login-btn:active {
+transform: scale(0.99);
+}
+
+/* =========================
+程式區塊：登入頁底部連結
+功能說明：
+固定在登入頁下方，提供申請帳號與忘記 / 變更密碼。
+========================= */
+
+.app-login-footer {
+padding-top: 14px;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 12px;
+}
+
+.app-login-link {
+color: #2f80ed;
+font-size: 15px;
+font-weight: 800;
+text-decoration: none;
+}
+
+.app-login-link:active {
+opacity: 0.7;
+}
+
+.app-login-divider {
+width: 1px;
+height: 14px;
+background: #cbd5e1;
+}
+
+/* =========================
+程式區塊：小螢幕調整
+功能說明：
+當手機高度較小時，縮小 Logo 與間距，
+避免登入按鈕被螢幕鍵盤或底部擋住。
+========================= */
+
+@media (max-height: 720px) {
+.app-login-shell {
+padding-top: calc(16px + env(safe-area-inset-top, 0px));
+padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-login-header {
+padding-bottom: 12px;
+}
+
+.app-login-logo {
+width: 56px;
+height: 56px;
+border-radius: 18px;
+font-size: 27px;
+margin-bottom: 10px;
+}
+
+.app-login-title {
+font-size: 23px;
+}
+
+.app-login-subtitle {
+margin-top: 5px;
+font-size: 13px;
+}
+
+.app-login-card {
+padding: 18px 16px 18px;
+}
+
+.app-form-group {
+margin-bottom: 13px;
+}
+}
+
+/* =========================
+程式區塊：窄螢幕調整
+功能說明：
+手機寬度較小時，驗證碼圖片與更新按鈕改成同一列，
+避免右側欄太窄。
+========================= */
+
+@media (max-width: 420px) {
+.app-captcha-panel {
+grid-template-columns: 1fr;
+}
+
+.app-login-card .captcha-side {
+grid-template-columns: minmax(0, 1fr) 108px;
+grid-template-rows: none;
+gap: 8px;
+}
+
+.app-login-card .captcha-image,
+.app-login-card .captcha-refresh {
+height: 50px;
+}
+
+.app-login-footer {
+gap: 10px;
+}
+
+.app-login-link {
+font-size: 14px;
+}
+}
+
+/* =========================
+程式區塊：iOS PWA 高度相容
+功能說明：
+部分 iPhone / iPad 對 100dvh 的支援不同，
+補上 -webkit-fill-available 增加穩定性。
+========================= */
+
+@supports (-webkit-touch-callout: none) {
+.app-login-page,
+.app-login-shell {
+min-height: -webkit-fill-available;
+}
+}
