@@ -2652,7 +2652,8 @@ width: 76% !important;
 
 @media (max-width: 480px) {
   .app-login-top-image {
-    width: min(180px, 58vw);
-    margin-bottom: 10px;
+    width: min(120px, 36vw);
+    margin-bottom: 8px;
   }
 }
+
