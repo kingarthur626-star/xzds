@@ -1444,3 +1444,195 @@ font-size: 14px;
 min-height: -webkit-fill-available;
 }
 }
+```css
+/* =========================
+   程式區塊：滿版 App 登入頁修正版
+   功能說明：
+   修正手機 PWA 登入頁畫面：
+   1. 移除「道務統計查詢系統」副標題
+   2. iPhone 驗證碼欄位改成上下排列，避免圖片被擠到看不到
+   3. Android 畫面高度不足時，可以看到申請帳號與忘記密碼連結
+   4. 保持整體滿版 App 風格
+========================= */
+
+/* 移除登入頁副標題：道務統計查詢系統 */
+.app-login-subtitle {
+  display: none !important;
+}
+
+/* 登入頁允許必要捲動，避免 Android 底部連結被切掉 */
+.app-login-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 調整整體上下間距，讓手機畫面更容易完整顯示 */
+.app-login-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding:
+    calc(18px + env(safe-area-inset-top, 0px))
+    18px
+    calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* 上方 Logo 與標題稍微縮小，避免擠壓下方表單 */
+.app-login-header {
+  padding-top: 0 !important;
+  padding-bottom: 14px !important;
+}
+
+.app-login-logo {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 18px !important;
+  font-size: 28px !important;
+  margin-bottom: 10px !important;
+}
+
+.app-login-title {
+  font-size: 25px !important;
+  line-height: 1.25;
+}
+
+/* 中間登入區改成靠上，不要過度置中造成底部連結被擠出畫面 */
+.app-login-main {
+  align-items: flex-start !important;
+  padding: 6px 0 10px !important;
+  overflow: visible !important;
+}
+
+/* 登入卡片稍微縮小 */
+.app-login-card {
+  padding: 20px 18px 18px !important;
+  border-radius: 22px !important;
+}
+
+/* 表單欄位間距略縮 */
+.app-form-group {
+  margin-bottom: 14px !important;
+}
+
+.app-login-card input {
+  height: 50px !important;
+  border-radius: 14px !important;
+}
+
+/* =========================
+   驗證碼區修正
+   功能說明：
+   手機上改成：
+   第一行：輸入驗證碼
+   第二行：驗證碼圖片 + 更新驗證碼
+   避免 iPhone 將驗證碼圖片壓縮到看不到。
+========================= */
+
+.app-captcha-panel {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+/* 驗證碼圖片與更新按鈕同一列 */
+.app-login-card .captcha-side {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 132px !important;
+  grid-template-rows: none !important;
+  gap: 10px !important;
+}
+
+/* 驗證碼圖片加大，避免被擠成細長一條 */
+.app-login-card .captcha-image {
+  width: 100% !important;
+  height: 50px !important;
+  min-width: 0 !important;
+  border-radius: 14px !important;
+  object-fit: cover !important;
+}
+
+/* 更新驗證碼按鈕固定寬度，避免文字換行 */
+.app-login-card .captcha-refresh {
+  width: 132px !important;
+  height: 50px !important;
+  border-radius: 14px !important;
+  white-space: nowrap !important;
+}
+
+/* 登入按鈕稍微縮小高度 */
+.app-login-btn {
+  min-height: 54px !important;
+  border-radius: 16px !important;
+  margin-top: 2px !important;
+}
+
+/* 底部連結保留在畫面下方，但允許因高度不足而自然往下捲動 */
+.app-login-footer {
+  padding-top: 12px !important;
+  padding-bottom: 4px !important;
+  flex-shrink: 0;
+}
+
+/* Android / 小高度手機再縮一點 */
+@media (max-height: 760px) {
+  .app-login-shell {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .app-login-logo {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 25px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .app-login-title {
+    font-size: 23px !important;
+  }
+
+  .app-login-header {
+    padding-bottom: 10px !important;
+  }
+
+  .app-login-card {
+    padding: 18px 16px 16px !important;
+  }
+
+  .app-form-group {
+    margin-bottom: 12px !important;
+  }
+
+  .app-login-card input {
+    height: 48px !important;
+  }
+
+  .app-login-card .captcha-image,
+  .app-login-card .captcha-refresh {
+    height: 48px !important;
+  }
+
+  .app-login-btn {
+    min-height: 52px !important;
+  }
+}
+
+/* 很窄的手機，驗證碼圖片與更新按鈕維持同列但縮小按鈕 */
+@media (max-width: 380px) {
+  .app-login-card .captcha-side {
+    grid-template-columns: minmax(0, 1fr) 118px !important;
+    gap: 8px !important;
+  }
+
+  .app-login-card .captcha-refresh {
+    width: 118px !important;
+    font-size: 13px !important;
+  }
+
+  .app-login-link {
+    font-size: 13px !important;
+  }
+}
+```
