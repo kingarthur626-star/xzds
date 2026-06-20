@@ -1,9 +1,43 @@
 <!DOCTYPE html>
+
+<!-- =========================
+     程式名稱：index.html
+     功能說明：
+     系統登入頁。
+     使用者在此輸入帳號、密碼與驗證碼，
+     登入成功後進入首頁 home.html。
+
+     本頁也加入 PWA 設定，
+     讓網站可以加入手機主畫面，
+     並以類似 App 的方式開啟。
+========================= -->
+
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>新莊區 道務檢視</title>
+
+  <!-- =========================
+       PWA 設定
+       功能說明：
+       讓網站可以加入手機主畫面，
+       並以類似 App 的獨立視窗開啟。
+  ========================= -->
+  <link rel="manifest" href="./manifest.json?v=20260620-001">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="新莊區道務檢視">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+  <!-- =========================
+       全站共用樣式
+       功能說明：
+       載入登入頁、首頁、今年道務、近年道務等共用 CSS。
+  ========================= -->
   <link rel="stylesheet" href="./css/style.css?v=20260620-2">
 </head>
 
@@ -15,8 +49,18 @@
         <h1 class="login-title">新莊區 道務檢視</h1>
       </div>
 
+      <!-- =========================
+           登入訊息區
+           功能說明：
+           顯示登入成功、登入失敗、驗證碼錯誤等提示訊息。
+      ========================= -->
       <div id="loginMessage" class="message"></div>
 
+      <!-- =========================
+           登入表單
+           功能說明：
+           使用者輸入帳號、密碼與驗證碼後送出登入。
+      ========================= -->
       <form id="loginForm">
         <div class="form-group">
           <label for="loginAccount">帳號</label>
@@ -28,12 +72,18 @@
           <input id="loginPassword" type="password" placeholder="請輸入密碼" autocomplete="current-password">
         </div>
 
+        <!-- =========================
+             驗證碼區
+             功能說明：
+             顯示後端產生的 4 碼驗證碼，
+             使用者需輸入正確後才能登入。
+        ========================= -->
         <div class="form-group">
           <label for="captchaInput">輸入驗證碼</label>
 
           <div class="captcha-panel">
             <div class="captcha-input-wrap">
-             <input id="captchaInput" type="text" placeholder="請輸入4碼驗證碼" autocomplete="off" inputmode="numeric" maxlength="4">
+              <input id="captchaInput" type="text" placeholder="請輸入4碼驗證碼" autocomplete="off" inputmode="numeric" maxlength="4">
             </div>
 
             <div class="captcha-side">
@@ -46,6 +96,11 @@
         <button id="loginBtn" class="btn" type="submit">登入</button>
       </form>
 
+      <!-- =========================
+           登入頁連結
+           功能說明：
+           前往申請帳號與忘記/變更密碼頁面。
+      ========================= -->
       <div class="login-link-row">
         <a class="text-link" href="register.html">申請帳號</a>
         <a class="text-link" href="forgot.html">忘記/變更密碼</a>
@@ -53,9 +108,25 @@
     </div>
   </div>
 
+  <!-- =========================
+       前端共用程式
+       功能說明：
+       config.js：設定 Apps Script API 網址
+       api.js：負責與後端 API 溝通
+       common.js：共用登入狀態與工具函式
+       login.js：登入頁專用邏輯
+  ========================= -->
   <script src="./js/config.js?v=20260619-5"></script>
   <script src="./js/api.js?v=20260619-5"></script>
   <script src="./js/common.js?v=20260619-5"></script>
   <script src="./js/login.js?v=20260619-5"></script>
+
+  <!-- =========================
+       PWA 控制程式
+       功能說明：
+       註冊 Service Worker，
+       並處理系統有新版本時的更新提示。
+  ========================= -->
+  <script src="./js/pwa.js?v=20260620-001"></script>
 </body>
 </html>

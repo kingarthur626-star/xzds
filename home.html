@@ -1,4 +1,25 @@
+```html
 <!DOCTYPE html>
+
+<!-- =========================
+     程式名稱：home.html
+     功能說明：
+     系統首頁。
+     登入成功後，使用者會進入此頁面。
+     本頁負責顯示：
+     1. 使用者所屬壇名
+     2. 今年道務入口
+     3. 近年道務入口
+     4. 更新報表入口
+     5. 系統後台 / 更多功能入口
+     6. 最後更新時間
+     7. 登出按鈕
+
+     本頁也加入 PWA 設定，
+     讓網站可以加入手機主畫面，
+     並以類似 App 的方式開啟。
+========================= -->
+
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
@@ -6,51 +27,136 @@
 
   <title>新莊區 道務檢視</title>
 
+  <!-- =========================
+       PWA 設定
+       功能說明：
+       讓網站可以加入手機主畫面，
+       並以類似 App 的獨立視窗開啟。
+  ========================= -->
+  <link rel="manifest" href="./manifest.json?v=20260620-001">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="新莊區道務檢視">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+  <!-- =========================
+       全站共用樣式
+       功能說明：
+       載入首頁、登入頁、今年道務、近年道務等共用 CSS。
+  ========================= -->
   <link rel="stylesheet" href="./css/style.css?v=20260619-2">
 </head>
 
 <body>
+  <!-- =========================
+       首頁主畫面
+       功能說明：
+       使用者登入後看到的主要功能選單。
+  ========================= -->
   <div class="home-page">
     <div class="home-card">
       <h1 class="home-title">新莊區 道務檢視</h1>
 
+      <!-- =========================
+           使用者壇名顯示區
+           功能說明：
+           home.js 會將登入者的壇名填入 homeTempleName。
+      ========================= -->
       <div class="home-user">
         <div id="homeTempleName" class="home-temple">讀取中...</div>
       </div>
 
+      <!-- =========================
+           首頁功能選單
+           功能說明：
+           提供使用者進入今年道務、近年道務、更新報表與更多功能。
+      ========================= -->
       <div class="home-menu">
+
+        <!-- =========================
+             今年道務按鈕
+             功能說明：
+             點擊後前往 annual.html，查看今年求道與法會統計。
+        ========================= -->
         <button class="home-menu-btn" id="btnAnnual" type="button">
           <span class="home-menu-main">今年道務</span>
           <span class="home-menu-sub">年度統計</span>
         </button>
 
+        <!-- =========================
+             近年道務按鈕
+             功能說明：
+             點擊後前往 history.html，查看近年求道與法會統計。
+        ========================= -->
         <button class="home-menu-btn" id="btnHistory" type="button">
           <span class="home-menu-main">近年道務</span>
           <span class="home-menu-sub">歷年比較</span>
         </button>
 
+        <!-- =========================
+             更新報表按鈕
+             功能說明：
+             預設隱藏。
+             home.js 會依照後端權限判斷，
+             只有有 UPDATE_TAO_REPORT 權限的人才會看到。
+        ========================= -->
         <button class="home-menu-btn update" id="btnUpdate" type="button" style="display:none;">
           <span class="home-menu-main">更新報表</span>
           <span class="home-menu-sub">即時同步</span>
         </button>
 
+        <!-- =========================
+             更多功能 / 系統後台按鈕
+             功能說明：
+             預設隱藏。
+             未來可依權限改成系統後台或其他管理功能入口。
+        ========================= -->
         <button class="home-menu-btn disabled" id="btnMore" type="button" style="display:none;">
           <span class="home-menu-main">更多功能</span>
           <span class="home-menu-sub">開發中</span>
         </button>
       </div>
 
+      <!-- =========================
+           最後更新時間
+           功能說明：
+           home.js 會讀取即時報表最後更新時間並顯示在這裡。
+      ========================= -->
       <div id="lastUpdateText" class="home-update-time">
         最後更新：讀取中...
       </div>
 
+      <!-- =========================
+           登出按鈕
+           功能說明：
+           點擊後清除登入狀態並回到登入頁。
+      ========================= -->
       <button class="home-logout-btn" id="btnLogout" type="button">登出</button>
     </div>
   </div>
 
+  <!-- =========================
+       前端共用程式
+       功能說明：
+       config.js：設定 Apps Script API 網址
+       api.js：負責與後端 API 溝通
+       common.js：共用登入狀態與工具函式
+       home.js：首頁專用邏輯
+  ========================= -->
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20260619-2"></script>
   <script src="./js/common.js?v=20260619-2"></script>
   <script src="./js/home.js?v=20260619-6"></script>
+
+  <!-- =========================
+       PWA 控制程式
+       功能說明：
+       註冊 Service Worker，
+       並處理系統有新版本時的更新提示。
+  ========================= -->
+  <script src="./js/pwa.js?v=20260620-001"></script>
 </body>
 </html>
+```

@@ -1,4 +1,18 @@
+```html
 <!DOCTYPE html>
+
+<!-- =========================
+     程式名稱：history.html
+     功能說明：
+     近年道務頁面。
+     使用者可在此查看指定壇名的近年道務統計，
+     包含近年求道、法會、年度目標、累計數與達成率。
+
+     本頁也加入 PWA 設定，
+     讓網站可以加入手機主畫面，
+     並以類似 App 的方式開啟。
+========================= -->
+
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
@@ -6,19 +20,58 @@
 
   <title>近年道務</title>
 
-  <link rel="stylesheet" href="css/style.css?v=20260620-2" />
+  <!-- =========================
+       PWA 設定
+       功能說明：
+       讓網站可以加入手機主畫面，
+       並以類似 App 的獨立視窗開啟。
+  ========================= -->
+  <link rel="manifest" href="./manifest.json?v=20260620-001">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="新莊區道務檢視">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+  <!-- =========================
+       全站共用樣式
+       功能說明：
+       載入近年道務頁、今年道務頁、首頁、登入頁等共用 CSS。
+  ========================= -->
+  <link rel="stylesheet" href="./css/style.css?v=20260620-2" />
 </head>
 
 <body>
   <div class="page">
     <div class="page-inner">
 
+      <!-- =========================
+           固定式上方操作列
+           功能說明：
+           提供返回首頁與登出功能。
+           搭配 style.css 的 fixed 設定後，
+           手機滑動畫面時仍會固定在上方。
+      ========================= -->
       <div class="page-action-bar">
         <button class="action-pill" id="backBtn" type="button">← 首頁</button>
         <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
       </div>
 
+      <!-- =========================
+           近年道務主卡片
+           功能說明：
+           顯示近年道務統計資料。
+           history.js 會把後端資料渲染到 historyStatsArea。
+      ========================= -->
       <div class="card wide-card">
+
+        <!-- =========================
+             標題與壇名選擇區
+             功能說明：
+             顯示「近年道務」標題，
+             並提供壇名下拉選單讓使用者切換查詢對象。
+        ========================= -->
         <div class="title-select-row">
           <h1>近年道務</h1>
 
@@ -27,8 +80,19 @@
           </select>
         </div>
 
+        <!-- =========================
+             訊息顯示區
+             功能說明：
+             顯示讀取中、錯誤、查無資料等訊息。
+        ========================= -->
         <div id="historyMessage" class="message"></div>
 
+        <!-- =========================
+             近年道務資料區
+             功能說明：
+             history.js 會將近年求道、法會、目標、累計、
+             達成率與年度比較資料顯示在此區。
+        ========================= -->
         <div id="historyStatsArea" class="stat-area">
           <div class="small-text">讀取中...</div>
         </div>
@@ -37,9 +101,26 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=20260620-1"></script>
-  <script src="js/api.js?v=20260620-1"></script>
-  <script src="js/common.js?v=20260620-1"></script>
-  <script src="js/history.js?v=20260620-1"></script>
+  <!-- =========================
+       前端共用程式
+       功能說明：
+       config.js：設定 Apps Script API 網址
+       api.js：負責與後端 API 溝通
+       common.js：共用登入狀態與工具函式
+       history.js：近年道務頁專用邏輯
+  ========================= -->
+  <script src="./js/config.js?v=20260620-1"></script>
+  <script src="./js/api.js?v=20260620-1"></script>
+  <script src="./js/common.js?v=20260620-1"></script>
+  <script src="./js/history.js?v=20260620-1"></script>
+
+  <!-- =========================
+       PWA 控制程式
+       功能說明：
+       註冊 Service Worker，
+       並處理系統有新版本時的更新提示。
+  ========================= -->
+  <script src="./js/pwa.js?v=20260620-001"></script>
 </body>
 </html>
+```
