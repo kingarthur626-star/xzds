@@ -1636,3 +1636,92 @@ min-height: -webkit-fill-available;
   }
 }
 ```
+/* =========================
+   程式區塊：滿版 App 登入頁間距修正版
+   功能說明：
+   1. 移除登入頁副標題「道務統計查詢系統」
+   2. 讓「申請帳號 / 忘記變更密碼」靠近登入按鈕
+   3. 讓底部保留一行空白，不要貼到底部
+========================= */
+
+/* 移除登入頁副標題 */
+.app-login-subtitle {
+  display: none !important;
+}
+
+/* 登入頁整體改成自然排列，不再把底部連結硬推到底 */
+.app-login-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+
+  padding:
+    calc(18px + env(safe-area-inset-top, 0px))
+    18px
+    calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* 上方 Logo 與標題區稍微縮短 */
+.app-login-header {
+  padding-top: 0 !important;
+  padding-bottom: 18px !important;
+}
+
+/* 中間登入卡片不要撐滿剩餘高度 */
+.app-login-main {
+  flex: none !important;
+  min-height: auto !important;
+
+  display: block !important;
+  overflow: visible !important;
+
+  padding: 0 !important;
+}
+
+/* 登入按鈕與底部連結之間的距離 */
+.app-login-footer {
+  margin-top: 18px !important;
+  padding-top: 0 !important;
+  padding-bottom: 22px !important;
+
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  flex-shrink: 0 !important;
+}
+
+/* 底部連結樣式 */
+.app-login-link {
+  color: #2f80ed;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.app-login-divider {
+  width: 1px;
+  height: 14px;
+  background: #cbd5e1;
+}
+
+/* 小高度手機：整體再縮一點，避免底部連結被切掉 */
+@media (max-height: 760px) {
+  .app-login-shell {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .app-login-header {
+    padding-bottom: 12px !important;
+  }
+
+  .app-login-footer {
+    margin-top: 14px !important;
+    padding-bottom: 18px !important;
+  }
+}
