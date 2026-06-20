@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 
 <!-- =========================
@@ -7,9 +8,8 @@
      使用者可在此選擇組別、壇名，
      並輸入姓名、帳號與密碼後送出申請。
 
-     本頁也加入 PWA 設定，
-     讓網站可以加入手機主畫面，
-     並以類似 App 的方式開啟。
+     本版調整為 PWA App 風格頁面，
+     讓手機主畫面開啟時更像 App。
 ========================= -->
 
 <html lang="zh-Hant">
@@ -38,109 +38,103 @@
        功能說明：
        載入登入頁、申請帳號、忘記密碼、首頁等共用 CSS。
   ========================= -->
-  <link rel="stylesheet" href="./css/style.css?v=20260620-2" />
+  <link rel="stylesheet" href="./css/style.css?v=20260620-7" />
 </head>
 
 <body>
-  <div class="page">
-    <div class="card">
-      <h1>申請帳號</h1>
+  <div class="app-form-page">
+    <div class="app-form-shell">
 
       <!-- =========================
-           訊息顯示區
+           頁面上方操作列
            功能說明：
-           顯示申請成功、欄位未填、系統錯誤等訊息。
+           提供返回登入頁功能。
       ========================= -->
-      <div id="registerMessage" class="message"></div>
+      <div class="app-form-header">
+        <a class="app-form-back" href="index.html">← 登入</a>
+        <div class="app-form-header-title">申請帳號</div>
+      </div>
 
       <!-- =========================
-           申請帳號表單
+           頁面品牌區
            功能說明：
-           使用者填寫申請資料後送出，
-           由 register.js 呼叫後端 registerAccount。
+           顯示系統 Logo 與頁面名稱。
       ========================= -->
-      <form id="registerForm">
+      <div class="app-form-hero">
+        <div class="app-form-logo">道</div>
+        <h1 class="app-form-title">申請帳號</h1>
+      </div>
 
-        <!-- =========================
-             組別選擇區
-             功能說明：
-             使用者先選第1組、第2組或第3組，
-             系統再依組別載入對應壇名。
-        ========================= -->
-        <div class="form-group">
-          <div class="label">組別：</div>
+      <!-- =========================
+           申請帳號表單卡片
+           功能說明：
+           使用者填寫申請資料後送出。
+      ========================= -->
+      <div class="app-form-card">
+        <div id="registerMessage" class="message"></div>
 
-          <div class="radio-row">
-            <label class="radio-item">
-              <input type="radio" name="group" value="1" />
-              第1組
-            </label>
+        <form id="registerForm">
+          <!-- =========================
+               組別選擇區
+               功能說明：
+               使用者先選第1組、第2組或第3組，
+               系統再依組別載入對應壇名。
+          ========================= -->
+          <div class="form-group">
+            <div class="label">組別：</div>
 
-            <label class="radio-item">
-              <input type="radio" name="group" value="2" />
-              第2組
-            </label>
+            <div class="radio-row">
+              <label class="radio-item">
+                <input type="radio" name="group" value="1" />
+                第1組
+              </label>
 
-            <label class="radio-item">
-              <input type="radio" name="group" value="3" />
-              第3組
-            </label>
+              <label class="radio-item">
+                <input type="radio" name="group" value="2" />
+                第2組
+              </label>
+
+              <label class="radio-item">
+                <input type="radio" name="group" value="3" />
+                第3組
+              </label>
+            </div>
           </div>
-        </div>
 
-        <!-- =========================
-             壇名選擇區
-             功能說明：
-             預設停用，等使用者選擇組別後，
-             register.js 會載入該組壇名選項。
-        ========================= -->
-        <div class="form-group">
-          <label for="templeSelect">壇名：</label>
-          <select id="templeSelect" disabled>
-            <option value="">請先圈選組別...</option>
-          </select>
-        </div>
+          <!-- =========================
+               壇名選擇區
+               功能說明：
+               預設停用，等使用者選擇組別後，
+               register.js 會載入該組壇名選項。
+          ========================= -->
+          <div class="form-group">
+            <label for="templeSelect">壇名：</label>
+            <select id="templeSelect" disabled>
+              <option value="">請先圈選組別...</option>
+            </select>
+          </div>
 
-        <!-- =========================
-             姓名欄位
-             功能說明：
-             使用者輸入真實姓名，作為帳號審核與辨識用。
-        ========================= -->
-        <div class="form-group">
-          <label for="registerName">姓名：</label>
-          <input id="registerName" type="text" placeholder="請輸入真實姓名" autocomplete="name" />
-        </div>
+          <div class="form-group">
+            <label for="registerName">姓名：</label>
+            <input id="registerName" type="text" placeholder="請輸入真實姓名" autocomplete="name" />
+          </div>
 
-        <!-- =========================
-             帳號欄位
-             功能說明：
-             使用者輸入 Email 作為登入帳號。
-        ========================= -->
-        <div class="form-group">
-          <label for="registerAccount">帳號：</label>
-          <input id="registerAccount" type="email" placeholder="例如: example@gmail.com" autocomplete="email" />
-        </div>
+          <div class="form-group">
+            <label for="registerAccount">帳號：</label>
+            <input id="registerAccount" type="email" placeholder="例如: example@gmail.com" autocomplete="email" />
+          </div>
 
-        <!-- =========================
-             密碼欄位
-             功能說明：
-             目前設定為輸入手機號碼，開頭不含 0。
-        ========================= -->
-        <div class="form-group">
-          <label for="registerPassword">密碼：</label>
-          <input id="registerPassword" type="password" placeholder="例如: 912345678" inputmode="numeric" />
-          <div class="hint">請輸入手機號碼，開頭不含0</div>
-        </div>
+          <div class="form-group">
+            <label for="registerPassword">密碼：</label>
+            <input id="registerPassword" type="password" placeholder="例如: 912345678" inputmode="numeric" />
+            <div class="hint">請輸入手機號碼，開頭不含0</div>
+          </div>
 
-        <button class="btn" id="registerBtn" type="submit">送出申請</button>
-      </form>
+          <button class="btn app-form-submit-btn" id="registerBtn" type="submit">送出申請</button>
+        </form>
+      </div>
 
-      <!-- =========================
-           返回登入
-           功能說明：
-           使用者可回到 index.html 登入頁。
-      ========================= -->
-      <div class="link-row">
+      <div class="app-form-footer">
         <a class="text-link" href="index.html">返回登入</a>
       </div>
     </div>
@@ -168,3 +162,4 @@
   <script src="./js/pwa.js?v=20260620-001"></script>
 </body>
 </html>
+```

@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 
 <!-- =========================
@@ -8,9 +9,8 @@
      並輸入姓名、帳號與新密碼，
      系統確認身份後更新密碼。
 
-     本頁也加入 PWA 設定，
-     讓網站可以加入手機主畫面，
-     並以類似 App 的方式開啟。
+     本版調整為 PWA App 風格頁面，
+     讓手機主畫面開啟時更像 App。
 ========================= -->
 
 <html lang="zh-Hant">
@@ -39,113 +39,97 @@
        功能說明：
        載入登入頁、申請帳號、忘記密碼、首頁等共用 CSS。
   ========================= -->
-  <link rel="stylesheet" href="./css/style.css?v=20260620-2" />
+  <link rel="stylesheet" href="./css/style.css?v=20260620-7" />
 </head>
 
 <body>
-  <div class="page">
-    <div class="card">
-      <h1>忘記密碼 / 變更密碼</h1>
+  <div class="app-form-page">
+    <div class="app-form-shell">
 
       <!-- =========================
-           訊息顯示區
+           頁面上方操作列
            功能說明：
-           顯示身份確認失敗、密碼格式錯誤、
-           修改成功或系統錯誤等訊息。
+           提供返回登入頁功能。
       ========================= -->
-      <div id="forgotMessage" class="message"></div>
+      <div class="app-form-header">
+        <a class="app-form-back" href="index.html">← 登入</a>
+        <div class="app-form-header-title">變更密碼</div>
+      </div>
 
       <!-- =========================
-           忘記 / 變更密碼表單
+           頁面品牌區
            功能說明：
-           使用者填寫身份資料與新密碼後送出，
-           由 forgot.js 呼叫後端 resetPassword。
+           顯示系統 Logo 與頁面名稱。
       ========================= -->
-      <form id="forgotForm">
+      <div class="app-form-hero">
+        <div class="app-form-logo">道</div>
+        <h1 class="app-form-title">忘記 / 變更密碼</h1>
+      </div>
 
-        <!-- =========================
-             組別選擇區
-             功能說明：
-             使用者先選第1組、第2組或第3組，
-             系統再依組別載入對應壇名。
-        ========================= -->
-        <div class="form-group">
-          <div class="label">組別：</div>
+      <!-- =========================
+           忘記密碼表單卡片
+           功能說明：
+           使用者填寫身份資料與新密碼後送出。
+      ========================= -->
+      <div class="app-form-card">
+        <div id="forgotMessage" class="message"></div>
 
-          <div class="radio-row">
-            <label class="radio-item">
-              <input type="radio" name="forgotGroup" value="1" />
-              第1組
-            </label>
+        <form id="forgotForm">
+          <!-- =========================
+               組別選擇區
+               功能說明：
+               使用者先選第1組、第2組或第3組，
+               系統再依組別載入對應壇名。
+          ========================= -->
+          <div class="form-group">
+            <div class="label">組別：</div>
 
-            <label class="radio-item">
-              <input type="radio" name="forgotGroup" value="2" />
-              第2組
-            </label>
+            <div class="radio-row">
+              <label class="radio-item">
+                <input type="radio" name="forgotGroup" value="1" />
+                第1組
+              </label>
 
-            <label class="radio-item">
-              <input type="radio" name="forgotGroup" value="3" />
-              第3組
-            </label>
+              <label class="radio-item">
+                <input type="radio" name="forgotGroup" value="2" />
+                第2組
+              </label>
+
+              <label class="radio-item">
+                <input type="radio" name="forgotGroup" value="3" />
+                第3組
+              </label>
+            </div>
           </div>
-        </div>
 
-        <!-- =========================
-             壇名選擇區
-             功能說明：
-             預設停用，等使用者選擇組別後，
-             forgot.js 會載入該組壇名選項。
-        ========================= -->
-        <div class="form-group">
-          <label for="forgotTempleSelect">壇名：</label>
-          <select id="forgotTempleSelect" disabled>
-            <option value="">請先圈選組別...</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label for="forgotTempleSelect">壇名：</label>
+            <select id="forgotTempleSelect" disabled>
+              <option value="">請先圈選組別...</option>
+            </select>
+          </div>
 
-        <!-- =========================
-             姓名欄位
-             功能說明：
-             使用者輸入真實姓名，
-             後端會用來比對帳號名單中的資料。
-        ========================= -->
-        <div class="form-group">
-          <label for="forgotName">姓名：</label>
-          <input id="forgotName" type="text" placeholder="請輸入真實姓名" autocomplete="name" />
-        </div>
+          <div class="form-group">
+            <label for="forgotName">姓名：</label>
+            <input id="forgotName" type="text" placeholder="請輸入真實姓名" autocomplete="name" />
+          </div>
 
-        <!-- =========================
-             帳號欄位
-             功能說明：
-             使用者輸入已註冊的 Gmail 帳號，
-             後端會比對是否與壇名、姓名一致。
-        ========================= -->
-        <div class="form-group">
-          <label for="forgotAccount">帳號：</label>
-          <input id="forgotAccount" type="email" placeholder="請輸入註冊的 Gmail" autocomplete="email" />
-        </div>
+          <div class="form-group">
+            <label for="forgotAccount">帳號：</label>
+            <input id="forgotAccount" type="email" placeholder="請輸入註冊的 Gmail" autocomplete="email" />
+          </div>
 
-        <!-- =========================
-             新密碼欄位
-             功能說明：
-             使用者輸入新密碼。
-             規則為至少 8 碼，且需包含英文大寫、小寫與數字。
-        ========================= -->
-        <div class="form-group">
-          <label for="forgotNewPassword">新密碼：</label>
-          <input id="forgotNewPassword" type="password" placeholder="至少8碼，含英文大小寫與數字" autocomplete="new-password" />
-          <div class="hint">新密碼需包含英文大寫、小寫與數字，至少8碼</div>
-        </div>
+          <div class="form-group">
+            <label for="forgotNewPassword">新密碼：</label>
+            <input id="forgotNewPassword" type="password" placeholder="至少8碼，含英文大小寫與數字" autocomplete="new-password" />
+            <div class="hint">新密碼需包含英文大寫、小寫與數字，至少8碼</div>
+          </div>
 
-        <button class="btn" id="forgotBtn" type="submit">確認身份並修改密碼</button>
-      </form>
+          <button class="btn app-form-submit-btn" id="forgotBtn" type="submit">確認身份並修改密碼</button>
+        </form>
+      </div>
 
-      <!-- =========================
-           返回登入
-           功能說明：
-           使用者可回到 index.html 登入頁。
-      ========================= -->
-      <div class="link-row">
+      <div class="app-form-footer">
         <a class="text-link" href="index.html">返回登入</a>
       </div>
     </div>
@@ -173,3 +157,4 @@
   <script src="./js/pwa.js?v=20260620-001"></script>
 </body>
 </html>
+```
