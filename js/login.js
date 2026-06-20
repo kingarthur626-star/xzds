@@ -223,20 +223,45 @@ captchaImage.src = createCaptchaPlaceholderDataUri(text || '產生中');
 內容可以是「產生中」或「載入失敗」。
 ========================= */
 function createCaptchaPlaceholderDataUri(text) {
-const safeText = String(text || '')
-.replace(/&/g, '')
-.replace(/</g, '')
-.replace(/>/g, '')
-.replace(/"/g, '');
+const safeText = String(text || '產生中');
 
-const svg =
-'' +
-'' +
-'' +
-'' +
-safeText +
-'' +
-'';
+const canvas = document.createElement('canvas');
+canvas.width = 150;
+canvas.height = 48;
 
-return 'data/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+const ctx = canvas.getContext('2d');
+
+if (!ctx) {
+return '';
+}
+
+ctx.fillStyle = '#f8fafc';
+ctx.fillRect(0, 0, 150, 48);
+
+ctx.strokeStyle = '#d7dde6';
+ctx.lineWidth = 2;
+roundRect(ctx, 1, 1, 148, 46, 10);
+ctx.stroke();
+
+ctx.fillStyle = '#94a3b8';
+ctx.font = 'bold 15px Arial, sans-serif';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText(safeText, 75, 24);
+
+return canvas.toDataURL('image/png');
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+ctx.beginPath();
+ctx.moveTo(x + radius, y);
+ctx.lineTo(x + width - radius, y);
+ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+ctx.lineTo(x + width, y + height - radius);
+ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+ctx.lineTo(x + radius, y + height);
+ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+ctx.lineTo(x, y + radius);
+ctx.quadraticCurveTo(x, y, x + radius, y);
+ctx.closePath();
 }
