@@ -2664,3 +2664,7 @@ width: 76% !important;
 .app-login-header {
 padding-top: 28px !important;
 }
+
+.app-form-logo {
+display: none !important;
+}
