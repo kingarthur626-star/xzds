@@ -2496,89 +2496,136 @@ padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
 /* =========================
-程式區塊：admin 後台 Android / PWA 版面修正
+程式區塊：admin 後台版面穩定修正版
 功能說明：
-修正 Android 手機上首頁按鈕消失、登出按鈕偏移、
-後台頁面橫向跑版，以及縮小儲存變更按鈕。
+修正電腦、Android、iPhone 後台頁面左右跑版。
+讓首頁 / 登出按鈕與系統後台卡片固定在同一個置中寬度。
+清單改成整頁自然滑動，避免內部捲軸造成跑版。
 ========================= */
 
 body.admin-page {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
+width: 100% !important;
+min-height: 100svh !important;
+height: auto !important;
+overflow-x: hidden !important;
+overflow-y: auto !important;
+background: #f8fafc !important;
 }
 
 body.admin-page .page {
-width: 100%;
-max-width: 100%;
-overflow-x: hidden;
+width: 100% !important;
+min-height: 100svh !important;
+height: auto !important;
+overflow: visible !important;
+display: block !important;
 }
 
 body.admin-page .page-inner {
-width: 100%;
-max-width: 430px;
-margin: 0 auto;
-padding-left: 18px;
-padding-right: 18px;
-box-sizing: border-box;
+width: 100% !important;
+max-width: 430px !important;
+height: auto !important;
+min-height: 100svh !important;
+margin: 0 auto !important;
+padding-left: 18px !important;
+padding-right: 18px !important;
+padding-top: max(14px, env(safe-area-inset-top)) !important;
+padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+box-sizing: border-box !important;
+display: block !important;
 }
 
 body.admin-page .page-action-bar {
-width: 100%;
-max-width: 430px;
-margin: 0 auto;
-box-sizing: border-box;
-display: flex;
-justify-content: space-between;
-align-items: center;
-gap: 12px;
-left: 0;
-right: 0;
+width: 100% !important;
+max-width: 100% !important;
+margin: 0 0 18px 0 !important;
+padding: 10px 0 14px 0 !important;
+box-sizing: border-box !important;
+display: flex !important;
+justify-content: space-between !important;
+align-items: center !important;
+gap: 12px !important;
+position: sticky !important;
+top: 0 !important;
+left: auto !important;
+right: auto !important;
+z-index: 50 !important;
+background: #f8fafc !important;
+border-bottom: 1px solid #dbe3ec !important;
+transform: none !important;
 }
 
 body.admin-page .page-action-bar .action-pill {
-min-width: 110px;
-max-width: 140px;
-height: 44px;
-padding: 0 18px;
-flex: 0 0 auto;
+min-width: 96px !important;
+max-width: 138px !important;
+height: 42px !important;
+padding: 0 16px !important;
+flex: 0 0 auto !important;
+font-size: 15px !important;
+box-sizing: border-box !important;
 }
 
 body.admin-page .admin-card {
-width: 100%;
-max-width: 100%;
-box-sizing: border-box;
+width: 100% !important;
+max-width: 100% !important;
+height: auto !important;
+min-height: 0 !important;
+margin: 0 !important;
+box-sizing: border-box !important;
+display: block !important;
+overflow: visible !important;
+}
+
+body.admin-page .admin-toolbar {
+width: 100% !important;
+box-sizing: border-box !important;
+}
+
+body.admin-page .admin-account-list {
+width: 100% !important;
+max-height: none !important;
+height: auto !important;
+overflow: visible !important;
+padding-bottom: 40px !important;
 }
 
 body.admin-page .admin-account-card {
-width: 100%;
-box-sizing: border-box;
+width: 100% !important;
+box-sizing: border-box !important;
 }
 
 body.admin-page .admin-save-btn {
-width: 76%;
-max-width: 260px;
-height: 38px;
-margin-left: auto;
-margin-right: auto;
-display: block;
-font-size: 14px;
-border-radius: 12px;
+width: 68% !important;
+max-width: 220px !important;
+height: 36px !important;
+margin: 12px auto 0 auto !important;
+display: block !important;
+font-size: 14px !important;
+border-radius: 11px !important;
+}
+
+@media (min-width: 768px) {
+body.admin-page .page-inner {
+max-width: 430px !important;
+}
+
+body.admin-page .admin-save-btn {
+width: 60% !important;
+}
 }
 
 @media (max-width: 390px) {
 body.admin-page .page-inner {
-padding-left: 14px;
-padding-right: 14px;
+padding-left: 14px !important;
+padding-right: 14px !important;
 }
 
 body.admin-page .page-action-bar .action-pill {
-min-width: 96px;
-height: 42px;
-font-size: 15px;
+min-width: 88px !important;
+height: 40px !important;
+font-size: 14px !important;
 }
 
 body.admin-page .admin-save-btn {
-width: 82%;
+width: 76% !important;
 }
 }
