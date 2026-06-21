@@ -3106,3 +3106,71 @@ body.duty-activity-list-page .page-inner {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+程式區塊：道務活動列表表格式呈現
+功能說明：
+將活動列表改成 日期 / 道務活動 / 人數 / 地點 / 規劃 的表格式卡片。
+點擊卡片可跳出日期區間與備註。
+========================= */
+
+.activity-list-item.compact {
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+}
+
+.activity-table-row {
+  display: grid;
+  grid-template-columns: 1.05fr 2fr 0.8fr 1fr 0.8fr;
+  align-items: center;
+}
+
+.activity-table-row > div {
+  padding: 10px 8px;
+  border-right: 1px solid #e2e8f0;
+  word-break: break-word;
+}
+
+.activity-table-row > div:last-child {
+  border-right: none;
+}
+
+.activity-table-head {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.activity-table-body {
+  background: #ffffff;
+  color: #143b63;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.activity-table-body > div:nth-child(2) {
+  text-align: left;
+}
+
+@media (max-width: 390px) {
+  .activity-table-row {
+    grid-template-columns: 1fr 1.8fr 0.7fr 0.9fr 0.7fr;
+  }
+
+  .activity-table-row > div {
+    padding: 9px 5px;
+  }
+
+  .activity-table-head {
+    font-size: 11px;
+  }
+
+  .activity-table-body {
+    font-size: 13px;
+  }
+}
