@@ -46,11 +46,11 @@ function bindDutyActivityButtons_() {
   const form = document.getElementById('dutyActivityForm');
   const peopleMode = document.getElementById('peopleMode');
 
-  if (backBtn) {
-    backBtn.addEventListener('click', function () {
-      location.href = 'admin.html';
-    });
-  }
+if (backBtn) {
+  backBtn.addEventListener('click', function () {
+    location.href = 'duty-activity-list.html';
+  });
+}
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function () {

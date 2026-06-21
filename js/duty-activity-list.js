@@ -156,33 +156,97 @@ function renderDutyActivityList_() {
   }
 
   area.innerHTML = htmlParts.join('');
+  bindActivityListCards_();
 }
 
 function createActivityListCardHtml_(item) {
   const title = escapeActivityListHtml_(item.activityName || '');
-  const dateStart = escapeActivityListHtml_(item.dateStart || '');
-  const dateEnd = escapeActivityListHtml_(item.dateEnd || '');
-  const peopleMode = escapeActivityListHtml_(item.peopleMode || '');
-  const peopleCount = escapeActivityListHtml_(item.peopleCount || '');
+  const dateStart = escapeActivityListHtml_(formatActivityListDate_(item.dateStart || ''));
+  const dateRange = escapeActivityListHtml_(formatActivityListDateRange_(item.dateStart, item.dateEnd));
+  const peopleCount = escapeActivityListHtml_(item.peopleCount || '—');
   const location = escapeActivityListHtml_(item.location || '—');
   const planning = escapeActivityListHtml_(item.planning || '—');
   const note = escapeActivityListHtml_(item.note || '');
 
   return '' +
-    '<div class="activity-list-item">' +
-      '<div class="activity-list-title">' + title + '</div>' +
-      '<div class="activity-list-date">' + dateStart + ' ～ ' + dateEnd + '</div>' +
-
-      '<div class="activity-list-meta">' +
-        '<div><span>人數模式</span><strong>' + peopleMode + '</strong></div>' +
-        '<div><span>人數</span><strong>' + (peopleCount || '—') + '</strong></div>' +
-        '<div><span>地點</span><strong>' + location + '</strong></div>' +
-        '<div><span>規劃</span><strong>' + planning + '</strong></div>' +
+    '<div class="activity-list-item compact" data-note="' + note + '" data-date-range="' + dateRange + '" data-title="' + title + '">' +
+      '<div class="activity-table-row activity-table-head">' +
+        '<div>日期</div>' +
+        '<div>道務活動</div>' +
+        '<div>人數</div>' +
+        '<div>地點</div>' +
+        '<div>規劃</div>' +
       '</div>' +
 
-      (note ? '<div class="activity-list-note">備註：' + note + '</div>' : '') +
+      '<div class="activity-table-row activity-table-body">' +
+        '<div>' + dateStart + '</div>' +
+        '<div>' + title + '</div>' +
+        '<div>' + peopleCount + '</div>' +
+        '<div>' + location + '</div>' +
+        '<div>' + planning + '</div>' +
+      '</div>' +
     '</div>';
 }
+
+function bindActivityListCards_() {
+  const cards = document.querySelectorAll('.activity-list-item.compact');
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+
+    card.addEventListener('click', function () {
+      const title = card.getAttribute('data-title') || '';
+      const dateRange = card.getAttribute('data-date-range') || '';
+      const note = card.getAttribute('data-note') || '';
+
+      let text = title;
+
+      if (dateRange) {
+        text += '\\n日期：' + dateRange;
+      }
+
+      if (note) {
+        text += '\\n\\n備註：' + note;
+      } else {
+        text += '\\n\\n備註：無';
+      }
+
+      alert(text);
+    });
+  }
+}
+
+function formatActivityListDate_(value) {
+  const text = normalizeActivityListText_(value);
+
+  if (!text) return '';
+
+  const compact = text.replace(/[\/\-\.]/g, '');
+
+  if (/^\d{8}$/.test(compact)) {
+    return compact.substring(4, 6) + '/' + compact.substring(6, 8);
+  }
+
+  if (/^\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}$/.test(text)) {
+    return text.substring(5).replace(/-/g, '/').replace(/\./g, '/');
+  }
+
+  return text;
+}
+
+function formatActivityListDateRange_(dateStart, dateEnd) {
+  const startText = normalizeActivityListText_(dateStart);
+  const endText = normalizeActivityListText_(dateEnd);
+
+  if (!startText) return '';
+
+  if (!endText || startText === endText) {
+    return startText;
+  }
+
+  return startText + '～' + endText;
+}
+
 
 function showActivityListMessage_(text, type) {
   const el = document.getElementById('activityListMessage');
