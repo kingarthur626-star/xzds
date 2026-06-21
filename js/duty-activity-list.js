@@ -189,31 +189,32 @@ function createActivityListCardHtml_(item) {
 }
 
 function bindActivityListCards_() {
-  const cards = document.querySelectorAll('.activity-list-item.compact');
+const cards = document.querySelectorAll('.activity-list-item.compact');
 
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
+for (let i = 0; i < cards.length; i++) {
+const card = cards[i];
 
-    card.addEventListener('click', function () {
-      const title = card.getAttribute('data-title') || '';
-      const dateRange = card.getAttribute('data-date-range') || '';
-      const note = card.getAttribute('data-note') || '';
+card.addEventListener('click', function () {
+  const title = card.getAttribute('data-title') || '';
+  const dateRange = card.getAttribute('data-date-range') || '';
+  const note = card.getAttribute('data-note') || '';
 
-      let text = title;
+  let text = title;
 
-      if (dateRange) {
-        text += '\n日期：' + dateRange;
-      }
-
-      if (note) {
-        text += '\n\n備註：' + note;
-      } else {
-        text += '\n\\n備註：無';
-      }
-
-      alert(text);
-    });
+  if (dateRange) {
+    text += '\n日期：' + dateRange;
   }
+
+  if (note) {
+    text += '\n備註：' + note;
+  } else {
+    text += '\n備註：無';
+  }
+
+  alert(text);
+});
+
+}
 }
 
 function formatActivityListDate_(value) {
