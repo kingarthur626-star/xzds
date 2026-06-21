@@ -92,6 +92,13 @@ const btnAnnual = document.getElementById('btnAnnual');
 const btnHistory = document.getElementById('btnHistory');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnLogout = document.getElementById('btnLogout');
+const btnDutyActivityList = document.getElementById('btnDutyActivityList');
+
+if (btnDutyActivityList) {
+  btnDutyActivityList.addEventListener('click', function () {
+    location.href = 'duty-activity-list.html';
+  });
+}
 
 if (btnAnnual) {
 btnAnnual.addEventListener('click', function () {
