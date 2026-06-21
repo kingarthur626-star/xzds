@@ -3310,3 +3310,15 @@ color: #ffffff;
 font-size: 17px;
 font-weight: 900;
 }
+
+.activity-list-item.compact:not(:first-child) .activity-table-head {
+display: none;
+}
+
+.activity-list-area {
+gap: 8px;
+}
+
+.activity-list-item.compact:not(:first-child) {
+margin-top: 0;
+}
