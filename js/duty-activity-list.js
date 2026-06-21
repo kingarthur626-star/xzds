@@ -199,19 +199,26 @@ card.addEventListener('click', function () {
   const dateRange = card.getAttribute('data-date-range') || '';
   const note = card.getAttribute('data-note') || '';
 
-  let text = title;
+  const lineBreak = String.fromCharCode(10);
+
+  const lines = [];
+
+  lines.push(title);
+  lines.push('');
 
   if (dateRange) {
-    text += '\n日期：' + dateRange;
+    lines.push('日期：' + dateRange);
   }
+
+  lines.push('');
 
   if (note) {
-    text += '\n備註：' + note;
+    lines.push('備註：' + note);
   } else {
-    text += '\n備註：無';
+    lines.push('備註：無');
   }
 
-  alert(text);
+  alert(lines.join(lineBreak));
 });
 
 }
