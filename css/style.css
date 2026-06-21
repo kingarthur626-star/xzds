@@ -3174,3 +3174,41 @@ body.duty-activity-list-page .page-inner {
     font-size: 13px;
   }
 }
+
+.activity-title-row {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+margin-bottom: 22px;
+}
+
+.activity-title-row h1 {
+margin: 0;
+}
+
+.activity-title-row .admin-small-btn {
+width: auto;
+min-width: 92px;
+height: 38px;
+padding: 0 14px;
+font-size: 14px;
+flex-shrink: 0;
+}
+
+@media (max-width: 390px) {
+.activity-title-row {
+gap: 10px;
+}
+
+.activity-title-row h1 {
+font-size: 28px;
+}
+
+.activity-title-row .admin-small-btn {
+min-width: 86px;
+height: 36px;
+font-size: 13px;
+padding: 0 10px;
+}
+}
