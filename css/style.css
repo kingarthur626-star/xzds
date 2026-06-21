@@ -3322,3 +3322,29 @@ gap: 8px;
 .activity-list-item.compact:not(:first-child) {
 margin-top: 0;
 }
+
+.activity-list-area {
+gap: 0 !important;
+}
+
+.activity-list-item.compact {
+margin: 0 !important;
+border-radius: 0 !important;
+box-shadow: none !important;
+border-bottom: none !important;
+}
+
+.activity-list-item.compact:not(:first-child) {
+border-top: none !important;
+}
+
+.activity-list-item.compact:first-child {
+border-top-left-radius: 18px !important;
+border-top-right-radius: 18px !important;
+}
+
+.activity-list-item.compact:last-child {
+border-bottom-left-radius: 18px !important;
+border-bottom-right-radius: 18px !important;
+border-bottom: 1px solid #e2e8f0 !important;
+}
