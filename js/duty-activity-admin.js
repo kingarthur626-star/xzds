@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!user) return;
 
   bindDutyActivityButtons_();
+  initDutyActivityMobilePickers_();
   loadDutyActivityAdminData_();
 });
 
@@ -144,6 +145,262 @@ async function loadDutyActivityAdminData_() {
 }
 
 /* =========================
+函式名稱：initDutyActivityMobilePickers_
+功能說明：
+初始化手機可用的自製下拉選單。
+原因：
+iOS Safari 與部分 Android 瀏覽器對 datalist 支援不穩，
+因此保留 datalist，同時另外建立可點選的選單。
+========================= */
+function initDutyActivityMobilePickers_() {
+  injectDutyActivityPickerStyle_();
+
+  setupDutyActivityMobilePicker_({
+    inputId: 'activityName',
+    pickerId: 'activityNamePicker',
+    getOptions: function () {
+      return dutyActivityOptions || [];
+    }
+  });
+
+  setupDutyActivityMobilePicker_({
+    inputId: 'location',
+    pickerId: 'locationPicker',
+    getOptions: function () {
+      return dutyLocationOptions || [];
+    }
+  });
+
+  document.addEventListener('click', function (event) {
+    const target = event.target;
+
+    if (!target.closest || !target.closest('.duty-picker-wrap')) {
+      hideDutyActivityMobilePickers_();
+    }
+  });
+}
+
+/* =========================
+函式名稱：setupDutyActivityMobilePicker_
+功能說明：
+為指定 input 建立自製選單容器與事件。
+========================= */
+function setupDutyActivityMobilePicker_(config) {
+  const input = document.getElementById(config.inputId);
+
+  if (!input) return;
+
+  let picker = document.getElementById(config.pickerId);
+
+  if (!picker) {
+    picker = document.createElement('div');
+    picker.id = config.pickerId;
+    picker.className = 'duty-mobile-picker';
+  }
+
+  const parent = input.parentNode;
+
+  if (parent && !parent.classList.contains('duty-picker-wrap')) {
+    parent.classList.add('duty-picker-wrap');
+  }
+
+  if (parent && picker.parentNode !== parent) {
+    parent.appendChild(picker);
+  }
+
+  input.setAttribute('autocomplete', 'off');
+
+  input.addEventListener('focus', function () {
+    renderDutyActivityMobilePicker_(config.inputId, config.pickerId, config.getOptions());
+    showDutyActivityMobilePicker_(config.pickerId);
+  });
+
+  input.addEventListener('click', function () {
+    renderDutyActivityMobilePicker_(config.inputId, config.pickerId, config.getOptions());
+    showDutyActivityMobilePicker_(config.pickerId);
+  });
+
+  input.addEventListener('input', function () {
+    renderDutyActivityMobilePicker_(config.inputId, config.pickerId, config.getOptions());
+    showDutyActivityMobilePicker_(config.pickerId);
+  });
+
+  input.addEventListener('blur', function () {
+    setTimeout(function () {
+      hideDutyActivityMobilePicker_(config.pickerId);
+    }, 180);
+  });
+}
+
+/* =========================
+函式名稱：renderDutyActivityMobilePicker_
+功能說明：
+依照目前輸入內容，產生活動名稱或地點選項。
+========================= */
+function renderDutyActivityMobilePicker_(inputId, pickerId, options) {
+  const input = document.getElementById(inputId);
+  const picker = document.getElementById(pickerId);
+
+  if (!input || !picker) return;
+
+  const keyword = normalizeDutyActivityText_(input.value).toLowerCase();
+  const sourceOptions = options || [];
+  const matched = [];
+
+  for (let i = 0; i < sourceOptions.length; i++) {
+    const optionText = normalizeDutyActivityText_(sourceOptions[i]);
+
+    if (!optionText) continue;
+
+    if (!keyword || optionText.toLowerCase().indexOf(keyword) >= 0) {
+      matched.push(optionText);
+    }
+
+    if (matched.length >= 30) {
+      break;
+    }
+  }
+
+  if (matched.length === 0) {
+    picker.innerHTML = '<div class="duty-mobile-picker-empty">沒有可選項目，可自行輸入</div>';
+    return;
+  }
+
+  picker.innerHTML = matched.map(function (text) {
+    return '<button class="duty-mobile-picker-option" type="button" data-value="' +
+      escapeDutyActivityHtml_(text) +
+      '">' +
+      escapeDutyActivityHtml_(text) +
+      '</button>';
+  }).join('');
+
+  const buttons = picker.querySelectorAll('.duty-mobile-picker-option');
+
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('mousedown', function (event) {
+      event.preventDefault();
+      selectDutyActivityMobilePickerValue_(inputId, pickerId, this.getAttribute('data-value'));
+    });
+
+    buttons[i].addEventListener('touchstart', function (event) {
+      event.preventDefault();
+      selectDutyActivityMobilePickerValue_(inputId, pickerId, this.getAttribute('data-value'));
+    }, { passive: false });
+
+    buttons[i].addEventListener('click', function (event) {
+      event.preventDefault();
+      selectDutyActivityMobilePickerValue_(inputId, pickerId, this.getAttribute('data-value'));
+    });
+  }
+}
+
+/* =========================
+函式名稱：selectDutyActivityMobilePickerValue_
+功能說明：
+選取自製選單項目後，回填 input。
+========================= */
+function selectDutyActivityMobilePickerValue_(inputId, pickerId, value) {
+  const input = document.getElementById(inputId);
+
+  if (!input) return;
+
+  input.value = value || '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  hideDutyActivityMobilePicker_(pickerId);
+}
+
+/* =========================
+函式名稱：showDutyActivityMobilePicker_
+功能說明：
+顯示指定自製選單。
+========================= */
+function showDutyActivityMobilePicker_(pickerId) {
+  const picker = document.getElementById(pickerId);
+
+  if (!picker) return;
+
+  picker.style.display = 'block';
+}
+
+/* =========================
+函式名稱：hideDutyActivityMobilePicker_
+功能說明：
+隱藏指定自製選單。
+========================= */
+function hideDutyActivityMobilePicker_(pickerId) {
+  const picker = document.getElementById(pickerId);
+
+  if (!picker) return;
+
+  picker.style.display = 'none';
+}
+
+/* =========================
+函式名稱：hideDutyActivityMobilePickers_
+功能說明：
+隱藏全部自製選單。
+========================= */
+function hideDutyActivityMobilePickers_() {
+  hideDutyActivityMobilePicker_('activityNamePicker');
+  hideDutyActivityMobilePicker_('locationPicker');
+}
+
+/* =========================
+函式名稱：injectDutyActivityPickerStyle_
+功能說明：
+注入自製選單樣式，避免另外修改 style.css。
+========================= */
+function injectDutyActivityPickerStyle_() {
+  if (document.getElementById('dutyActivityPickerStyle')) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = 'dutyActivityPickerStyle';
+  style.textContent = [
+    '.duty-picker-wrap{position:relative;}',
+    '.duty-mobile-picker{',
+      'display:none;',
+      'position:absolute;',
+      'left:0;',
+      'right:0;',
+      'top:calc(100% + 6px);',
+      'z-index:30;',
+      'max-height:230px;',
+      'overflow:auto;',
+      'background:#fff;',
+      'border:1px solid #cdd9ea;',
+      'border-radius:14px;',
+      'box-shadow:0 10px 24px rgba(15,45,75,.16);',
+      'padding:6px;',
+    '}',
+    '.duty-mobile-picker-option{',
+      'display:block;',
+      'width:100%;',
+      'border:0;',
+      'background:#fff;',
+      'text-align:left;',
+      'font-size:15px;',
+      'font-weight:700;',
+      'color:#06365f;',
+      'padding:12px 14px;',
+      'border-radius:10px;',
+    '}',
+    '.duty-mobile-picker-option:active,.duty-mobile-picker-option:hover{',
+      'background:#edf5ff;',
+    '}',
+    '.duty-mobile-picker-empty{',
+      'font-size:14px;',
+      'color:#7b8ea8;',
+      'padding:12px 14px;',
+    '}'
+  ].join('');
+
+  document.head.appendChild(style);
+}
+
+
+/* =========================
 函式名稱：renderDutyDatalist_
 功能說明：
 渲染活動名稱與地點 datalist。
@@ -163,6 +420,9 @@ function renderDutyDatalist_() {
       return '<option value="' + escapeDutyActivityHtml_(name) + '"></option>';
     }).join('');
   }
+
+  renderDutyActivityMobilePicker_('activityName', 'activityNamePicker', dutyActivityOptions);
+  renderDutyActivityMobilePicker_('location', 'locationPicker', dutyLocationOptions);
 }
 
 /* =========================
@@ -207,7 +467,6 @@ function createDutyActivityCardHtml_(item) {
   const dateRange = escapeDutyActivityHtml_((item.dateStart || '') + ' ～ ' + (item.dateEnd || ''));
   const peopleMode = escapeDutyActivityHtml_(item.peopleMode || '');
   const peopleCount = escapeDutyActivityHtml_(item.peopleCount || '');
-  const peopleCountDisplay = peopleCount || (item.peopleMode === '手動' ? '—' : '由系統自動計算');
   const location = escapeDutyActivityHtml_(item.location || '—');
   const planning = escapeDutyActivityHtml_(item.planning || '—');
   const status = escapeDutyActivityHtml_(item.status || '啟用');
@@ -230,7 +489,7 @@ function createDutyActivityCardHtml_(item) {
 
       '<div class="duty-item-meta">' +
         '<span>模式：' + peopleMode + '</span>' +
-        '<span>人數：' + peopleCountDisplay + '</span>' +
+        '<span>人數：' + (peopleCount || '—') + '</span>' +
         '<span>地點：' + location + '</span>' +
         '<span>規劃：' + planning + '</span>' +
       '</div>' +
@@ -363,7 +622,7 @@ async function saveDutyActivityFromForm_() {
 
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.textContent = payload.peopleMode === '手動' ? '儲存中...' : '儲存並統計中...';
+    saveBtn.textContent = '儲存中...';
   }
 
   try {
@@ -373,20 +632,7 @@ async function saveDutyActivityFromForm_() {
       throw new Error(result.message || '儲存失敗');
     }
 
-    let successMessage = result.message || '儲存完成';
-
-    if (payload.peopleMode !== '手動') {
-      const calculatedCount =
-        result.peopleCount ||
-        result.calculatedCount ||
-        (result.stats && result.stats.totalCount);
-
-      if (calculatedCount !== undefined && calculatedCount !== null && calculatedCount !== '') {
-        successMessage += '，系統統計人數：' + calculatedCount;
-      }
-    }
-
-    showDutyActivityMessage_(successMessage, 'success');
+    showDutyActivityMessage_(result.message || '儲存完成', 'success');
 
     resetDutyActivityForm_();
     loadDutyActivityAdminData_();
@@ -471,7 +717,7 @@ function resetDutyActivityForm_() {
 功能說明：
 依照人數模式控制人數欄位。
 手動：可輸入。
-求道統計 / 法會統計：不可輸入，由系統自動計算。
+求道統計 / 法會統計：先不可輸入，下一階段由系統統計。
 ========================= */
 function updatePeopleCountState_() {
   const peopleMode = getInputValue_('peopleMode');
