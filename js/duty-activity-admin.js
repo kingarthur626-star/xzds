@@ -25,13 +25,13 @@ let dutyActivityOptions = [];
 let dutyLocationOptions = [];
 
 const DUTY_ACTIVITY_FALLBACK_ACTIVITY_OPTIONS = [
-  '護經關闡',
-  '觀音辦道週',
-  '親其親班務法會',
+  '孝親活動',
   '報恩法會',
   '樂活養生嘉年華',
-  '孝親活動',
-  '觀音孝親祈福'
+  '親其親班務法會',
+  '護經闖關',
+  '觀音孝親祈福',
+  '觀音辦道週'
 ];
 
 const DUTY_ACTIVITY_FALLBACK_LOCATION_OPTIONS = [
@@ -60,9 +60,9 @@ function bindDutyActivityButtons_() {
   const clearBtn = document.getElementById('clearActivityBtn');
   const form = document.getElementById('dutyActivityForm');
   const peopleMode = document.getElementById('peopleMode');
-  const activityNameSelect = document.getElementById('activityNameSelect');
+  const activityName = document.getElementById('activityName');
   const activityNameCustom = document.getElementById('activityNameCustom');
-  const locationSelect = document.getElementById('locationSelect');
+  const location = document.getElementById('location');
   const locationCustom = document.getElementById('locationCustom');
 
 if (backBtn) {
@@ -102,28 +102,24 @@ if (backBtn) {
     });
   }
 
-  if (activityNameSelect) {
-    activityNameSelect.addEventListener('change', function () {
-      syncDutyActivitySelectToHidden_('activityName');
+  if (activityName) {
+    activityName.addEventListener('change', function () {
+      updateDutyActivityCustomInputState_('activityName');
     });
   }
 
   if (activityNameCustom) {
-    activityNameCustom.addEventListener('input', function () {
-      syncDutyActivitySelectToHidden_('activityName');
-    });
+    activityNameCustom.addEventListener('input', function () {});
   }
 
-  if (locationSelect) {
-    locationSelect.addEventListener('change', function () {
-      syncDutyActivitySelectToHidden_('location');
+  if (location) {
+    location.addEventListener('change', function () {
+      updateDutyActivityCustomInputState_('location');
     });
   }
 
   if (locationCustom) {
-    locationCustom.addEventListener('input', function () {
-      syncDutyActivitySelectToHidden_('location');
-    });
+    locationCustom.addEventListener('input', function () {});
   }
 }
 
@@ -189,114 +185,40 @@ async function loadDutyActivityAdminData_() {
 /* =========================
 函式名稱：renderDutyDatalist_
 功能說明：
-渲染活動名稱與地點的手機穩定版下拉選單。
+渲染活動名稱與地點原生下拉選單。
 ========================= */
 function renderDutyDatalist_() {
-  const activityOptions = mergeDutyActivitySelectOptions_(
-    dutyActivityOptions,
-    getDutyActivityNamesFromItems_(),
-    DUTY_ACTIVITY_FALLBACK_ACTIVITY_OPTIONS
-  );
+  const currentActivityName = getDutyActivityFieldValue_('activityName');
+  const currentLocation = getDutyActivityFieldValue_('location');
 
-  const locationOptions = mergeDutyActivitySelectOptions_(
-    dutyLocationOptions,
-    getDutyActivityLocationsFromItems_(),
-    DUTY_ACTIVITY_FALLBACK_LOCATION_OPTIONS
-  );
-
-  renderDutyActivitySelectOptions_(
-    'activityNameSelect',
-    activityOptions,
+  renderDutyActivityNativeSelect_(
+    'activityName',
+    mergeDutyActivityOptions_(dutyActivityOptions, getDutyActivityNamesFromItems_(), DUTY_ACTIVITY_FALLBACK_ACTIVITY_OPTIONS),
     '請選擇',
     true
   );
 
-  renderDutyActivitySelectOptions_(
-    'locationSelect',
-    locationOptions,
+  renderDutyActivityNativeSelect_(
+    'location',
+    mergeDutyActivityOptions_(dutyLocationOptions, getDutyActivityLocationsFromItems_(), DUTY_ACTIVITY_FALLBACK_LOCATION_OPTIONS),
     '可空白',
     true
   );
 
-  syncDutyActivitySelectFromHidden_('activityName');
-  syncDutyActivitySelectFromHidden_('location');
+  setDutyActivityFieldValue_('activityName', currentActivityName);
+  setDutyActivityFieldValue_('location', currentLocation);
 }
 
 /* =========================
-函式名稱：mergeDutyActivitySelectOptions_
+函式名稱：renderDutyActivityNativeSelect_
 功能說明：
-合併後端選項、既有活動資料、預設選項，避免手機只剩「請選擇」。
+將選項渲染到原生 select。
 ========================= */
-function mergeDutyActivitySelectOptions_() {
-  const result = [];
-  const seen = {};
-
-  for (let a = 0; a < arguments.length; a++) {
-    const list = arguments[a] || [];
-
-    for (let i = 0; i < list.length; i++) {
-      const text = normalizeDutyActivityText_(list[i]);
-
-      if (!text) continue;
-      if (seen[text]) continue;
-
-      seen[text] = true;
-      result.push(text);
-    }
-  }
-
-  return result;
-}
-
-/* =========================
-函式名稱：getDutyActivityNamesFromItems_
-功能說明：
-從既有活動設定中補出活動名稱選項。
-========================= */
-function getDutyActivityNamesFromItems_() {
-  const result = [];
-
-  for (let i = 0; i < dutyActivityItems.length; i++) {
-    const name = normalizeDutyActivityText_(dutyActivityItems[i].activityName);
-
-    if (name) {
-      result.push(name);
-    }
-  }
-
-  return result;
-}
-
-/* =========================
-函式名稱：getDutyActivityLocationsFromItems_
-功能說明：
-從既有活動設定中補出地點選項。
-========================= */
-function getDutyActivityLocationsFromItems_() {
-  const result = [];
-
-  for (let i = 0; i < dutyActivityItems.length; i++) {
-    const location = normalizeDutyActivityText_(dutyActivityItems[i].location);
-
-    if (location) {
-      result.push(location);
-    }
-  }
-
-  return result;
-}
-
-/* =========================
-函式名稱：renderDutyActivitySelectOptions_
-功能說明：
-將選項資料渲染到 select。
-========================= */
-function renderDutyActivitySelectOptions_(selectId, options, emptyText, allowCustom) {
+function renderDutyActivityNativeSelect_(selectId, options, emptyText, allowCustom) {
   const select = document.getElementById(selectId);
 
   if (!select) return;
 
-  const currentValue = normalizeDutyActivityText_(select.value);
   const htmlParts = [];
 
   htmlParts.push('<option value="">' + escapeDutyActivityHtml_(emptyText || '請選擇') + '</option>');
@@ -320,82 +242,127 @@ function renderDutyActivitySelectOptions_(selectId, options, emptyText, allowCus
   }
 
   select.innerHTML = htmlParts.join('');
-
-  if (currentValue) {
-    select.value = currentValue;
-  }
 }
 
 /* =========================
-函式名稱：syncDutyActivitySelectToHidden_
+函式名稱：mergeDutyActivityOptions_
 功能說明：
-把 select / 自行輸入框同步到真正送出的 hidden input。
+合併後端選項、既有資料與預設選項。
 ========================= */
-function syncDutyActivitySelectToHidden_(fieldName) {
-  const hidden = document.getElementById(fieldName);
-  const select = document.getElementById(fieldName + 'Select');
-  const custom = document.getElementById(fieldName + 'Custom');
+function mergeDutyActivityOptions_() {
+  const result = [];
+  const seen = {};
 
-  if (!hidden || !select) return;
+  for (let a = 0; a < arguments.length; a++) {
+    const list = arguments[a] || [];
+
+    for (let i = 0; i < list.length; i++) {
+      const text = normalizeDutyActivityText_(list[i]);
+
+      if (!text || seen[text]) continue;
+
+      seen[text] = true;
+      result.push(text);
+    }
+  }
+
+  return result;
+}
+
+/* =========================
+函式名稱：getDutyActivityNamesFromItems_
+功能說明：
+從既有活動設定補活動名稱。
+========================= */
+function getDutyActivityNamesFromItems_() {
+  const result = [];
+
+  for (let i = 0; i < dutyActivityItems.length; i++) {
+    const name = normalizeDutyActivityText_(dutyActivityItems[i].activityName);
+
+    if (name) {
+      result.push(name);
+    }
+  }
+
+  return result;
+}
+
+/* =========================
+函式名稱：getDutyActivityLocationsFromItems_
+功能說明：
+從既有活動設定補地點。
+========================= */
+function getDutyActivityLocationsFromItems_() {
+  const result = [];
+
+  for (let i = 0; i < dutyActivityItems.length; i++) {
+    const location = normalizeDutyActivityText_(dutyActivityItems[i].location);
+
+    if (location) {
+      result.push(location);
+    }
+  }
+
+  return result;
+}
+
+/* =========================
+函式名稱：getDutyActivityFieldValue_
+功能說明：
+取得原生 select 或自行輸入欄位的實際值。
+========================= */
+function getDutyActivityFieldValue_(fieldId) {
+  const select = document.getElementById(fieldId);
+  const custom = document.getElementById(fieldId + 'Custom');
+
+  if (!select) return '';
 
   if (select.value === '__CUSTOM__') {
-    if (custom) {
-      custom.style.display = '';
-      hidden.value = normalizeDutyActivityText_(custom.value);
-      custom.focus();
-    }
-
-    return;
+    return normalizeDutyActivityText_(custom && custom.value);
   }
 
-  if (custom) {
-    custom.style.display = 'none';
-    custom.value = '';
-  }
-
-  hidden.value = normalizeDutyActivityText_(select.value);
+  return normalizeDutyActivityText_(select.value);
 }
 
 /* =========================
-函式名稱：syncDutyActivitySelectFromHidden_
+函式名稱：setDutyActivityFieldValue_
 功能說明：
-編輯既有資料時，將 hidden input 的值帶回 select 或自行輸入框。
+設定原生 select 或自行輸入欄位。
 ========================= */
-function syncDutyActivitySelectFromHidden_(fieldName) {
-  const hidden = document.getElementById(fieldName);
-  const select = document.getElementById(fieldName + 'Select');
-  const custom = document.getElementById(fieldName + 'Custom');
+function setDutyActivityFieldValue_(fieldId, value) {
+  const select = document.getElementById(fieldId);
+  const custom = document.getElementById(fieldId + 'Custom');
+  const cleanValue = normalizeDutyActivityText_(value);
 
-  if (!hidden || !select) return;
+  if (!select) return;
 
-  const value = normalizeDutyActivityText_(hidden.value);
-
-  if (!value) {
+  if (!cleanValue) {
     select.value = '';
 
     if (custom) {
-      custom.style.display = 'none';
       custom.value = '';
+      custom.style.display = 'none';
     }
 
     return;
   }
 
-  let optionExists = false;
+  let exists = false;
 
   for (let i = 0; i < select.options.length; i++) {
-    if (select.options[i].value === value) {
-      optionExists = true;
+    if (select.options[i].value === cleanValue) {
+      exists = true;
       break;
     }
   }
 
-  if (optionExists) {
-    select.value = value;
+  if (exists) {
+    select.value = cleanValue;
 
     if (custom) {
-      custom.style.display = 'none';
       custom.value = '';
+      custom.style.display = 'none';
     }
 
     return;
@@ -404,19 +371,29 @@ function syncDutyActivitySelectFromHidden_(fieldName) {
   select.value = '__CUSTOM__';
 
   if (custom) {
+    custom.value = cleanValue;
     custom.style.display = '';
-    custom.value = value;
   }
 }
 
 /* =========================
-函式名稱：syncDutyActivityHiddenFields_
+函式名稱：updateDutyActivityCustomInputState_
 功能說明：
-送出表單前，確保 hidden input 已同步最新選擇。
+控制自行輸入欄位顯示。
 ========================= */
-function syncDutyActivityHiddenFields_() {
-  syncDutyActivitySelectToHidden_('activityName');
-  syncDutyActivitySelectToHidden_('location');
+function updateDutyActivityCustomInputState_(fieldId) {
+  const select = document.getElementById(fieldId);
+  const custom = document.getElementById(fieldId + 'Custom');
+
+  if (!select || !custom) return;
+
+  if (select.value === '__CUSTOM__') {
+    custom.style.display = '';
+    custom.focus();
+  } else {
+    custom.value = '';
+    custom.style.display = 'none';
+  }
 }
 
 /* =========================
@@ -547,16 +524,13 @@ function editDutyActivity_(id) {
   setInputValue_('activityId', item.id);
   setInputValue_('dateStart', toHtmlDateValue_(item.dateStart));
   setInputValue_('dateEnd', toHtmlDateValue_(item.dateEnd));
-  setInputValue_('activityName', item.activityName);
+  setDutyActivityFieldValue_('activityName', item.activityName);
   setInputValue_('peopleMode', item.peopleMode || '手動');
   setInputValue_('peopleCount', item.peopleCount);
-  setInputValue_('location', item.location);
+  setDutyActivityFieldValue_('location', item.location);
   setInputValue_('planning', item.planning);
   setInputValue_('activityStatus', item.status || '啟用');
   setInputValue_('activityNote', item.note);
-
-  syncDutyActivitySelectFromHidden_('activityName');
-  syncDutyActivitySelectFromHidden_('location');
 
   const saveBtn = document.getElementById('saveActivityBtn');
   if (saveBtn) {
@@ -579,17 +553,15 @@ function editDutyActivity_(id) {
 async function saveDutyActivityFromForm_() {
   const saveBtn = document.getElementById('saveActivityBtn');
 
-  syncDutyActivityHiddenFields_();
-
   const payload = {
     action: 'saveDutyActivity',
     id: getInputValue_('activityId'),
     dateStart: getInputValue_('dateStart'),
     dateEnd: getInputValue_('dateEnd'),
-    activityName: getInputValue_('activityName'),
+    activityName: getDutyActivityFieldValue_('activityName'),
     peopleMode: getInputValue_('peopleMode'),
     peopleCount: getInputValue_('peopleCount'),
-    location: getInputValue_('location'),
+    location: getDutyActivityFieldValue_('location'),
     planning: getInputValue_('planning'),
     status: getInputValue_('activityStatus'),
     note: getInputValue_('activityNote')
@@ -708,16 +680,13 @@ function resetDutyActivityForm_() {
   setInputValue_('activityId', '');
   setInputValue_('dateStart', '');
   setInputValue_('dateEnd', '');
-  setInputValue_('activityName', '');
+  setDutyActivityFieldValue_('activityName', '');
   setInputValue_('peopleMode', '手動');
   setInputValue_('peopleCount', '');
-  setInputValue_('location', '');
+  setDutyActivityFieldValue_('location', '');
   setInputValue_('planning', '');
   setInputValue_('activityStatus', '啟用');
   setInputValue_('activityNote', '');
-
-  syncDutyActivitySelectFromHidden_('activityName');
-  syncDutyActivitySelectFromHidden_('location');
 
   const saveBtn = document.getElementById('saveActivityBtn');
   if (saveBtn) {
@@ -733,7 +702,7 @@ function resetDutyActivityForm_() {
 功能說明：
 依照人數模式控制人數欄位。
 手動：可輸入。
-求道統計 / 法會統計：不可輸入，由系統自動計算。
+求道統計 / 法會統計：先不可輸入，下一階段由系統統計。
 ========================= */
 function updatePeopleCountState_() {
   const peopleMode = getInputValue_('peopleMode');
