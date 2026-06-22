@@ -24,6 +24,21 @@ let dutyActivityItems = [];
 let dutyActivityOptions = [];
 let dutyLocationOptions = [];
 
+const DUTY_ACTIVITY_FALLBACK_ACTIVITY_OPTIONS = [
+  '護經關闡',
+  '觀音辦道週',
+  '親其親班務法會',
+  '報恩法會',
+  '樂活養生嘉年華',
+  '孝親活動',
+  '觀音孝親祈福'
+];
+
+const DUTY_ACTIVITY_FALLBACK_LOCATION_OPTIONS = [
+  '崇慧',
+  '耕德'
+];
+
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
 
@@ -177,22 +192,98 @@ async function loadDutyActivityAdminData_() {
 渲染活動名稱與地點的手機穩定版下拉選單。
 ========================= */
 function renderDutyDatalist_() {
+  const activityOptions = mergeDutyActivitySelectOptions_(
+    dutyActivityOptions,
+    getDutyActivityNamesFromItems_(),
+    DUTY_ACTIVITY_FALLBACK_ACTIVITY_OPTIONS
+  );
+
+  const locationOptions = mergeDutyActivitySelectOptions_(
+    dutyLocationOptions,
+    getDutyActivityLocationsFromItems_(),
+    DUTY_ACTIVITY_FALLBACK_LOCATION_OPTIONS
+  );
+
   renderDutyActivitySelectOptions_(
     'activityNameSelect',
-    dutyActivityOptions,
+    activityOptions,
     '請選擇',
     true
   );
 
   renderDutyActivitySelectOptions_(
     'locationSelect',
-    dutyLocationOptions,
+    locationOptions,
     '可空白',
     true
   );
 
   syncDutyActivitySelectFromHidden_('activityName');
   syncDutyActivitySelectFromHidden_('location');
+}
+
+/* =========================
+函式名稱：mergeDutyActivitySelectOptions_
+功能說明：
+合併後端選項、既有活動資料、預設選項，避免手機只剩「請選擇」。
+========================= */
+function mergeDutyActivitySelectOptions_() {
+  const result = [];
+  const seen = {};
+
+  for (let a = 0; a < arguments.length; a++) {
+    const list = arguments[a] || [];
+
+    for (let i = 0; i < list.length; i++) {
+      const text = normalizeDutyActivityText_(list[i]);
+
+      if (!text) continue;
+      if (seen[text]) continue;
+
+      seen[text] = true;
+      result.push(text);
+    }
+  }
+
+  return result;
+}
+
+/* =========================
+函式名稱：getDutyActivityNamesFromItems_
+功能說明：
+從既有活動設定中補出活動名稱選項。
+========================= */
+function getDutyActivityNamesFromItems_() {
+  const result = [];
+
+  for (let i = 0; i < dutyActivityItems.length; i++) {
+    const name = normalizeDutyActivityText_(dutyActivityItems[i].activityName);
+
+    if (name) {
+      result.push(name);
+    }
+  }
+
+  return result;
+}
+
+/* =========================
+函式名稱：getDutyActivityLocationsFromItems_
+功能說明：
+從既有活動設定中補出地點選項。
+========================= */
+function getDutyActivityLocationsFromItems_() {
+  const result = [];
+
+  for (let i = 0; i < dutyActivityItems.length; i++) {
+    const location = normalizeDutyActivityText_(dutyActivityItems[i].location);
+
+    if (location) {
+      result.push(location);
+    }
+  }
+
+  return result;
 }
 
 /* =========================
@@ -290,9 +381,14 @@ function syncDutyActivitySelectFromHidden_(fieldName) {
     return;
   }
 
-  const optionExists = Array.from(select.options).some(function (option) {
-    return option.value === value;
-  });
+  let optionExists = false;
+
+  for (let i = 0; i < select.options.length; i++) {
+    if (select.options[i].value === value) {
+      optionExists = true;
+      break;
+    }
+  }
 
   if (optionExists) {
     select.value = value;
