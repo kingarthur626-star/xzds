@@ -207,6 +207,7 @@ function createDutyActivityCardHtml_(item) {
   const dateRange = escapeDutyActivityHtml_((item.dateStart || '') + ' ～ ' + (item.dateEnd || ''));
   const peopleMode = escapeDutyActivityHtml_(item.peopleMode || '');
   const peopleCount = escapeDutyActivityHtml_(item.peopleCount || '');
+  const peopleCountDisplay = peopleCount || (item.peopleMode === '手動' ? '—' : '由系統自動計算');
   const location = escapeDutyActivityHtml_(item.location || '—');
   const planning = escapeDutyActivityHtml_(item.planning || '—');
   const status = escapeDutyActivityHtml_(item.status || '啟用');
@@ -229,7 +230,7 @@ function createDutyActivityCardHtml_(item) {
 
       '<div class="duty-item-meta">' +
         '<span>模式：' + peopleMode + '</span>' +
-        '<span>人數：' + (peopleCount || '—') + '</span>' +
+        '<span>人數：' + peopleCountDisplay + '</span>' +
         '<span>地點：' + location + '</span>' +
         '<span>規劃：' + planning + '</span>' +
       '</div>' +
@@ -362,7 +363,7 @@ async function saveDutyActivityFromForm_() {
 
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.textContent = '儲存中...';
+    saveBtn.textContent = payload.peopleMode === '手動' ? '儲存中...' : '儲存並統計中...';
   }
 
   try {
@@ -372,7 +373,20 @@ async function saveDutyActivityFromForm_() {
       throw new Error(result.message || '儲存失敗');
     }
 
-    showDutyActivityMessage_(result.message || '儲存完成', 'success');
+    let successMessage = result.message || '儲存完成';
+
+    if (payload.peopleMode !== '手動') {
+      const calculatedCount =
+        result.peopleCount ||
+        result.calculatedCount ||
+        (result.stats && result.stats.totalCount);
+
+      if (calculatedCount !== undefined && calculatedCount !== null && calculatedCount !== '') {
+        successMessage += '，系統統計人數：' + calculatedCount;
+      }
+    }
+
+    showDutyActivityMessage_(successMessage, 'success');
 
     resetDutyActivityForm_();
     loadDutyActivityAdminData_();
@@ -457,7 +471,7 @@ function resetDutyActivityForm_() {
 功能說明：
 依照人數模式控制人數欄位。
 手動：可輸入。
-求道統計 / 法會統計：先不可輸入，下一階段由系統統計。
+求道統計 / 法會統計：不可輸入，由系統自動計算。
 ========================= */
 function updatePeopleCountState_() {
   const peopleMode = getInputValue_('peopleMode');
@@ -471,7 +485,7 @@ function updatePeopleCountState_() {
   } else {
     peopleCount.disabled = true;
     peopleCount.value = '';
-    peopleCount.placeholder = '下一階段自動統計';
+    peopleCount.placeholder = '由系統自動計算';
   }
 }
 
