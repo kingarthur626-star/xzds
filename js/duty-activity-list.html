@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>道務活動列表</title>
+
+  <link rel="stylesheet" href="css/style.css?v=20260623-7" />
+</head>
+
+<body class="duty-activity-list-page">
+  <div class="page">
+    <div class="page-inner">
+
+
+  <div class="page-action-bar activity-list-action-bar">
+    <button class="action-pill" id="homeBtn" type="button">首頁</button>
+    <button class="action-pill" id="settingBtn" type="button">道務活動設定</button>
+    <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
+  </div>
+
+  <div class="card wide-card activity-list-card">
+
+    <div class="activity-title-row">
+      <h1>道務活動列表</h1>
+      <button id="reloadActivityListBtn" class="admin-small-btn" type="button">重新整理</button>
+    </div>
+
+    <div id="activityListMessage" class="message"></div>
+
+    <div id="activityListStats" class="small-text">讀取中...</div>
+
+    <div id="activityListArea" class="activity-list-area">
+      <div class="small-text">讀取道務活動中...</div>
+    </div>
+  </div>
+
+</div>
+
+
+  </div>
+
+  <div id="activityDetailModal" class="activity-detail-modal" style="display: none;">
+    <div class="activity-detail-mask"></div>
+
+
+<div class="activity-detail-box">
+  <div id="activityDetailTitle" class="activity-detail-title"></div>
+  <div id="activityDetailDate" class="activity-detail-date"></div>
+  <div id="activityDetailNote" class="activity-detail-note"></div>
+
+  <button id="activityDetailCloseBtn" class="activity-detail-close-btn" type="button">
+    關閉
+  </button>
+</div>
+
+
+  </div>
+
+  <script src="js/config.js?v=20260620-1"></script>
+
+  <script src="js/api.js?v=20260620-1"></script>
+
+  <script src="js/common.js?v=20260620-1"></script>
+
+  <script src="js/duty-activity-list.js?v=20260623-5"></script>
+
+</body>
+</html>
