@@ -16,9 +16,7 @@
    - getMyPermissions
 ========================= */
 
-let allDutyActivities = [];
 let visibleDutyActivities = [];
-let selectedDutyActivityYear = '';
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -114,10 +112,7 @@ async function loadDutyActivityList_() {
       throw new Error(result.message || '讀取失敗');
     }
 
-    allDutyActivities = sortDutyActivitiesByDateDesc_(result.activities || []);
-    selectedDutyActivityYear = getDefaultDutyActivityYear_(allDutyActivities, selectedDutyActivityYear);
-    renderDutyActivityYearFilter_();
-    visibleDutyActivities = filterDutyActivitiesByYear_(allDutyActivities, selectedDutyActivityYear);
+    visibleDutyActivities = result.activities || [];
 
     renderDutyActivityList_();
 
@@ -146,7 +141,7 @@ function renderDutyActivityList_() {
   if (!area) return;
 
   if (stats) {
-    stats.textContent = '共 ' + visibleDutyActivities.length + ' 筆活動' + (selectedDutyActivityYear ? '｜' + selectedDutyActivityYear : '');
+    stats.textContent = '共 ' + visibleDutyActivities.length + ' 筆活動';
   }
 
   if (visibleDutyActivities.length === 0) {
@@ -166,10 +161,10 @@ function renderDutyActivityList_() {
 
 function createActivityListCardHtml_(item) {
   const title = escapeActivityListHtml_(item.activityName || '');
-  const dateStart = escapeActivityListHtml_(formatActivityListDateShort_(item.dateStart || ''));
+  const dateStart = escapeActivityListHtml_(formatActivityListDate_(item.dateStart || ''));
   const dateRange = escapeActivityListHtml_(formatActivityListDateRange_(item.dateStart, item.dateEnd));
   const peopleCount = escapeActivityListHtml_(item.peopleCount || '—');
-  const location = escapeActivityListHtml_(item.location || '');
+  const location = escapeActivityListHtml_(item.location || '—');
   const planning = escapeActivityListHtml_(item.planning || '—');
   const note = escapeActivityListHtml_(item.note || '');
 
@@ -244,6 +239,7 @@ dateEl.textContent = dateRange ? '日期：' + dateRange : '';
 
 if (noteEl) {
 noteEl.textContent = '備註：' + (note || '無');
+noteEl.style.whiteSpace = 'pre-line';
 }
 
 modal.style.display = 'flex';
@@ -258,18 +254,26 @@ modal.style.display = 'none';
 }
 
 function formatActivityListDate_(value) {
-  const parts = parseActivityListDateParts_(value);
+  const text = normalizeActivityListText_(value);
 
-  if (!parts) {
-    return normalizeActivityListText_(value);
+  if (!text) return '';
+
+  const compact = text.replace(/[\/\-\.]/g, '');
+
+  if (/^\d{8}$/.test(compact)) {
+    return compact.substring(4, 6) + '/' + compact.substring(6, 8);
   }
 
-  return parts.year + '/' + parts.month + '/' + parts.day;
+  if (/^\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}$/.test(text)) {
+    return text.substring(5).replace(/-/g, '/').replace(/\./g, '/');
+  }
+
+  return text;
 }
 
 function formatActivityListDateRange_(dateStart, dateEnd) {
-  const startText = formatActivityListDate_(dateStart);
-  const endText = formatActivityListDate_(dateEnd);
+  const startText = normalizeActivityListText_(dateStart);
+  const endText = normalizeActivityListText_(dateEnd);
 
   if (!startText) return '';
 
@@ -280,282 +284,6 @@ function formatActivityListDateRange_(dateStart, dateEnd) {
   return startText + '～' + endText;
 }
 
-
-/* =========================
-函式名稱：renderDutyActivityYearFilter_
-功能說明：
-在「道務活動列表」標題左側建立年度下拉選單。
-年度選項會依活動資料自動產生。
-例如新增 2025 活動後會出現 2025；新增 2027 活動後會出現 2027。
-========================= */
-function renderDutyActivityYearFilter_() {
-  const titleEl = findDutyActivityListTitle_();
-
-  if (!titleEl) return;
-
-  let wrapper = document.getElementById('activityYearFilterWrap');
-  let select = document.getElementById('activityYearFilter');
-
-  if (!wrapper) {
-    wrapper = document.createElement('div');
-    wrapper.id = 'activityYearFilterWrap';
-    wrapper.className = 'activity-year-filter-wrap';
-
-    select = document.createElement('select');
-    select.id = 'activityYearFilter';
-    select.className = 'activity-year-filter';
-    select.setAttribute('aria-label', '選擇活動年度');
-
-    wrapper.appendChild(select);
-    titleEl.parentNode.insertBefore(wrapper, titleEl);
-
-    injectDutyActivityYearFilterStyle_();
-
-    select.addEventListener('change', function() {
-      selectedDutyActivityYear = select.value;
-      visibleDutyActivities = filterDutyActivitiesByYear_(allDutyActivities, selectedDutyActivityYear);
-      renderDutyActivityList_();
-    });
-  }
-
-  const years = getDutyActivityYears_(allDutyActivities);
-
-  select.innerHTML = '';
-
-  years.forEach(function(year) {
-    const option = document.createElement('option');
-    option.value = year;
-    option.textContent = year;
-    select.appendChild(option);
-  });
-
-  if (!selectedDutyActivityYear && years.length > 0) {
-    selectedDutyActivityYear = years[0];
-  }
-
-  select.value = selectedDutyActivityYear;
-}
-
-/* =========================
-函式名稱：findDutyActivityListTitle_
-功能說明：
-尋找頁面上的「道務活動列表」標題。
-避免一定要修改 HTML，也能由 JS 自動把年度選單插入標題左側。
-========================= */
-function findDutyActivityListTitle_() {
-  const headings = document.querySelectorAll('h1, h2');
-
-  for (let i = 0; i < headings.length; i++) {
-    if (normalizeActivityListText_(headings[i].textContent) === '道務活動列表') {
-      return headings[i];
-    }
-  }
-
-  return null;
-}
-
-/* =========================
-函式名稱：getDutyActivityYears_
-功能說明：
-從活動日期中抓出所有年度，並由新到舊排列。
-========================= */
-function getDutyActivityYears_(activities) {
-  const map = {};
-
-  activities.forEach(function(item) {
-    const parts = parseActivityListDateParts_(item && item.dateStart);
-
-    if (parts && parts.year) {
-      map[parts.year] = true;
-    }
-  });
-
-  return Object.keys(map).sort(function(a, b) {
-    return Number(b) - Number(a);
-  });
-}
-
-/* =========================
-函式名稱：getDefaultDutyActivityYear_
-功能說明：
-預設年度優先使用今年；若今年沒有資料，就使用資料中最新年度。
-========================= */
-function getDefaultDutyActivityYear_(activities, currentYear) {
-  const years = getDutyActivityYears_(activities);
-
-  if (currentYear && years.indexOf(currentYear) !== -1) {
-    return currentYear;
-  }
-
-  const thisYear = String(new Date().getFullYear());
-
-  if (years.indexOf(thisYear) !== -1) {
-    return thisYear;
-  }
-
-  return years[0] || '';
-}
-
-/* =========================
-函式名稱：filterDutyActivitiesByYear_
-功能說明：
-依年度下拉選單篩選活動。
-========================= */
-function filterDutyActivitiesByYear_(activities, year) {
-  if (!year) return activities.slice();
-
-  return activities.filter(function(item) {
-    const parts = parseActivityListDateParts_(item && item.dateStart);
-
-    return parts && parts.year === year;
-  });
-}
-
-/* =========================
-函式名稱：formatActivityListDateShort_
-功能說明：
-活動列表日期欄位只顯示月日，例如 05/31。
-年度改由上方年度下拉選單辨識。
-========================= */
-function formatActivityListDateShort_(value) {
-  const parts = parseActivityListDateParts_(value);
-
-  if (!parts) {
-    return normalizeActivityListText_(value);
-  }
-
-  return parts.month + '/' + parts.day;
-}
-
-/* =========================
-函式名稱：injectDutyActivityYearFilterStyle_
-功能說明：
-加入年度下拉選單樣式，讓它放在標題左側並符合目前介面。
-========================= */
-function injectDutyActivityYearFilterStyle_() {
-  if (document.getElementById('activityYearFilterStyle')) return;
-
-  const style = document.createElement('style');
-  style.id = 'activityYearFilterStyle';
-  style.textContent = `
-    .activity-year-filter-wrap {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 12px 0 0;
-      vertical-align: middle;
-    }
-
-    .activity-year-filter {
-      min-width: 92px;
-      height: 42px;
-      padding: 0 14px;
-      border: 1px solid #cfd8e5;
-      border-radius: 14px;
-      background: #ffffff;
-      color: #07365f;
-      font-size: 18px;
-      font-weight: 800;
-      outline: none;
-    }
-
-    @media (max-width: 600px) {
-      .activity-year-filter-wrap {
-        margin-right: 10px;
-      }
-
-      .activity-year-filter {
-        min-width: 84px;
-        height: 38px;
-        font-size: 16px;
-        border-radius: 12px;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-/* =========================
-函式名稱：sortDutyActivitiesByDateDesc_
-功能說明：
-將道務活動依照「日期起」排序。
-日期越新的活動排越上面，日期越舊的活動排越下面。
-========================= */
-function sortDutyActivitiesByDateDesc_(activities) {
-  return activities.slice().sort(function(a, b) {
-    const timeA = getActivityListDateTime_(a && a.dateStart);
-    const timeB = getActivityListDateTime_(b && b.dateStart);
-
-    if (timeA !== timeB) {
-      return timeB - timeA;
-    }
-
-    const idA = Number((a && a.id) || 0);
-    const idB = Number((b && b.id) || 0);
-
-    return idB - idA;
-  });
-}
-
-/* =========================
-函式名稱：getActivityListDateTime_
-功能說明：
-將活動日期轉成排序用時間戳。
-========================= */
-function getActivityListDateTime_(value) {
-  const parts = parseActivityListDateParts_(value);
-
-  if (!parts) {
-    return 0;
-  }
-
-  return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day)).getTime();
-}
-
-/* =========================
-函式名稱：parseActivityListDateParts_
-功能說明：
-解析 2026/04/04、2026-04-04、20260404 等日期格式。
-========================= */
-function parseActivityListDateParts_(value) {
-  const text = normalizeActivityListText_(value);
-
-  if (!text) return null;
-
-  const compact = text.replace(/[\/\-\.]/g, '');
-
-  if (/^\d{8}$/.test(compact)) {
-    return {
-      year: compact.substring(0, 4),
-      month: compact.substring(4, 6),
-      day: compact.substring(6, 8)
-    };
-  }
-
-  return null;
-}
-
-/* =========================
-函式名稱：formatActivityListDateHtml_
-功能說明：
-活動列表日期欄位顯示年度，方便辨識跨年度活動。
-手機上會分成兩行顯示：
-2026
-04/04
-========================= */
-function formatActivityListDateHtml_(value) {
-  const parts = parseActivityListDateParts_(value);
-
-  if (!parts) {
-    return escapeActivityListHtml_(normalizeActivityListText_(value));
-  }
-
-  return '' +
-    '<span class="activity-list-date-year">' + escapeActivityListHtml_(parts.year) + '</span>' +
-    '<br>' +
-    '<span class="activity-list-date-md">' + escapeActivityListHtml_(parts.month + '/' + parts.day) + '</span>';
-}
 
 function showActivityListMessage_(text, type) {
   const el = document.getElementById('activityListMessage');
