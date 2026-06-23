@@ -45,8 +45,38 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!user) return;
 
   bindDutyActivityButtons_();
+  ensureDutyActivityPeopleModeOptions_();
   loadDutyActivityAdminData_();
 });
+
+
+/* =========================
+函式名稱：ensureDutyActivityPeopleModeOptions_
+功能說明：
+確保人數模式下拉選單包含「求道統計+壇名」。
+即使 HTML 尚未更新，JS 載入後也會自動補上。
+========================= */
+function ensureDutyActivityPeopleModeOptions_() {
+  const select = document.getElementById('peopleMode');
+
+  if (!select) return;
+
+  const options = ['手動', '求道統計', '法會統計', '求道統計+壇名'];
+  const existing = {};
+
+  for (let i = 0; i < select.options.length; i++) {
+    existing[select.options[i].value] = true;
+  }
+
+  options.forEach(function(value) {
+    if (existing[value]) return;
+
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+}
 
 /* =========================
 函式名稱：bindDutyActivityButtons_
@@ -67,7 +97,7 @@ function bindDutyActivityButtons_() {
 
 if (backBtn) {
   backBtn.addEventListener('click', function () {
-    location.href = 'duty-activity-list.html';
+    window.location.href = 'duty-activity-list.html';
   });
 }
 
@@ -592,6 +622,11 @@ async function saveDutyActivityFromForm_() {
     return;
   }
 
+  if (payload.peopleMode === '求道統計+壇名' && !payload.location) {
+    showDutyActivityMessage_('人數模式為求道統計+壇名時，請選擇或輸入地點。', 'error');
+    return;
+  }
+
   if (saveBtn) {
     saveBtn.disabled = true;
     saveBtn.textContent = payload.peopleMode === '手動' ? '儲存中...' : '儲存並統計中...';
@@ -716,7 +751,11 @@ function updatePeopleCountState_() {
   } else {
     peopleCount.disabled = true;
     peopleCount.value = '';
-    peopleCount.placeholder = '由系統自動計算';
+    if (peopleMode === '求道統計+壇名') {
+      peopleCount.placeholder = '依日期、地點、壇名自動統計';
+    } else {
+      peopleCount.placeholder = '由系統自動計算';
+    }
   }
 }
 
