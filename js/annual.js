@@ -136,7 +136,7 @@ function renderCombinedStats(result) {
 
 function getMonthValue(item, month) {
   if (!item || !item.found || !item.months) {
-    return '0';
+    return '';
   }
 
   const monthData = item.months.find(function(m) {
@@ -144,19 +144,48 @@ function getMonthValue(item, month) {
   });
 
   if (!monthData) {
-    return '0';
+    return '';
   }
 
-  return monthData.value || '0';
+  return formatZeroAsBlank_(monthData.value);
 }
 
 function getStatValue(item, key) {
   if (!item || !item.found) {
-    return '0';
+    return '';
   }
 
-  return item[key] || '0';
+  return formatZeroAsBlank_(item[key]);
 }
+
+/* =========================
+函式名稱：formatZeroAsBlank_
+功能說明：
+將 0、0.0、0.00、0% 等數值改成空白不顯示。
+========================= */
+function formatZeroAsBlank_(value) {
+  const text = String(value || '').trim();
+
+  if (!text) return '';
+
+  const normalized = text
+    .replace(/,/g, '')
+    .replace(/\s/g, '');
+
+  if (
+    normalized === '0' ||
+    normalized === '0.0' ||
+    normalized === '0.00' ||
+    normalized === '0%' ||
+    normalized === '0.0%' ||
+    normalized === '0.00%'
+  ) {
+    return '';
+  }
+
+  return text;
+}
+
 
 /* =========================
 函式名稱：loadAnnualSharedLastUpdate_
