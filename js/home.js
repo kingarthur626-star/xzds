@@ -421,7 +421,7 @@ btn.innerHTML =
 /* =========================
 函式名稱：applyRecentDutyButtonText_
 功能說明：
-將首頁「近年道務」按鈕文字改為「近五年道務」。
+將首頁「近五年道務」按鈕文字改為「近五年道務」。
 若 HTML 內仍寫舊文字，載入時由 JS 自動修正。
 ========================= */
 function applyRecentDutyButtonText_() {

@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   loadTempleOptions(user);
+  loadHistorySharedLastUpdate_();
 });
 
 async function loadTempleOptions(user) {
@@ -398,4 +399,52 @@ function getYearRangeTextFromRows(rows) {
   const yearEnd = Math.max.apply(null, years);
 
   return yearStart + '-' + yearEnd;
+}
+
+
+/* =========================
+函式名稱：loadHistorySharedLastUpdate_
+功能說明：
+讀取與首頁相同來源的「最後更新」時間。
+來源：
+1. localStorage：taoReportLastUpdate
+2. 後端 action：getTaoReportLastUpdate
+========================= */
+async function loadHistorySharedLastUpdate_() {
+  const cachedLastUpdate = localStorage.getItem('taoReportLastUpdate');
+  updateHistoryLastUpdateText_(cachedLastUpdate || '讀取中...');
+
+  try {
+    const result = await callApi({
+      action: 'getTaoReportLastUpdate'
+    });
+
+    if (result.success && result.lastUpdate) {
+      localStorage.setItem('taoReportLastUpdate', result.lastUpdate);
+      updateHistoryLastUpdateText_(result.lastUpdate);
+      return;
+    }
+
+    if (!cachedLastUpdate) {
+      updateHistoryLastUpdateText_('尚未更新');
+    }
+
+  } catch (err) {
+    if (!cachedLastUpdate) {
+      updateHistoryLastUpdateText_('讀取失敗');
+    }
+  }
+}
+
+/* =========================
+函式名稱：updateHistoryLastUpdateText_
+功能說明：
+更新近五年道務頁「最後更新」小字。
+========================= */
+function updateHistoryLastUpdateText_(text) {
+  const area = document.getElementById('historyLastUpdateText');
+
+  if (!area) return;
+
+  area.textContent = '最後更新：' + (text || '尚未更新');
 }
