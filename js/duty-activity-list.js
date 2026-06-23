@@ -241,7 +241,8 @@ titleEl.textContent = title || '';
 }
 
 if (dateEl) {
-dateEl.textContent = dateRange ? '日期：' + dateRange : '';
+dateEl.textContent = '';
+dateEl.style.display = 'none';
 }
 
 if (noteEl) {
@@ -589,10 +590,10 @@ function renderActivityDetailNoteHtml_(note) {
       '<tr class="' + (isTotal ? 'is-total' : '') + '">' +
         '<td class="temple-cell">' + escapeActivityListHtml_(row.temple) + '</td>' +
         '<td>' + escapeActivityListHtml_(row.total) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.qian) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.kun) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.tong) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.nv) + '</td>' +
+        '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.qian)) + '</td>' +
+        '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.kun)) + '</td>' +
+        '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.tong)) + '</td>' +
+        '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.nv)) + '</td>' +
       '</tr>';
   }).join('');
 
@@ -755,6 +756,22 @@ function isActivityNoteNumber_(value) {
 }
 
 /* =========================
+函式名稱：formatActivityNoteZeroBlank_
+功能說明：
+備註表格中，乾坤童女欄位若為 0，改成空白不顯示。
+========================= */
+function formatActivityNoteZeroBlank_(value) {
+  const text = String(value || '').trim();
+
+  if (text === '0' || text === '0.0' || text === '0.00') {
+    return '';
+  }
+
+  return text;
+}
+
+
+/* =========================
 函式名稱：injectActivityDetailNoteStyle_
 功能說明：
 加入活動詳情備註表格樣式。
@@ -840,7 +857,7 @@ function injectActivityDetailNoteStyle_() {
     }
 
     .activity-detail-note-table .temple-cell {
-      text-align: left;
+      text-align: center;
       font-weight: 700;
       min-width: 76px;
     }
