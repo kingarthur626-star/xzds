@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!user) return;
 
-  document.getElementById('annualTitle').textContent = user.temple + ' 今年道務';
+  const annualTitle = document.getElementById('annualTitle');
+  if (annualTitle) {
+    annualTitle.textContent = user.temple + ' ' + getAnnualDisplayYear_() + '道務統計';
+  }
 
   // 不顯示「壇名　姓名」
   const userInfo = document.getElementById('userInfo');
@@ -82,10 +85,8 @@ function renderCombinedStats(result) {
 
   return `
     <div class="stat-card">
-      <h2>2026道務統計</h2>
-      <div id="annualLastUpdateText" class="last-update-mini"></div>
-
-      <div class="stat-summary">
+      <div id="annualLastUpdateText" class="last-update-mini annual-last-update-top"></div>
+<div class="stat-summary">
         <div class="stat-box">
           <div class="stat-label">求道年度目標</div>
           <div class="stat-value">${escapeHtml(getStatValue(qiudao, 'annualTarget'))}</div>
@@ -202,4 +203,15 @@ function updateAnnualLastUpdateText_(text) {
   if (!area) return;
 
   area.textContent = '最後更新：' + (text || '尚未更新');
+}
+
+
+/* =========================
+函式名稱：getAnnualDisplayYear_
+功能說明：
+取得今年道務頁標題顯示年度。
+若未來到 2027 年，會自動顯示 2027道務統計。
+========================= */
+function getAnnualDisplayYear_() {
+  return new Date().getFullYear();
 }
