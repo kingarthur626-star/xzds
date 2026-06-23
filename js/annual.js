@@ -76,7 +76,7 @@ function renderCombinedStats(result) {
 
     monthRows.push(`
       <tr>
-        <td>${month}月</td>
+        <td>${month}</td>
         <td>${escapeHtml(qiudaoValue)}</td>
         <td>${escapeHtml(fahuiValue)}</td>
       </tr>
