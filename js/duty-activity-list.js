@@ -638,7 +638,7 @@ function renderActivityDetailNoteMetaHtml_(parsed) {
   }
 
   if (parsed.dataPeriod) {
-    parts.push('<div><span>資料期間</span>' + escapeActivityListHtml_(parsed.dataPeriod) + '</div>');
+    parts.push('<div><span>目前資料</span>' + escapeActivityListHtml_(parsed.dataPeriod) + '</div>');
   }
 
   if (!parsed.settingPeriod && parsed.period) {
@@ -672,7 +672,7 @@ function parseReceiveByTempleNote_(note) {
 
   const modeMatch = text.match(/(求道統計\+壇名|求道統計|法會統計)/);
   const settingPeriodMatch = text.match(/設定期間：?\s*([^\n\t]+)/);
-  const dataPeriodMatch = text.match(/資料期間：?\s*([^\n\t]+)/);
+  const dataPeriodMatch = text.match(/(?:資料期間|目前資料)：?\s*([^\n\t]+)/);
   const periodMatch = text.match(/(?:期間|統計期間)：?\s*([0-9\/\-]+(?:～|~)[0-9\/\-]+)/);
   const locationMatch = text.match(/(?:地點|輸入地點)：?\s*([^\s\n\t]+)/);
 
@@ -803,6 +803,7 @@ function parseReceiveByTempleNoteRowsFromFlatText_(text) {
   body = body.replace(/說明：[\s\S]*$/, '');
   body = body.replace(/^設定期間：[^\s]+\s*/, '');
   body = body.replace(/^資料期間：[^\s]+\s*/, '');
+  body = body.replace(/^目前資料：[^\s]+\s*/, '');
   body = body.trim();
 
   const regex = columnMode === 'qianKunOnly'
