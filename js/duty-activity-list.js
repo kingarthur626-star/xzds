@@ -16,7 +16,9 @@
    - getMyPermissions
 ========================= */
 
+let allDutyActivities = [];
 let visibleDutyActivities = [];
+let selectedDutyActivityYear = '';
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -112,7 +114,10 @@ async function loadDutyActivityList_() {
       throw new Error(result.message || '讀取失敗');
     }
 
-    visibleDutyActivities = sortDutyActivitiesByDateDesc_(result.activities || []);
+    allDutyActivities = sortDutyActivitiesByDateDesc_(result.activities || []);
+    selectedDutyActivityYear = getDefaultDutyActivityYear_(allDutyActivities, selectedDutyActivityYear);
+    renderDutyActivityYearFilter_();
+    visibleDutyActivities = filterDutyActivitiesByYear_(allDutyActivities, selectedDutyActivityYear);
 
     renderDutyActivityList_();
 
@@ -141,7 +146,7 @@ function renderDutyActivityList_() {
   if (!area) return;
 
   if (stats) {
-    stats.textContent = '共 ' + visibleDutyActivities.length + ' 筆活動';
+    stats.textContent = '共 ' + visibleDutyActivities.length + ' 筆活動' + (selectedDutyActivityYear ? '｜' + selectedDutyActivityYear : '');
   }
 
   if (visibleDutyActivities.length === 0) {
@@ -161,7 +166,7 @@ function renderDutyActivityList_() {
 
 function createActivityListCardHtml_(item) {
   const title = escapeActivityListHtml_(item.activityName || '');
-  const dateStart = formatActivityListDateHtml_(item.dateStart || '');
+  const dateStart = escapeActivityListHtml_(formatActivityListDateShort_(item.dateStart || ''));
   const dateRange = escapeActivityListHtml_(formatActivityListDateRange_(item.dateStart, item.dateEnd));
   const peopleCount = escapeActivityListHtml_(item.peopleCount || '—');
   const location = escapeActivityListHtml_(item.location || '');
@@ -273,6 +278,202 @@ function formatActivityListDateRange_(dateStart, dateEnd) {
   }
 
   return startText + '～' + endText;
+}
+
+
+/* =========================
+函式名稱：renderDutyActivityYearFilter_
+功能說明：
+在「道務活動列表」標題左側建立年度下拉選單。
+年度選項會依活動資料自動產生。
+例如新增 2025 活動後會出現 2025；新增 2027 活動後會出現 2027。
+========================= */
+function renderDutyActivityYearFilter_() {
+  const titleEl = findDutyActivityListTitle_();
+
+  if (!titleEl) return;
+
+  let wrapper = document.getElementById('activityYearFilterWrap');
+  let select = document.getElementById('activityYearFilter');
+
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'activityYearFilterWrap';
+    wrapper.className = 'activity-year-filter-wrap';
+
+    select = document.createElement('select');
+    select.id = 'activityYearFilter';
+    select.className = 'activity-year-filter';
+    select.setAttribute('aria-label', '選擇活動年度');
+
+    wrapper.appendChild(select);
+    titleEl.parentNode.insertBefore(wrapper, titleEl);
+
+    injectDutyActivityYearFilterStyle_();
+
+    select.addEventListener('change', function() {
+      selectedDutyActivityYear = select.value;
+      visibleDutyActivities = filterDutyActivitiesByYear_(allDutyActivities, selectedDutyActivityYear);
+      renderDutyActivityList_();
+    });
+  }
+
+  const years = getDutyActivityYears_(allDutyActivities);
+
+  select.innerHTML = '';
+
+  years.forEach(function(year) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    select.appendChild(option);
+  });
+
+  if (!selectedDutyActivityYear && years.length > 0) {
+    selectedDutyActivityYear = years[0];
+  }
+
+  select.value = selectedDutyActivityYear;
+}
+
+/* =========================
+函式名稱：findDutyActivityListTitle_
+功能說明：
+尋找頁面上的「道務活動列表」標題。
+避免一定要修改 HTML，也能由 JS 自動把年度選單插入標題左側。
+========================= */
+function findDutyActivityListTitle_() {
+  const headings = document.querySelectorAll('h1, h2');
+
+  for (let i = 0; i < headings.length; i++) {
+    if (normalizeActivityListText_(headings[i].textContent) === '道務活動列表') {
+      return headings[i];
+    }
+  }
+
+  return null;
+}
+
+/* =========================
+函式名稱：getDutyActivityYears_
+功能說明：
+從活動日期中抓出所有年度，並由新到舊排列。
+========================= */
+function getDutyActivityYears_(activities) {
+  const map = {};
+
+  activities.forEach(function(item) {
+    const parts = parseActivityListDateParts_(item && item.dateStart);
+
+    if (parts && parts.year) {
+      map[parts.year] = true;
+    }
+  });
+
+  return Object.keys(map).sort(function(a, b) {
+    return Number(b) - Number(a);
+  });
+}
+
+/* =========================
+函式名稱：getDefaultDutyActivityYear_
+功能說明：
+預設年度優先使用今年；若今年沒有資料，就使用資料中最新年度。
+========================= */
+function getDefaultDutyActivityYear_(activities, currentYear) {
+  const years = getDutyActivityYears_(activities);
+
+  if (currentYear && years.indexOf(currentYear) !== -1) {
+    return currentYear;
+  }
+
+  const thisYear = String(new Date().getFullYear());
+
+  if (years.indexOf(thisYear) !== -1) {
+    return thisYear;
+  }
+
+  return years[0] || '';
+}
+
+/* =========================
+函式名稱：filterDutyActivitiesByYear_
+功能說明：
+依年度下拉選單篩選活動。
+========================= */
+function filterDutyActivitiesByYear_(activities, year) {
+  if (!year) return activities.slice();
+
+  return activities.filter(function(item) {
+    const parts = parseActivityListDateParts_(item && item.dateStart);
+
+    return parts && parts.year === year;
+  });
+}
+
+/* =========================
+函式名稱：formatActivityListDateShort_
+功能說明：
+活動列表日期欄位只顯示月日，例如 05/31。
+年度改由上方年度下拉選單辨識。
+========================= */
+function formatActivityListDateShort_(value) {
+  const parts = parseActivityListDateParts_(value);
+
+  if (!parts) {
+    return normalizeActivityListText_(value);
+  }
+
+  return parts.month + '/' + parts.day;
+}
+
+/* =========================
+函式名稱：injectDutyActivityYearFilterStyle_
+功能說明：
+加入年度下拉選單樣式，讓它放在標題左側並符合目前介面。
+========================= */
+function injectDutyActivityYearFilterStyle_() {
+  if (document.getElementById('activityYearFilterStyle')) return;
+
+  const style = document.createElement('style');
+  style.id = 'activityYearFilterStyle';
+  style.textContent = `
+    .activity-year-filter-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 12px 0 0;
+      vertical-align: middle;
+    }
+
+    .activity-year-filter {
+      min-width: 92px;
+      height: 42px;
+      padding: 0 14px;
+      border: 1px solid #cfd8e5;
+      border-radius: 14px;
+      background: #ffffff;
+      color: #07365f;
+      font-size: 18px;
+      font-weight: 800;
+      outline: none;
+    }
+
+    @media (max-width: 600px) {
+      .activity-year-filter-wrap {
+        margin-right: 10px;
+      }
+
+      .activity-year-filter {
+        min-width: 84px;
+        height: 38px;
+        font-size: 16px;
+        border-radius: 12px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
 }
 
 /* =========================
