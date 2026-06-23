@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 
 <!-- =========================
@@ -39,6 +40,33 @@
        載入近年道務頁、今年道務頁、首頁、登入頁等共用 CSS。
   ========================= -->
   <link rel="stylesheet" href="./css/style.css?v=20260620-2" />
+
+  <!-- =========================
+       最後更新小字樣式
+       功能說明：
+       今年道務與近年道務使用，文字小、顏色淡。
+  ========================= -->
+  <style>
+    .last-update-mini {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #8b9aab;
+      font-weight: 400;
+      text-align: center;
+      margin: -4px 0 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .stat-card .last-update-mini {
+      margin-top: -8px;
+      margin-bottom: 14px;
+    }
+
+    .title-select-row + .last-update-mini {
+      margin-top: -4px;
+      margin-bottom: 14px;
+    }
+  </style>
 </head>
 
 <body>
@@ -79,6 +107,8 @@
           </select>
         </div>
 
+        <div id="historyLastUpdateText" class="last-update-mini"></div>
+
         <!-- =========================
              訊息顯示區
              功能說明：
@@ -111,7 +141,7 @@
   <script src="./js/config.js?v=20260620-1"></script>
   <script src="./js/api.js?v=20260620-1"></script>
   <script src="./js/common.js?v=20260620-1"></script>
-  <script src="./js/history.js?v=20260620-1"></script>
+  <script src="./js/history.js?v=20260623-1"></script>
 
   <!-- =========================
        PWA 控制程式
