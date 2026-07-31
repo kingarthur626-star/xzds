@@ -3367,3 +3367,83 @@ border-bottom-left-radius: 18px !important;
 border-bottom-right-radius: 18px !important;
 border-bottom: 1px solid #e2e8f0 !important;
 }
+/* 20260731 V3 annual/history district UI */
+.page-action-bar.three-actions .action-pill:first-child,
+.page-action-bar.three-actions .action-pill:last-child {
+  flex: 0 0 76px;
+  max-width: 76px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.page-action-bar.three-actions .action-pill:nth-child(2) {
+  flex: 1 1 auto;
+}
+
+.title-select-row.history-title-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.title-select-row.history-title-actions h1 {
+  flex: 0 0 auto;
+  font-size: 24px;
+}
+
+.title-select-row.history-title-actions .title-temple-select {
+  flex: 1 1 118px;
+  width: 118px !important;
+  min-width: 0;
+}
+
+.district-summary-btn {
+  flex: 0 0 72px;
+  height: 42px;
+  padding: 0 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #164568;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.district-summary-btn:hover {
+  background: #f1f5f9;
+}
+
+.district-summary-btn.is-active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+@media (max-width: 390px) {
+  .page-action-bar.three-actions .action-pill:first-child,
+  .page-action-bar.three-actions .action-pill:last-child {
+    flex-basis: 70px;
+    max-width: 70px;
+  }
+
+  .title-select-row.history-title-actions {
+    gap: 6px;
+  }
+
+  .title-select-row.history-title-actions h1 {
+    font-size: 21px;
+  }
+
+  .title-select-row.history-title-actions .title-temple-select {
+    flex-basis: 106px;
+    width: 106px !important;
+    font-size: 14px;
+  }
+
+  .district-summary-btn {
+    flex-basis: 66px;
+    padding: 0 5px;
+    font-size: 13px;
+  }
+}
