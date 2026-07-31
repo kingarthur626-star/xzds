@@ -15,6 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const annualBtn = document.getElementById('annualBtn');
+  if (annualBtn) {
+    annualBtn.addEventListener('click', function() {
+      location.href = 'annual.html';
+    });
+  }
+
   const templeSelect = document.getElementById('historyTempleSelect');
 
   if (templeSelect) {

@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const annualTitle = document.getElementById('annualTitle');
   if (annualTitle) {
-    annualTitle.textContent = user.temple + ' ' + getAnnualDisplayYear_() + '道務統計';
+    annualTitle.textContent = '今年道務';
   }
 
   // 不顯示「壇名　姓名」
@@ -23,6 +23,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (backBtn) {
     backBtn.addEventListener('click', function() {
       location.href = 'home.html';
+    });
+  }
+
+  const historyBtn = document.getElementById('historyBtn');
+  if (historyBtn) {
+    historyBtn.addEventListener('click', function() {
+      location.href = 'history.html';
     });
   }
 
