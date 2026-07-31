@@ -3447,3 +3447,35 @@ border-bottom: 1px solid #e2e8f0 !important;
     font-size: 13px;
   }
 }
+/* 20260731 V4 iPhone cache and temple select pill */
+.title-select-row.history-title-actions .title-temple-select {
+  height: 42px !important;
+  box-sizing: border-box !important;
+  padding: 0 38px 0 16px !important;
+  border: 1px solid #d7dde6 !important;
+  border-radius: 999px !important;
+  background-color: #ffffff !important;
+  color: #164568 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M6 8L10 12L14 8' stroke='%23164568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 20px 20px !important;
+}
+
+.title-select-row.history-title-actions .title-temple-select:focus {
+  outline: none !important;
+  border-color: #93b4d1 !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10), 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+@media (max-width: 390px) {
+  .title-select-row.history-title-actions .title-temple-select {
+    padding-left: 13px !important;
+    padding-right: 33px !important;
+    background-position: right 9px center !important;
+  }
+}
