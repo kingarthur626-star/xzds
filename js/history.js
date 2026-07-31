@@ -13,14 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const backBtn = document.getElementById('backBtn');
   if (backBtn) {
     backBtn.addEventListener('click', function() {
-      location.href = 'home.html';
+      location.href = 'home.html?v=20260731-4';
     });
   }
 
   const annualBtn = document.getElementById('annualBtn');
   if (annualBtn) {
     annualBtn.addEventListener('click', function() {
-      location.href = 'annual.html';
+      location.href = 'annual.html?v=20260731-4';
     });
   }
 

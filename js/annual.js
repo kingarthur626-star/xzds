@@ -22,14 +22,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const backBtn = document.getElementById('backBtn');
   if (backBtn) {
     backBtn.addEventListener('click', function() {
-      location.href = 'home.html';
+      location.href = 'home.html?v=20260731-4';
     });
   }
 
   const historyBtn = document.getElementById('historyBtn');
   if (historyBtn) {
     historyBtn.addEventListener('click', function() {
-      location.href = 'history.html';
+      location.href = 'history.html?v=20260731-4';
     });
   }
 
