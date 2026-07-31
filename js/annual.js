@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const annualTitle = document.getElementById('annualTitle');
   if (annualTitle) {
-    annualTitle.textContent = '今年道務';
+    annualTitle.textContent = '今年道務 ' + (user.temple || '');
   }
 
   // 不顯示「壇名　姓名」

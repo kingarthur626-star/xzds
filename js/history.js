@@ -1,3 +1,5 @@
+const XINZHUANG_DISTRICT_TOKEN = '__XINZHUANG_DISTRICT__';
+
 document.addEventListener('DOMContentLoaded', function() {
   const user = requireLogin();
 
@@ -34,6 +36,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const districtBtn = document.getElementById('districtBtn');
+  if (districtBtn) {
+    districtBtn.addEventListener('click', function() {
+      if (templeSelect) {
+        templeSelect.value = '';
+      }
+      setHistoryDistrictMode_(true);
+      loadRecentDutyStats(XINZHUANG_DISTRICT_TOKEN);
+    });
+  }
+
+  if (templeSelect) {
+    templeSelect.addEventListener('change', function() {
+      if (templeSelect.value) {
+        setHistoryDistrictMode_(false);
+      }
+    });
+  }
   loadTempleOptions(user);
   loadHistorySharedLastUpdate_();
 });
@@ -454,4 +474,11 @@ function updateHistoryLastUpdateText_(text) {
   if (!area) return;
 
   area.textContent = '最後更新：' + (text || '尚未更新');
+}
+function setHistoryDistrictMode_(active) {
+  const districtBtn = document.getElementById('districtBtn');
+  if (!districtBtn) return;
+
+  districtBtn.classList.toggle('is-active', Boolean(active));
+  districtBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
 }
