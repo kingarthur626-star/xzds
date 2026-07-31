@@ -1,6 +1,6 @@
 /* =========================
    Program: pwa.js
-   Update: 2026-07-31 V4
+   Update: 2026-08-01 V5
    Purpose:
    1. Register Service Worker without HTTP cache.
    2. Check for updates immediately.
@@ -8,7 +8,7 @@
    4. Reload once after the new worker takes control.
 ========================= */
 
-const XZDS_PWA_VERSION = '20260731-4';
+const XZDS_PWA_VERSION = '20260801-5';
 
 window.addEventListener('load', function() {
   registerServiceWorker();
