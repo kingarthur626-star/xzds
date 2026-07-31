@@ -1013,6 +1013,25 @@ select:disabled {
   background: #eef2f7;
 }
 
+/* annual.html / history.html 三個導覽按鈕 */
+.page-action-bar.three-actions {
+  gap: 6px;
+}
+
+.page-action-bar.three-actions .action-pill {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .page-action-bar.three-actions .action-pill {
+    padding: 0 4px;
+    font-size: 13px;
+  }
+}
+
 /* 減少手機上下拉時的彈跳感，讓畫面更像 App */
 html,
 body {
