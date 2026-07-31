@@ -38,7 +38,7 @@
        功能說明：
        載入近年道務頁、今年道務頁、首頁、登入頁等共用 CSS。
   ========================= -->
-  <link rel="stylesheet" href="./css/style.css?v=20260731-1" />
+  <link rel="stylesheet" href="./css/style.css?v=20260731-2" />
 
   <!-- =========================
        近五年道務顯示樣式
@@ -112,12 +112,12 @@
              顯示「近年道務」標題，
              並提供壇名下拉選單讓使用者切換查詢對象。
         ========================= -->
-        <div class="title-select-row">
+        <div class="title-select-row history-title-actions">
           <h1>近五年道務</h1>
-
           <select id="historyTempleSelect" class="title-temple-select">
             <option value="">讀取中...</option>
           </select>
+          <button id="districtBtn" class="district-summary-btn" type="button" aria-pressed="false">新莊區</button>
         </div>
 
         <div id="historyLastUpdateText" class="last-update-mini"></div>
@@ -154,7 +154,7 @@
   <script src="./js/config.js?v=20260620-1"></script>
   <script src="./js/api.js?v=20260620-1"></script>
   <script src="./js/common.js?v=20260620-1"></script>
-  <script src="./js/history.js?v=20260731-1"></script>
+  <script src="./js/history.js?v=20260731-2"></script>
 
   <!-- =========================
        PWA 控制程式
