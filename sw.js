@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-01 V5
+   Update: 2026-08-01 V6
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -9,7 +9,7 @@
 ========================= */
 
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260801-005';
+const CACHE_NAME = CACHE_PREFIX + '20260801-006';
 
 const STATIC_ASSETS = [
   './',
