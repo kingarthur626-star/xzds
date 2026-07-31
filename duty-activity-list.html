@@ -5,9 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>道務活動列表</title>
+  
+  <meta name="xzds-ui-version" content="20260801-5" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" /><title>道務活動列表</title>
 
-  <link rel="stylesheet" href="css/style.css?v=20260623-13" />
+  <link rel="stylesheet" href="css/style.css?v=20260801-5" />
 </head>
 
 <body class="duty-activity-list-page">
@@ -15,10 +19,10 @@
     <div class="page-inner">
 
 
-  <div class="page-action-bar activity-list-action-bar">
-    <button class="action-pill" id="homeBtn" type="button">首頁</button>
-    <button class="action-pill" id="settingBtn" type="button">道務活動設定</button>
+  <div class="page-action-bar unified-nav-action-bar">
     <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
+        <button class="action-pill" id="settingBtn" type="button">道務活動設定</button>
+        <button class="action-pill" id="homeBtn" type="button">首頁</button>
   </div>
 
   <div class="card wide-card activity-list-card">
@@ -67,5 +71,6 @@
 
   <script src="js/duty-activity-list.js?v=20260623-13"></script>
 
+  <script src="./js/pwa.js?v=20260801-5"></script>
 </body>
 </html>
