@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
 程式名稱：duty-activity-list.js
 功能說明：
 道務活動列表頁專用程式。
@@ -20,6 +20,11 @@
 let allDutyActivities = [];
 let visibleDutyActivities = [];
 let selectedDutyActivityYear = '';
+let activityDetailBodyScrollY_ = 0;
+let activityDetailTouchStartY_ = 0;
+let activityDetailTouchStartScrollTop_ = 0;
+let activityDetailTouchBound_ = false;
+let activityDetailViewportHandlerBound_ = false;
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -252,11 +257,19 @@ noteEl.style.whiteSpace = 'normal';
 }
 
 modal.style.display = 'flex';
-document.body.classList.add('activity-detail-open');
+lockActivityDetailPageScroll_();
+prepareActivityDetailIOSScroll_();
 
 if (noteEl) {
   noteEl.scrollTop = 0;
 }
+
+window.requestAnimationFrame(function() {
+  updateActivityDetailViewportHeight_();
+  if (noteEl) {
+    noteEl.scrollTop = 0;
+  }
+});
 }
 
 function closeActivityDetailModal_() {
@@ -266,7 +279,97 @@ if (modal) {
 modal.style.display = 'none';
 }
 
-document.body.classList.remove('activity-detail-open');
+unlockActivityDetailPageScroll_();
+}
+
+function lockActivityDetailPageScroll_() {
+  activityDetailBodyScrollY_ = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+  document.documentElement.classList.add('activity-detail-open');
+  document.body.classList.add('activity-detail-open');
+
+  document.body.style.position = 'fixed';
+  document.body.style.top = '-' + activityDetailBodyScrollY_ + 'px';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+}
+
+function unlockActivityDetailPageScroll_() {
+  document.documentElement.classList.remove('activity-detail-open');
+  document.body.classList.remove('activity-detail-open');
+
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+
+  window.scrollTo(0, activityDetailBodyScrollY_ || 0);
+}
+
+function updateActivityDetailViewportHeight_() {
+  const modal = document.getElementById('activityDetailModal');
+  if (!modal) return;
+
+  const height = window.visualViewport && window.visualViewport.height
+    ? window.visualViewport.height
+    : window.innerHeight;
+
+  modal.style.setProperty('--activity-detail-viewport-height', Math.max(320, Math.floor(height)) + 'px');
+}
+
+function prepareActivityDetailIOSScroll_() {
+  const modal = document.getElementById('activityDetailModal');
+  const noteEl = document.getElementById('activityDetailNote');
+
+  if (!modal || !noteEl) return;
+
+  updateActivityDetailViewportHeight_();
+
+  if (!activityDetailViewportHandlerBound_) {
+    activityDetailViewportHandlerBound_ = true;
+
+    window.addEventListener('resize', updateActivityDetailViewportHeight_);
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateActivityDetailViewportHeight_);
+      window.visualViewport.addEventListener('scroll', updateActivityDetailViewportHeight_);
+    }
+  }
+
+  if (activityDetailTouchBound_) return;
+  activityDetailTouchBound_ = true;
+
+  noteEl.addEventListener('touchstart', function(event) {
+    if (!event.touches || event.touches.length !== 1) return;
+
+    activityDetailTouchStartY_ = event.touches[0].clientY;
+    activityDetailTouchStartScrollTop_ = noteEl.scrollTop;
+  }, { passive: true });
+
+  noteEl.addEventListener('touchmove', function(event) {
+    if (!event.touches || event.touches.length !== 1) return;
+
+    const maxScrollTop = Math.max(0, noteEl.scrollHeight - noteEl.clientHeight);
+
+    if (maxScrollTop <= 0) return;
+
+    const deltaY = activityDetailTouchStartY_ - event.touches[0].clientY;
+    const nextScrollTop = Math.max(
+      0,
+      Math.min(maxScrollTop, activityDetailTouchStartScrollTop_ + deltaY)
+    );
+
+    noteEl.scrollTop = nextScrollTop;
+    event.preventDefault();
+    event.stopPropagation();
+  }, { passive: false });
+
+  modal.addEventListener('touchmove', function(event) {
+    if (noteEl.contains(event.target)) return;
+    event.preventDefault();
+  }, { passive: false });
 }
 
 function formatActivityListDate_(value) {
@@ -915,40 +1018,74 @@ function injectActivityDetailNoteStyle_() {
   const style = document.createElement('style');
   style.id = 'activityDetailNoteStyle';
   style.textContent = `
+    html.activity-detail-open,
     body.activity-detail-open {
-      overflow: hidden;
+      overflow: hidden !important;
+      height: 100% !important;
+      overscroll-behavior: none !important;
     }
 
     .activity-detail-modal {
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: var(--activity-detail-viewport-height, 100vh) !important;
+      max-height: var(--activity-detail-viewport-height, 100vh) !important;
+      padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left)) !important;
+      align-items: stretch !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+      touch-action: none;
     }
 
     .activity-detail-box {
-      display: flex;
-      flex-direction: column;
-      max-height: calc(100dvh - 32px);
-      overflow: hidden;
-      margin-top: auto;
-      margin-bottom: auto;
+      position: relative !important;
+      display: grid !important;
+      grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+      width: min(100%, 430px) !important;
+      height: 100% !important;
+      max-height: none !important;
+      min-height: 0 !important;
+      margin: 0 auto !important;
+      overflow: hidden !important;
+      padding:
+        18px
+        14px
+        max(12px, env(safe-area-inset-bottom)) !important;
     }
 
     .activity-detail-title,
     .activity-detail-date,
     .activity-detail-close-btn {
-      flex: 0 0 auto;
+      min-height: 0;
+    }
+
+    .activity-detail-title {
+      margin-bottom: 10px !important;
     }
 
     .activity-detail-note {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-      margin-bottom: 14px;
-      padding-right: 2px;
+      min-height: 0 !important;
+      height: 100% !important;
+      overflow-x: hidden !important;
+      overflow-y: scroll !important;
+      overscroll-behavior-y: contain !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y !important;
+      margin-bottom: 10px !important;
+      padding: 0 2px 18px 0 !important;
+    }
+
+    .activity-detail-close-btn {
+      position: relative;
+      z-index: 5;
+      flex: none !important;
+      margin-top: 0 !important;
     }
 
     .activity-detail-note-card {
@@ -984,6 +1121,9 @@ function injectActivityDetailNoteStyle_() {
       display: block;
       width: 100%;
       overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
       border: 1px solid #d8e2ee;
       border-radius: 10px;
       background: #ffffff;
@@ -1088,6 +1228,27 @@ function injectActivityDetailNoteStyle_() {
       .activity-detail-note-table td:not(.temple-cell),
       .activity-detail-note-table th:not(:first-child) {
         min-width: 30px;
+      }
+
+      .activity-detail-modal {
+        padding-top: max(6px, env(safe-area-inset-top)) !important;
+        padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+      }
+
+      .activity-detail-box {
+        width: 100% !important;
+        border-radius: 18px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+
+      .activity-detail-note-table-wrap {
+        overflow-x: visible !important;
+      }
+
+      .activity-detail-note-table {
+        width: 100% !important;
+        font-size: 12px !important;
       }
     }
   `;
