@@ -8,7 +8,7 @@
 2. 顯示啟用中的道務活動列表。
 3. admin 可從上方按鈕進入「道務活動設定」。
 4. 一般 user 只會看到「首頁」與「登出」。
-5. R11：詳細視窗可上下滑動，並顯示三大組標題與小計。
+5. R13：iPhone 可上下滑動；三大組各自顯示欄位標題、小計佛堂間數，並精簡期間資訊。
 
 注意事項：
 1. 本頁只讀取資料，不修改資料。
@@ -683,45 +683,106 @@ function renderActivityDetailNoteHtml_(note) {
   const text = String(note || '').trim();
 
   if (!text) {
-    return '<div class="activity-detail-note-empty">備註：無</div>';
+    return '<div class="activity-detail-note-empty">無資料</div>';
   }
 
   const parsed = parseReceiveByTempleNote_(text);
 
   if (!parsed) {
-    return '<div class="activity-detail-note-text">備註：' + escapeActivityListHtml_(text) + '</div>';
+    return '<div class="activity-detail-note-text">' + escapeActivityListHtml_(text) + '</div>';
   }
 
   injectActivityDetailNoteStyle_();
 
   const showChildColumns = parsed.columnMode !== 'qianKunOnly';
-
-  const tableColumnCount = showChildColumns ? 6 : 4;
-  const rowsHtml = parsed.rows.map(function(row) {
-    if (row.isGroupHeading) {
-      return '' +
-        '<tr class="is-group-heading">' +
-          '<td colspan="' + String(tableColumnCount) + '">' +
-            escapeActivityListHtml_(row.temple) +
-          '</td>' +
-        '</tr>';
-    }
-
-    const isTotal = row.temple === '合計' || row.temple === '總計';
-    const isGroupSubtotal = row.temple.indexOf('小計') >= 0;
-
-    return '' +
-      '<tr class="' + (isTotal ? 'is-total' : '') + (isGroupSubtotal ? ' is-group-subtotal' : '') + '">' +
-        '<td class="temple-cell">' + escapeActivityListHtml_(row.temple) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.total) + '</td>' +
-        '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.qian)) + '</td>' +
-        '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.kun)) + '</td>' +
-        (showChildColumns ? '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.tong)) + '</td>' : '') +
-        (showChildColumns ? '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.nv)) + '</td>' : '') +
-      '</tr>';
+  const sections = buildActivityDetailGroupSections_(parsed.rows);
+  const sectionsHtml = sections.map(function(section) {
+    return renderActivityDetailGroupSection_(section, showChildColumns);
   }).join('');
 
-  const tableHeaderHtml = '' +
+  return '' +
+    '<div class="activity-detail-note-card">' +
+      renderActivityDetailNoteMetaHtml_(parsed) +
+      '<div class="activity-detail-groups">' + sectionsHtml + '</div>' +
+    '</div>';
+}
+
+function normalizeActivityDetailGroupTitle_(value) {
+  const text = normalizeActivityListText_(value);
+
+  if (text.indexOf('第一大組') === 0) return '第一大組';
+  if (text.indexOf('第二大組') === 0) return '第二大組';
+  if (text.indexOf('第三大組') === 0) return '第三大組';
+  if (text.indexOf('其他') === 0) return '其他';
+
+  return text || '統計';
+}
+
+function buildActivityDetailGroupSections_(rows) {
+  const sections = [];
+  let current = null;
+  let finalTotal = null;
+
+  (rows || []).forEach(function(row) {
+    if (row.isGroupHeading) {
+      current = {
+        title: normalizeActivityDetailGroupTitle_(row.temple),
+        rows: [],
+        subtotal: null,
+        templeCount: 0
+      };
+      sections.push(current);
+      return;
+    }
+
+    if (row.temple === '總計' || row.temple === '合計') {
+      finalTotal = row;
+      return;
+    }
+
+    if (row.temple.indexOf('小計') >= 0) {
+      if (!current) {
+        current = {
+          title: '統計',
+          rows: [],
+          subtotal: null,
+          templeCount: 0
+        };
+        sections.push(current);
+      }
+      current.subtotal = row;
+      return;
+    }
+
+    if (!current) {
+      current = {
+        title: '統計',
+        rows: [],
+        subtotal: null,
+        templeCount: 0
+      };
+      sections.push(current);
+    }
+
+    current.rows.push(row);
+    current.templeCount++;
+  });
+
+  if (finalTotal) {
+    sections.push({
+      title: '',
+      rows: [],
+      subtotal: finalTotal,
+      templeCount: 0,
+      isGrandTotal: true
+    });
+  }
+
+  return sections;
+}
+
+function renderActivityDetailGroupSection_(section, showChildColumns) {
+  const headers = '' +
     '<tr>' +
       '<th>所屬佛堂</th>' +
       '<th>人數</th>' +
@@ -731,17 +792,66 @@ function renderActivityDetailNoteHtml_(note) {
       (showChildColumns ? '<th>女</th>' : '') +
     '</tr>';
 
+  const bodyRows = (section.rows || []).map(function(row) {
+    return renderActivityDetailDataRow_(row, showChildColumns, '');
+  }).join('');
+
+  let subtotalHtml = '';
+
+  if (section.subtotal) {
+    const label = section.isGrandTotal
+      ? '總計'
+      : '小計：' + String(section.templeCount || 0) + '間';
+
+    const subtotal = {
+      temple: label,
+      total: section.subtotal.total,
+      qian: section.subtotal.qian,
+      kun: section.subtotal.kun,
+      tong: section.subtotal.tong,
+      nv: section.subtotal.nv
+    };
+
+    subtotalHtml = renderActivityDetailDataRow_(
+      subtotal,
+      showChildColumns,
+      section.isGrandTotal ? 'is-total' : 'is-group-subtotal'
+    );
+  }
+
+  if (section.isGrandTotal) {
+    return '' +
+      '<div class="activity-detail-grand-total">' +
+        '<table class="activity-detail-note-table">' +
+          '<tbody>' + subtotalHtml + '</tbody>' +
+        '</table>' +
+      '</div>';
+  }
+
   return '' +
-    '<div class="activity-detail-note-card">' +
-      '<div class="activity-detail-note-title">備註：' + escapeActivityListHtml_(parsed.modeText || '系統統計') + '</div>' +
-      renderActivityDetailNoteMetaHtml_(parsed) +
+    '<section class="activity-detail-group-section">' +
+      '<div class="activity-detail-group-title">' +
+        escapeActivityListHtml_(section.title) +
+      '</div>' +
       '<div class="activity-detail-note-table-wrap">' +
         '<table class="activity-detail-note-table">' +
-          '<thead>' + tableHeaderHtml + '</thead>' +
-          '<tbody>' + rowsHtml + '</tbody>' +
+          '<thead>' + headers + '</thead>' +
+          '<tbody>' + bodyRows + subtotalHtml + '</tbody>' +
         '</table>' +
       '</div>' +
-    '</div>';
+    '</section>';
+}
+
+function renderActivityDetailDataRow_(row, showChildColumns, className) {
+  return '' +
+    '<tr class="' + escapeActivityListHtml_(className || '') + '">' +
+      '<td class="temple-cell">' + escapeActivityListHtml_(row.temple) + '</td>' +
+      '<td>' + escapeActivityListHtml_(row.total) + '</td>' +
+      '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.qian)) + '</td>' +
+      '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.kun)) + '</td>' +
+      (showChildColumns ? '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.tong)) + '</td>' : '') +
+      (showChildColumns ? '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.nv)) + '</td>' : '') +
+    '</tr>';
 }
 
 
@@ -755,19 +865,19 @@ function renderActivityDetailNoteMetaHtml_(parsed) {
   const parts = [];
 
   if (parsed.settingPeriod) {
-    parts.push('<div><span>設定期間</span>' + escapeActivityListHtml_(parsed.settingPeriod) + '</div>');
+    parts.push('<div><span>設定期間：</span><strong>' + escapeActivityListHtml_(parsed.settingPeriod) + '</strong></div>');
   }
 
   if (parsed.dataPeriod) {
-    parts.push('<div><span>目前資料</span>' + escapeActivityListHtml_(parsed.dataPeriod) + '</div>');
+    parts.push('<div><span>目前資料：</span><strong>' + escapeActivityListHtml_(parsed.dataPeriod) + '</strong></div>');
   }
 
   if (!parsed.settingPeriod && parsed.period) {
-    parts.push('<div><span>期間</span>' + escapeActivityListHtml_(parsed.period) + '</div>');
+    parts.push('<div><span>期間：</span><strong>' + escapeActivityListHtml_(parsed.period) + '</strong></div>');
   }
 
   if (parsed.location) {
-    parts.push('<div><span>地點</span>' + escapeActivityListHtml_(parsed.location) + '</div>');
+    parts.push('<div><span>地點：</span><strong>' + escapeActivityListHtml_(parsed.location) + '</strong></div>');
   }
 
   if (parts.length === 0) {
@@ -1089,32 +1199,68 @@ function injectActivityDetailNoteStyle_() {
     }
 
     .activity-detail-note-card {
-      margin-top: 12px;
+      margin-top: 0;
       line-height: 1.38;
       color: #1f2d3d;
     }
 
-    .activity-detail-note-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: #07365f;
-      margin-bottom: 8px;
-    }
-
     .activity-detail-note-meta {
       display: grid;
-      gap: 4px;
+      gap: 5px;
       margin-bottom: 10px;
       font-size: 14px;
       color: #34495e;
     }
 
+    .activity-detail-note-meta div {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: nowrap;
+    }
+
     .activity-detail-note-meta span {
-      display: inline-block;
-      min-width: 68px;
-      margin-right: 6px;
+      display: inline;
+      min-width: 0;
+      margin-right: 0;
       font-weight: 800;
       color: #07365f;
+      white-space: nowrap;
+    }
+
+    .activity-detail-note-meta strong {
+      font-weight: 500;
+      color: #34495e;
+      white-space: nowrap;
+    }
+
+    .activity-detail-groups {
+      display: grid;
+      gap: 14px;
+    }
+
+    .activity-detail-group-section {
+      display: block;
+    }
+
+    .activity-detail-group-title {
+      padding: 8px 10px;
+      background: #e8f1fb;
+      color: #07365f;
+      font-size: 15px;
+      font-weight: 900;
+      border: 1px solid #d8e2ee;
+      border-bottom: 0;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .activity-detail-group-section .activity-detail-note-table-wrap {
+      border-radius: 0 0 10px 10px;
+    }
+
+    .activity-detail-grand-total {
+      border: 1px solid #d8e2ee;
+      border-radius: 10px;
+      overflow: hidden;
     }
 
     .activity-detail-note-table-wrap {
@@ -1167,7 +1313,7 @@ function injectActivityDetailNoteStyle_() {
     .activity-detail-note-table .temple-cell {
       text-align: center;
       font-weight: 700;
-      min-width: 76px;
+      min-width: 110px;
     }
 
     .activity-detail-note-table td:not(.temple-cell),
@@ -1204,10 +1350,6 @@ function injectActivityDetailNoteStyle_() {
     }
 
     @media (max-width: 600px) {
-      .activity-detail-note-title {
-        font-size: 16px;
-      }
-
       .activity-detail-note-meta {
         font-size: 13px;
       }
@@ -1222,7 +1364,7 @@ function injectActivityDetailNoteStyle_() {
       }
 
       .activity-detail-note-table .temple-cell {
-        min-width: 72px;
+        min-width: 102px;
       }
 
       .activity-detail-note-table td:not(.temple-cell),
