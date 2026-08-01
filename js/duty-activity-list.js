@@ -8,6 +8,7 @@
 2. 顯示啟用中的道務活動列表。
 3. admin 可從上方按鈕進入「道務活動設定」。
 4. 一般 user 只會看到「首頁」與「登出」。
+5. R11：詳細視窗可上下滑動，並顯示三大組標題與小計。
 
 注意事項：
 1. 本頁只讀取資料，不修改資料。
@@ -251,6 +252,11 @@ noteEl.style.whiteSpace = 'normal';
 }
 
 modal.style.display = 'flex';
+document.body.classList.add('activity-detail-open');
+
+if (noteEl) {
+  noteEl.scrollTop = 0;
+}
 }
 
 function closeActivityDetailModal_() {
@@ -259,6 +265,8 @@ const modal = document.getElementById('activityDetailModal');
 if (modal) {
 modal.style.display = 'none';
 }
+
+document.body.classList.remove('activity-detail-open');
 }
 
 function formatActivityListDate_(value) {
@@ -585,8 +593,18 @@ function renderActivityDetailNoteHtml_(note) {
 
   const showChildColumns = parsed.columnMode !== 'qianKunOnly';
 
+  const tableColumnCount = showChildColumns ? 6 : 4;
   const rowsHtml = parsed.rows.map(function(row) {
-    const isTotal = row.temple === '合計';
+    if (row.isGroupHeading) {
+      return '' +
+        '<tr class="is-group-heading">' +
+          '<td colspan="' + String(tableColumnCount) + '">' +
+            escapeActivityListHtml_(row.temple) +
+          '</td>' +
+        '</tr>';
+    }
+
+    const isTotal = row.temple === '合計' || row.temple === '總計';
     const isGroupSubtotal = row.temple.indexOf('小計') >= 0;
 
     return '' +
@@ -724,6 +742,19 @@ function parseReceiveByTempleNoteRowsFromLines_(text) {
     if (cleanLine.indexOf('求道統計+壇名') >= 0) return;
     if (cleanLine.indexOf('期間：') >= 0) return;
     if (cleanLine.indexOf('地點：') >= 0) return;
+
+    if (/^(第一大組|第二大組|第三大組|其他)(?:（[^）]*）)?$/.test(cleanLine)) {
+      rows.push({
+        temple: cleanLine,
+        total: '',
+        qian: '',
+        kun: '',
+        tong: '',
+        nv: '',
+        isGroupHeading: true
+      });
+      return;
+    }
 
     const parts = cleanLine.split(/\t+|\s{2,}/).map(function(part) {
       return part.trim();
@@ -884,6 +915,42 @@ function injectActivityDetailNoteStyle_() {
   const style = document.createElement('style');
   style.id = 'activityDetailNoteStyle';
   style.textContent = `
+    body.activity-detail-open {
+      overflow: hidden;
+    }
+
+    .activity-detail-modal {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .activity-detail-box {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100dvh - 32px);
+      overflow: hidden;
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+
+    .activity-detail-title,
+    .activity-detail-date,
+    .activity-detail-close-btn {
+      flex: 0 0 auto;
+    }
+
+    .activity-detail-note {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      margin-bottom: 14px;
+      padding-right: 2px;
+    }
+
     .activity-detail-note-card {
       margin-top: 12px;
       line-height: 1.38;
@@ -968,6 +1035,15 @@ function injectActivityDetailNoteStyle_() {
       min-width: 34px;
     }
 
+
+    .activity-detail-note-table tr.is-group-heading td {
+      background: #e8f1fb;
+      color: #07365f;
+      font-weight: 900;
+      text-align: left;
+      padding: 8px 10px;
+      border-right: 0;
+    }
 
     .activity-detail-note-table tr.is-group-subtotal td {
       background: #fff8e8;
