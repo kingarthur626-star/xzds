@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-01 V6
+   Update: 2026-08-02 R17
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -9,8 +9,7 @@
 ========================= */
 
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260801-006';
-
+const CACHE_NAME = CACHE_PREFIX + '20260802-017';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -61,16 +60,10 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('fetch', function(event) {
   const request = event.request;
-
-  if (request.method !== 'GET') {
-    return;
-  }
+  if (request.method !== 'GET') return;
 
   const requestUrl = new URL(request.url);
-
-  if (requestUrl.origin !== self.location.origin) {
-    return;
-  }
+  if (requestUrl.origin !== self.location.origin) return;
 
   if (isFreshnessCriticalRequest_(request, requestUrl)) {
     event.respondWith(networkFirst_(request));
@@ -87,10 +80,7 @@ self.addEventListener('message', function(event) {
 });
 
 function isFreshnessCriticalRequest_(request, requestUrl) {
-  if (request.mode === 'navigate') {
-    return true;
-  }
-
+  if (request.mode === 'navigate') return true;
   const path = requestUrl.pathname.toLowerCase();
   return (
     path.endsWith('.html') ||
@@ -110,11 +100,9 @@ function networkFirst_(request) {
     }).catch(function() {
       return cache.match(request, { ignoreSearch: true }).then(function(cached) {
         if (cached) return cached;
-
         if (request.mode === 'navigate') {
           return cache.match('./index.html', { ignoreSearch: true });
         }
-
         return Response.error();
       });
     });
@@ -125,7 +113,6 @@ function cacheFirst_(request) {
   return caches.open(CACHE_NAME).then(function(cache) {
     return cache.match(request, { ignoreSearch: true }).then(function(cached) {
       if (cached) return cached;
-
       return fetch(request).then(function(response) {
         if (response && response.ok) {
           cache.put(request, response.clone());
@@ -138,7 +125,6 @@ function cacheFirst_(request) {
 
 async function precacheAvailableAssets_() {
   const cache = await caches.open(CACHE_NAME);
-
   await Promise.all(
     STATIC_ASSETS.map(async function(asset) {
       try {

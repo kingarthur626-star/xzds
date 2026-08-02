@@ -1,4 +1,4 @@
-﻿/* =========================
+/* =========================
 程式名稱：duty-activity-list.js
 功能說明：
 道務活動列表頁專用程式。
@@ -8,7 +8,7 @@
 2. 顯示啟用中的道務活動列表。
 3. admin 可從上方按鈕進入「道務活動設定」。
 4. 一般 user 只會看到「首頁」與「登出」。
-5. R14：新增完整統計圖片產生與 iPhone 分享功能；關閉與 LINE分享同列。
+5. R17：壇名與壇名資料強制置中；所有活動共用固定按鈕列；小計移除「間」；0 隱藏；雙組分享圖片置中。
 
 注意事項：
 1. 本頁只讀取資料，不修改資料。
@@ -30,7 +30,83 @@ let currentDutyActivityDetail_ = null;
 let activityShareFile_ = null;
 let activityShareObjectUrl_ = '';
 let activitySharePrepareToken_ = 0;
-let activityShareLibraryPromise_ = null;
+
+const DUTY_ACTIVITY_TEMPLE_ORDER_R15 = [
+  "1A_瑩德",
+  "1A_選德",
+  "1A_聯德",
+  "1A_均德",
+  "1A_樹德",
+  "1A_閎德",
+  "1A_誠德",
+  "1A_禛德",
+  "1B_益德",
+  "1B_捷德",
+  "1B_仝德",
+  "1B_愿德",
+  "1B_永德",
+  "1B_代德",
+  "1B_茁德",
+  "1B_根德",
+  "1C_信德",
+  "1C_覺德",
+  "1C_心德",
+  "1C_英德",
+  "1C_山德",
+  "1C_秝德",
+  "1C_如德",
+  "1C_居德",
+  "1C_谷德",
+  "1C_懋德",
+  "1C_煜德",
+  "1C_醒德",
+  "2A_頌德",
+  "2A_顓德",
+  "2A_薪德",
+  "2A_田德",
+  "2A_庚德",
+  "2A_航德",
+  "2A_季德",
+  "2A_記德",
+  "2A_蘊德",
+  "2A_原德",
+  "2B_琳德",
+  "2B_綝德",
+  "2B_胤德",
+  "2B_是德",
+  "2B_昊德",
+  "2B_先德",
+  "2B_渡德",
+  "2B_領德",
+  "3A_和德",
+  "3A_標德",
+  "3A_聞德",
+  "3A_晉德",
+  "3A_鳳德",
+  "3A_皆德",
+  "3A_佑德",
+  "3A_靜德",
+  "3B_文德",
+  "3B_朗德",
+  "3B_慕德",
+  "3B_翰德",
+  "3B_量德",
+  "3B_融德",
+  "3B_望德",
+  "3B_璿德",
+  "3C_端德",
+  "3C_騰德",
+  "3C_蓁德",
+  "3C_述德",
+  "3C_印德",
+  "3C_旺德",
+  "3C_品德"
+];
+
+const DUTY_ACTIVITY_TEMPLE_ORDER_INDEX_R15 = DUTY_ACTIVITY_TEMPLE_ORDER_R15.reduce(function(map, name, index) {
+  map[normalizeDutyActivityTempleKeyR15_(name)] = index;
+  return map;
+}, {});
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -246,6 +322,9 @@ if (mask) {
 }
 
 function showActivityDetailModal_(title, dateRange, note) {
+// R17：無論備註是否能解析成表格，都先套用固定彈窗與按鈕樣式。
+injectActivityDetailNoteStyle_();
+
 const modal = document.getElementById('activityDetailModal');
 const titleEl = document.getElementById('activityDetailTitle');
 const dateEl = document.getElementById('activityDetailDate');
@@ -272,7 +351,7 @@ dateEl.style.display = 'none';
 }
 
 if (noteEl) {
-noteEl.innerHTML = renderActivityDetailNoteHtml_(note);
+noteEl.innerHTML = renderActivityDetailNoteHtml_(note, dateRange);
 noteEl.style.whiteSpace = 'normal';
 }
 
@@ -435,61 +514,6 @@ function resetDutyActivityShareFile_() {
   }
 }
 
-async function ensureDutyActivityHtml2Canvas_() {
-  if (typeof window.html2canvas === 'function') {
-    return window.html2canvas;
-  }
-
-  if (activityShareLibraryPromise_) {
-    return activityShareLibraryPromise_;
-  }
-
-  activityShareLibraryPromise_ = new Promise(function(resolve, reject) {
-    const existing = document.querySelector('script[data-duty-html2canvas="1"]');
-
-    if (existing) {
-      existing.addEventListener('load', function() {
-        if (typeof window.html2canvas === 'function') {
-          resolve(window.html2canvas);
-        } else {
-          reject(new Error('圖片元件載入失敗'));
-        }
-      }, { once: true });
-
-      existing.addEventListener('error', function() {
-        reject(new Error('圖片元件載入失敗'));
-      }, { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-    script.async = true;
-    script.dataset.dutyHtml2canvas = '1';
-
-    script.onload = function() {
-      if (typeof window.html2canvas === 'function') {
-        resolve(window.html2canvas);
-      } else {
-        reject(new Error('圖片元件載入失敗'));
-      }
-    };
-
-    script.onerror = function() {
-      reject(new Error('圖片元件載入失敗'));
-    };
-
-    document.head.appendChild(script);
-  });
-
-  try {
-    return await activityShareLibraryPromise_;
-  } catch (error) {
-    activityShareLibraryPromise_ = null;
-    throw error;
-  }
-}
-
 async function prepareCurrentDutyActivityShareImage_() {
   const detail = currentDutyActivityDetail_;
   const token = ++activitySharePrepareToken_;
@@ -502,17 +526,6 @@ async function prepareCurrentDutyActivityShareImage_() {
   setDutyActivityShareButtonState_('preparing');
 
   try {
-    const html2canvasFn = await ensureDutyActivityHtml2Canvas_();
-
-    if (token !== activitySharePrepareToken_ || detail !== currentDutyActivityDetail_) {
-      return;
-    }
-
-    injectDutyActivityShareStyle_();
-
-    const report = createDutyActivityShareReport_(detail);
-    document.body.appendChild(report);
-
     if (document.fonts && document.fonts.ready) {
       try {
         await document.fonts.ready;
@@ -520,34 +533,22 @@ async function prepareCurrentDutyActivityShareImage_() {
     }
 
     await new Promise(function(resolve) {
-      window.requestAnimationFrame(function() {
-        window.requestAnimationFrame(resolve);
-      });
+      window.requestAnimationFrame(resolve);
     });
-
-    const canvas = await html2canvasFn(report, {
-      backgroundColor: '#f8f4ec',
-      scale: 1,
-      useCORS: true,
-      allowTaint: false,
-      logging: false,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: 1080,
-      width: report.scrollWidth,
-      height: report.scrollHeight
-    });
-
-    report.remove();
 
     if (token !== activitySharePrepareToken_ || detail !== currentDutyActivityDetail_) {
       return;
     }
 
-    const blob = await dutyActivityCanvasToBlob_(canvas, 'image/png', 0.95);
+    const canvas = createDutyActivityShareCanvasR15_(detail);
+    const blob = await dutyActivityCanvasToBlob_(canvas, 'image/png', 1);
 
     if (!blob) {
       throw new Error('圖片產生失敗');
+    }
+
+    if (token !== activitySharePrepareToken_ || detail !== currentDutyActivityDetail_) {
+      return;
     }
 
     const fileName = buildDutyActivityShareFileName_(detail);
@@ -560,6 +561,484 @@ async function prepareCurrentDutyActivityShareImage_() {
       setDutyActivityShareButtonState_('error');
     }
   }
+}
+
+function createDutyActivityShareCanvasR15_(detail) {
+  const parsed = parseReceiveByTempleNote_(detail.note || '');
+  const canvas = document.createElement('canvas');
+  const width = 1440;
+  const marginX = 42;
+  const gap = 26;
+  const topHeight = 226;
+  const groupTitleHeight = 82;
+  const tableHeaderHeight = 58;
+  const rowHeight = 52;
+  const subtotalHeight = 72;
+  const grandTotalHeight = 120;
+  const bottomSpace = 52;
+
+  if (!parsed) {
+    canvas.width = width;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+    drawDutyActivityPosterBackgroundR15_(ctx, canvas.width, canvas.height);
+    drawDutyActivityPosterHeaderR15_(ctx, detail.title || '道務活動統計', detail.dateRange || '', width);
+    ctx.fillStyle = '#ffffff';
+    roundRectDutyActivityR15_(ctx, 70, 250, width - 140, 700, 28, true, false);
+    ctx.fillStyle = '#173a65';
+    ctx.font = dutyActivityCanvasFontR15_(34, 600);
+    drawWrappedDutyActivityTextR15_(ctx, String(detail.note || '無資料'), 110, 310, width - 220, 54);
+    return canvas;
+  }
+
+  const showChildColumns = parsed.columnMode !== 'qianKunOnly';
+  const sections = getDutyActivityVisibleSectionsR16_(
+    buildActivityDetailGroupSections_(parsed.rows)
+  );
+  sortDutyActivitySectionsByMasterOrderR15_(sections);
+
+  const regularSections = sections.filter(function(section) {
+    return !section.isGrandTotal;
+  }).slice(0, 3);
+  const grandTotalSection = sections.find(function(section) {
+    return section.isGrandTotal;
+  });
+
+  if (regularSections.length === 0) {
+    canvas.width = width;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+    drawDutyActivityPosterBackgroundR15_(ctx, canvas.width, canvas.height);
+    drawDutyActivityPosterHeaderR15_(ctx, detail.title || '道務活動統計', detail.dateRange || '', width);
+    ctx.fillStyle = '#ffffff';
+    roundRectDutyActivityR15_(ctx, 70, 250, width - 140, 700, 28, true, false);
+    ctx.fillStyle = '#173a65';
+    ctx.font = dutyActivityCanvasFontR15_(34, 600);
+    drawWrappedDutyActivityTextR15_(ctx, '無各壇統計資料', 110, 310, width - 220, 54);
+    return canvas;
+  }
+
+  const maxRows = Math.max.apply(null, regularSections.map(function(section) {
+    return Math.max(1, (section.rows || []).length);
+  }));
+
+  const cardHeight = groupTitleHeight + tableHeaderHeight + maxRows * rowHeight + subtotalHeight;
+  const height = topHeight + cardHeight + 24 + grandTotalHeight + bottomSpace;
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext('2d');
+  drawDutyActivityPosterBackgroundR15_(ctx, width, height);
+  drawDutyActivityPosterHeaderR15_(
+    ctx,
+    detail.title || '道務活動統計',
+    detail.dateRange || parsed.period || '',
+    width
+  );
+
+  const layout = getDutyActivityShareLayoutR16_(regularSections.length, width, marginX, gap);
+  regularSections.forEach(function(section, index) {
+    const x = layout.startX + index * (layout.cardWidth + layout.gap);
+    drawDutyActivityGroupCardR15_(
+      ctx,
+      section,
+      x,
+      topHeight,
+      layout.cardWidth,
+      cardHeight,
+      maxRows,
+      showChildColumns
+    );
+  });
+
+  const totals = getDutyActivityGrandTotalsR15_(grandTotalSection, regularSections);
+  drawDutyActivityGrandTotalR15_(
+    ctx,
+    marginX,
+    topHeight + cardHeight + 24,
+    width - marginX * 2,
+    grandTotalHeight,
+    totals,
+    showChildColumns
+  );
+
+  return canvas;
+}
+
+function drawDutyActivityPosterBackgroundR15_(ctx, width, height) {
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, '#fffefa');
+  gradient.addColorStop(1, '#f5f0e6');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.strokeStyle = '#d5a23c';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.arc(90 + i * 20, 82, 60 + i * 14, Math.PI, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(width - 90 - i * 20, 82, 60 + i * 14, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawDutyActivityPosterHeaderR15_(ctx, title, period, width) {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#082f6b';
+  ctx.font = dutyActivityCanvasFontR15_(76, 800);
+  fitDutyActivityCanvasTextR15_(ctx, normalizeActivityListText_(title), width - 180, 76, 56);
+  ctx.fillText(normalizeActivityListText_(title), width / 2, 74);
+
+  const divider = ctx.createLinearGradient(200, 0, width - 200, 0);
+  divider.addColorStop(0, 'rgba(205,145,36,0)');
+  divider.addColorStop(0.25, '#d09a32');
+  divider.addColorStop(0.75, '#d09a32');
+  divider.addColorStop(1, 'rgba(205,145,36,0)');
+  ctx.strokeStyle = divider;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(230, 132);
+  ctx.lineTo(width - 230, 132);
+  ctx.stroke();
+  ctx.fillStyle = '#d09a32';
+  ctx.beginPath();
+  ctx.arc(width / 2, 132, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (period) {
+    ctx.fillStyle = '#173a65';
+    ctx.font = dutyActivityCanvasFontR15_(34, 600);
+    ctx.fillText('期間：' + normalizeActivityListText_(period), width / 2, 180);
+  }
+  ctx.restore();
+}
+
+function drawDutyActivityGroupCardR15_(ctx, section, x, y, width, height, maxRows, showChildColumns) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(20, 54, 97, 0.12)';
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 8;
+  ctx.fillStyle = 'rgba(255,255,255,0.97)';
+  roundRectDutyActivityR15_(ctx, x, y, width, height, 24, true, false);
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = '#d09a32';
+  ctx.lineWidth = 2.5;
+  roundRectDutyActivityR15_(ctx, x, y, width, height, 24, false, true);
+
+  const groupTitleHeight = 82;
+  const headerHeight = 58;
+  const rowHeight = 52;
+  const subtotalHeight = 72;
+
+  ctx.fillStyle = '#fffaf0';
+  roundRectDutyActivityR15_(ctx, x + 2, y + 2, width - 4, groupTitleHeight, 22, true, false);
+  ctx.fillStyle = '#08336d';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = dutyActivityCanvasFontR15_(42, 800);
+  fitDutyActivityCanvasTextR15_(ctx, section.title || '統計', width - 40, 42, 30);
+  ctx.fillText(section.title || '統計', x + width / 2, y + groupTitleHeight / 2 + 3);
+
+  const columns = showChildColumns
+    ? [0.36, 0.20, 0.11, 0.11, 0.11, 0.11]
+    : [0.44, 0.22, 0.17, 0.17];
+  const headers = showChildColumns
+    ? ['壇名', '人數', '乾', '坤', '童', '女']
+    : ['壇名', '人數', '乾', '坤'];
+  const headerY = y + groupTitleHeight;
+  ctx.fillStyle = '#083d7c';
+  ctx.fillRect(x, headerY, width, headerHeight);
+  drawDutyActivityTableGridAndTextR15_(ctx, x, headerY, width, headerHeight, columns, headers, true);
+
+  const rows = section.rows || [];
+  for (let i = 0; i < maxRows; i++) {
+    const rowY = headerY + headerHeight + i * rowHeight;
+    ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#fbfdff';
+    ctx.fillRect(x, rowY, width, rowHeight);
+    const row = rows[i];
+    const values = row
+      ? (showChildColumns
+          ? [
+              row.temple,
+              formatDutyActivityDisplayNumberR16_(row.total),
+              formatDutyActivityDisplayNumberR16_(row.qian),
+              formatDutyActivityDisplayNumberR16_(row.kun),
+              formatDutyActivityDisplayNumberR16_(row.tong),
+              formatDutyActivityDisplayNumberR16_(row.nv)
+            ]
+          : [
+              row.temple,
+              formatDutyActivityDisplayNumberR16_(row.total),
+              formatDutyActivityDisplayNumberR16_(row.qian),
+              formatDutyActivityDisplayNumberR16_(row.kun)
+            ])
+      : ['', '', '', '', '', ''].slice(0, headers.length);
+    drawDutyActivityTableGridAndTextR15_(ctx, x, rowY, width, rowHeight, columns, values, false);
+  }
+
+  const subtotalY = y + height - subtotalHeight;
+  const subtotalGradient = ctx.createLinearGradient(0, subtotalY, 0, subtotalY + subtotalHeight);
+  subtotalGradient.addColorStop(0, '#fff8e7');
+  subtotalGradient.addColorStop(1, '#fff0c9');
+  ctx.fillStyle = subtotalGradient;
+  ctx.fillRect(x, subtotalY, width, subtotalHeight);
+  ctx.strokeStyle = '#d6a13a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, subtotalY);
+  ctx.lineTo(x + width, subtotalY);
+  ctx.stroke();
+
+  const subtotal = section.subtotal || sumDutyActivityRowsR15_(rows);
+  const subtotalValues = showChildColumns
+    ? [
+        '小計：' + String(section.templeCount || rows.length || 0),
+        formatDutyActivityDisplayNumberR16_(subtotal.total),
+        formatDutyActivityDisplayNumberR16_(subtotal.qian),
+        formatDutyActivityDisplayNumberR16_(subtotal.kun),
+        formatDutyActivityDisplayNumberR16_(subtotal.tong),
+        formatDutyActivityDisplayNumberR16_(subtotal.nv)
+      ]
+    : [
+        '小計：' + String(section.templeCount || rows.length || 0),
+        formatDutyActivityDisplayNumberR16_(subtotal.total),
+        formatDutyActivityDisplayNumberR16_(subtotal.qian),
+        formatDutyActivityDisplayNumberR16_(subtotal.kun)
+      ];
+
+  drawDutyActivitySubtotalRowR16_(
+    ctx,
+    x,
+    subtotalY,
+    width,
+    subtotalHeight,
+    columns,
+    subtotalValues
+  );
+  ctx.restore();
+}
+
+function drawDutyActivityTableGridAndTextR15_(ctx, x, y, width, height, columns, values, isHeader) {
+  let currentX = x;
+  ctx.save();
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.font = dutyActivityCanvasFontR15_(isHeader ? 24 : 23, isHeader ? 800 : 600);
+  ctx.fillStyle = isHeader ? '#ffffff' : '#082c5d';
+  ctx.strokeStyle = isHeader ? 'rgba(255,255,255,0.35)' : '#d8e4ef';
+  ctx.lineWidth = 1;
+
+  columns.forEach(function(ratio, index) {
+    const cellWidth = width * ratio;
+    if (index > 0) {
+      ctx.beginPath();
+      ctx.moveTo(currentX, y);
+      ctx.lineTo(currentX, y + height);
+      ctx.stroke();
+    }
+    const text = normalizeActivityListText_(values[index]);
+    const maxWidth = cellWidth - 12;
+    const baseSize = isHeader ? 24 : (index === 0 ? 23 : 24);
+    fitDutyActivityCanvasTextR15_(ctx, text, maxWidth, baseSize, 16);
+    ctx.fillText(text, currentX + cellWidth / 2, y + height / 2 + 1);
+    currentX += cellWidth;
+  });
+
+  ctx.beginPath();
+  ctx.moveTo(x, y + height);
+  ctx.lineTo(x + width, y + height);
+  ctx.stroke();
+  ctx.restore();
+}
+
+
+function getDutyActivityShareLayoutR16_(count, width, marginX, gap) {
+  const availableWidth = width - marginX * 2;
+
+  if (count <= 1) {
+    const cardWidth = Math.min(820, availableWidth);
+    return {
+      cardWidth: cardWidth,
+      gap: 0,
+      startX: (width - cardWidth) / 2
+    };
+  }
+
+  if (count === 2) {
+    const cardWidth = Math.min(620, (availableWidth - gap) / 2);
+    const totalWidth = cardWidth * 2 + gap;
+    return {
+      cardWidth: cardWidth,
+      gap: gap,
+      startX: (width - totalWidth) / 2
+    };
+  }
+
+  return {
+    cardWidth: (availableWidth - gap * 2) / 3,
+    gap: gap,
+    startX: marginX
+  };
+}
+
+function drawDutyActivitySubtotalRowR16_(ctx, x, y, width, height, columns, values) {
+  let currentX = x;
+  ctx.save();
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#8a5200';
+  ctx.strokeStyle = '#e2c686';
+  ctx.lineWidth = 1;
+
+  columns.forEach(function(ratio, index) {
+    const cellWidth = width * ratio;
+    if (index > 0) {
+      ctx.beginPath();
+      ctx.moveTo(currentX, y);
+      ctx.lineTo(currentX, y + height);
+      ctx.stroke();
+    }
+
+    const text = normalizeActivityListText_(values[index]);
+    const startSize = index === 0 ? 28 : 31;
+    fitDutyActivityCanvasTextR15_(ctx, text, cellWidth - 12, startSize, 16);
+    ctx.fillText(text, currentX + cellWidth / 2, y + height / 2 + 1);
+    currentX += cellWidth;
+  });
+
+  ctx.restore();
+}
+
+function drawDutyActivityGrandTotalR15_(ctx, x, y, width, height, total, showChildColumns) {
+  ctx.save();
+  const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
+  gradient.addColorStop(0, '#0b4f98');
+  gradient.addColorStop(1, '#062c63');
+  ctx.fillStyle = gradient;
+  roundRectDutyActivityR15_(ctx, x, y, width, height, 28, true, false);
+  ctx.strokeStyle = '#d9a238';
+  ctx.lineWidth = 4;
+  roundRectDutyActivityR15_(ctx, x, y, width, height, 28, false, true);
+
+  let items = showChildColumns
+    ? [['總計', total.total], ['乾', total.qian], ['坤', total.kun], ['童', total.tong], ['女', total.nv]]
+    : [['總計', total.total], ['乾', total.qian], ['坤', total.kun]];
+
+  items = items.filter(function(item, index) {
+    return index === 0 || Number(item[1] || 0) !== 0;
+  });
+
+  const itemWidth = width / Math.max(1, items.length);
+  items.forEach(function(item, index) {
+    const cx = x + itemWidth * index + itemWidth / 2;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = item[0] === '乾' ? '#f1c45f' : '#ffffff';
+    ctx.font = dutyActivityCanvasFontR15_(30, 800);
+    ctx.fillText(item[0], cx, y + 38);
+    ctx.font = dutyActivityCanvasFontR15_(56, 800);
+    ctx.fillText(formatDutyActivityDisplayNumberR16_(item[1]) || '0', cx, y + 86);
+    if (index > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + itemWidth * index, y + 22);
+      ctx.lineTo(x + itemWidth * index, y + height - 22);
+      ctx.stroke();
+    }
+  });
+  ctx.restore();
+}
+
+function getDutyActivityGrandTotalsR15_(grandTotalSection, sections) {
+  if (grandTotalSection && grandTotalSection.subtotal) {
+    return {
+      total: Number(grandTotalSection.subtotal.total || 0),
+      qian: Number(grandTotalSection.subtotal.qian || 0),
+      kun: Number(grandTotalSection.subtotal.kun || 0),
+      tong: Number(grandTotalSection.subtotal.tong || 0),
+      nv: Number(grandTotalSection.subtotal.nv || 0)
+    };
+  }
+
+  const total = { total: 0, qian: 0, kun: 0, tong: 0, nv: 0 };
+  (sections || []).forEach(function(section) {
+    const subtotal = section.subtotal || sumDutyActivityRowsR15_(section.rows || []);
+    total.total += Number(subtotal.total || 0);
+    total.qian += Number(subtotal.qian || 0);
+    total.kun += Number(subtotal.kun || 0);
+    total.tong += Number(subtotal.tong || 0);
+    total.nv += Number(subtotal.nv || 0);
+  });
+  return total;
+}
+
+function sumDutyActivityRowsR15_(rows) {
+  return (rows || []).reduce(function(total, row) {
+    total.total += Number(row.total || 0);
+    total.qian += Number(row.qian || 0);
+    total.kun += Number(row.kun || 0);
+    total.tong += Number(row.tong || 0);
+    total.nv += Number(row.nv || 0);
+    return total;
+  }, { total: 0, qian: 0, kun: 0, tong: 0, nv: 0 });
+}
+
+function roundRectDutyActivityR15_(ctx, x, y, width, height, radius, fill, stroke) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+  if (fill) ctx.fill();
+  if (stroke) ctx.stroke();
+}
+
+function dutyActivityCanvasFontR15_(size, weight) {
+  return String(weight || 600) + ' ' + String(size || 24) + 'px "Kaiti TC", "BiauKai", "DFKai-SB", "標楷體", "PingFang TC", "Microsoft JhengHei", serif';
+}
+
+function fitDutyActivityCanvasTextR15_(ctx, text, maxWidth, startSize, minSize) {
+  let size = startSize;
+  while (size > minSize) {
+    ctx.font = dutyActivityCanvasFontR15_(size, 700);
+    if (ctx.measureText(text).width <= maxWidth) break;
+    size -= 1;
+  }
+  return size;
+}
+
+function drawWrappedDutyActivityTextR15_(ctx, text, x, y, maxWidth, lineHeight) {
+  const characters = Array.from(String(text || ''));
+  let line = '';
+  let cursorY = y;
+  characters.forEach(function(character) {
+    if (character === '\n') {
+      ctx.fillText(line, x, cursorY);
+      line = '';
+      cursorY += lineHeight;
+      return;
+    }
+    const test = line + character;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, cursorY);
+      line = character;
+      cursorY += lineHeight;
+    } else {
+      line = test;
+    }
+  });
+  if (line) ctx.fillText(line, x, cursorY);
 }
 
 async function shareCurrentDutyActivityImage_() {
@@ -685,7 +1164,9 @@ function buildDutyActivityShareReportHtml_(title, dateRange, parsed, rawNote) {
   }
 
   const showChildColumns = parsed.columnMode !== 'qianKunOnly';
-  const sections = buildActivityDetailGroupSections_(parsed.rows);
+  const sections = getDutyActivityVisibleSectionsR16_(
+    buildActivityDetailGroupSections_(parsed.rows)
+  );
   const regularSections = sections.filter(function(section) {
     return !section.isGrandTotal;
   });
@@ -703,8 +1184,15 @@ function buildDutyActivityShareReportHtml_(title, dateRange, parsed, rawNote) {
     showChildColumns
   );
 
+  const sectionCount = Math.max(1, regularSections.length);
+  const mainStyle = sectionCount === 1
+    ? 'grid-template-columns:minmax(0,1fr);width:58%;margin-left:auto;margin-right:auto'
+    : (sectionCount === 2
+        ? 'grid-template-columns:repeat(2,minmax(0,1fr));width:82%;margin-left:auto;margin-right:auto'
+        : 'grid-template-columns:repeat(3,minmax(0,1fr))');
+
   return header +
-    '<main class="duty-share-main">' + sectionsHtml + '</main>' +
+    '<main class="duty-share-main" style="' + mainStyle + '">' + sectionsHtml + '</main>' +
     grandTotalHtml;
 }
 
@@ -713,16 +1201,17 @@ function renderDutyActivityShareGroup_(section, showChildColumns) {
     return '' +
       '<tr>' +
         '<td class="duty-share-temple">' + escapeActivityListHtml_(row.temple) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.total) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.qian) + '</td>' +
-        '<td>' + escapeActivityListHtml_(row.kun) + '</td>' +
-        (showChildColumns ? '<td>' + escapeActivityListHtml_(row.tong) + '</td>' : '') +
-        (showChildColumns ? '<td>' + escapeActivityListHtml_(row.nv) + '</td>' : '') +
+        '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.total)) + '</td>' +
+        '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.qian)) + '</td>' +
+        '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.kun)) + '</td>' +
+        (showChildColumns ? '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.tong)) + '</td>' : '') +
+        (showChildColumns ? '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.nv)) + '</td>' : '') +
       '</tr>';
   }).join('');
 
-  const subtotal = section.subtotal || {};
-  const countLabel = '小計：' + String(section.templeCount || 0) + '間';
+  const subtotal = section.subtotal || sumDutyActivityRowsR15_(section.rows || []);
+  const countLabel = '小計：' + String(section.templeCount || 0);
+  const subtotalClass = showChildColumns ? ' has-child-columns' : '';
 
   return '' +
     '<section class="duty-share-group">' +
@@ -731,18 +1220,18 @@ function renderDutyActivityShareGroup_(section, showChildColumns) {
       '</h2><span>✧</span></div>' +
       '<table class="duty-share-table">' +
         '<thead><tr>' +
-          '<th>所屬佛堂</th><th>人數</th><th>乾</th><th>坤</th>' +
+          '<th class="duty-share-temple-header">壇名</th><th class="duty-share-people-header">人數</th><th>乾</th><th>坤</th>' +
           (showChildColumns ? '<th>童</th><th>女</th>' : '') +
         '</tr></thead>' +
         '<tbody>' + rowsHtml + '</tbody>' +
       '</table>' +
-      '<div class="duty-share-subtotal">' +
+      '<div class="duty-share-subtotal' + subtotalClass + '">' +
         '<div class="duty-share-subtotal-label">' + countLabel + '</div>' +
-        '<div><span>人數</span><strong>' + escapeActivityListHtml_(subtotal.total || '') + '</strong></div>' +
-        '<div><span>乾</span><strong>' + escapeActivityListHtml_(subtotal.qian || '') + '</strong></div>' +
-        '<div><span>坤</span><strong>' + escapeActivityListHtml_(subtotal.kun || '') + '</strong></div>' +
-        (showChildColumns ? '<div><span>童</span><strong>' + escapeActivityListHtml_(subtotal.tong || '') + '</strong></div>' : '') +
-        (showChildColumns ? '<div><span>女</span><strong>' + escapeActivityListHtml_(subtotal.nv || '') + '</strong></div>' : '') +
+        '<div><strong>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(subtotal.total)) + '</strong></div>' +
+        '<div><strong>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(subtotal.qian)) + '</strong></div>' +
+        '<div><strong>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(subtotal.kun)) + '</strong></div>' +
+        (showChildColumns ? '<div><strong>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(subtotal.tong)) + '</strong></div>' : '') +
+        (showChildColumns ? '<div><strong>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(subtotal.nv)) + '</strong></div>' : '') +
       '</div>' +
     '</section>';
 }
@@ -763,16 +1252,25 @@ function renderDutyActivityShareGrandTotal_(grandTotalSection, sections, showChi
     });
   }
 
+  let items = showChildColumns
+    ? [['總計', total.total], ['乾', total.qian], ['坤', total.kun], ['童', total.tong], ['女', total.nv]]
+    : [['總計', total.total], ['乾', total.qian], ['坤', total.kun]];
+
+  items = items.filter(function(item, index) {
+    return index === 0 || Number(item[1] || 0) !== 0;
+  });
+
+  const content = items.map(function(item, index) {
+    const divider = index > 0 ? '<i></i>' : '';
+    return divider + '<div><span>' + escapeActivityListHtml_(item[0]) + '</span><strong>' +
+      escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(item[1]) || '0') +
+      '</strong></div>';
+  }).join('');
+
   return '' +
     '<footer class="duty-share-grand-total">' +
       '<div class="duty-share-lotus">✦</div>' +
-      '<div><span>總計</span><strong>' + escapeActivityListHtml_(total.total) + '</strong></div>' +
-      '<i></i>' +
-      '<div><span>乾</span><strong>' + escapeActivityListHtml_(total.qian) + '</strong></div>' +
-      '<i></i>' +
-      '<div><span>坤</span><strong>' + escapeActivityListHtml_(total.kun) + '</strong></div>' +
-      (showChildColumns ? '<i></i><div><span>童</span><strong>' + escapeActivityListHtml_(total.tong) + '</strong></div>' : '') +
-      (showChildColumns ? '<i></i><div><span>女</span><strong>' + escapeActivityListHtml_(total.nv) + '</strong></div>' : '') +
+      content +
     '</footer>';
 }
 
@@ -795,7 +1293,7 @@ function injectDutyActivityShareStyle_() {
         radial-gradient(circle at 4% 4%, rgba(216, 162, 50, .12), transparent 18%),
         radial-gradient(circle at 96% 7%, rgba(44, 107, 184, .10), transparent 20%),
         linear-gradient(180deg, #fffefa 0%, #f7f4ec 100%);
-      font-family: BiauKai, "Kaiti TC", "DFKai-SB", "Noto Serif TC", serif;
+      font-family: "Kaiti TC", BiauKai, "DFKai-SB", "標楷體", "PingFang TC", "Microsoft JhengHei", serif;
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
     }
@@ -924,8 +1422,19 @@ function injectDutyActivityShareStyle_() {
     }
 
     .duty-share-table th:first-child,
-    .duty-share-table td:first-child {
-      width: 44%;
+    .duty-share-table td:first-child,
+    .duty-share-temple-header,
+    .duty-share-temple {
+      width: 40%;
+      text-align: center !important;
+      vertical-align: middle !important;
+    }
+
+    .duty-share-table th:nth-child(2),
+    .duty-share-table td:nth-child(2),
+    .duty-share-people-header {
+      width: 20%;
+      text-align: center !important;
     }
 
     .duty-share-table td {
@@ -934,22 +1443,26 @@ function injectDutyActivityShareStyle_() {
     }
 
     .duty-share-temple {
-      text-align: left !important;
-      padding-left: 14px !important;
+      text-align: center !important;
+      padding-left: 5px !important;
       white-space: nowrap;
     }
 
     .duty-share-subtotal {
       display: grid;
-      grid-template-columns: 1.55fr repeat(3, 1fr);
+      grid-template-columns: 44fr 22fr 17fr 17fr;
       margin-top: auto;
       border-top: 2px solid #d29a31;
       background: linear-gradient(180deg, #fff8e7, #fff3d3);
       color: #7f4b00;
     }
 
+    .duty-share-subtotal.has-child-columns {
+      grid-template-columns: 36fr 20fr 11fr 11fr 11fr 11fr;
+    }
+
     .duty-share-subtotal > div {
-      min-height: 88px;
+      min-height: 70px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -970,8 +1483,7 @@ function injectDutyActivityShareStyle_() {
     }
 
     .duty-share-subtotal span {
-      font-size: 20px;
-      font-weight: 800;
+      display: none;
     }
 
     .duty-share-subtotal strong {
@@ -1347,23 +1859,27 @@ function formatActivityListDateHtml_(value) {
 若為「求道統計+壇名」備註，會顯示成對齊表格。
 其他備註則維持一般文字顯示。
 ========================= */
-function renderActivityDetailNoteHtml_(note) {
+function renderActivityDetailNoteHtml_(note, fallbackDateRange) {
+  injectActivityDetailNoteStyle_();
+
   const text = String(note || '').trim();
 
   if (!text) {
-    return '<div class="activity-detail-note-empty">無資料</div>';
+    return renderActivityDetailFallbackMetaR17_(fallbackDateRange) + '<div class="activity-detail-note-empty">無資料</div>';
   }
 
   const parsed = parseReceiveByTempleNote_(text);
 
   if (!parsed) {
-    return '<div class="activity-detail-note-text">' + escapeActivityListHtml_(text) + '</div>';
+    return renderActivityDetailFallbackMetaR17_(fallbackDateRange) + '<div class="activity-detail-note-text">' + escapeActivityListHtml_(text) + '</div>';
   }
 
   injectActivityDetailNoteStyle_();
 
   const showChildColumns = parsed.columnMode !== 'qianKunOnly';
-  const sections = buildActivityDetailGroupSections_(parsed.rows);
+  const sections = getDutyActivityVisibleSectionsR16_(
+    buildActivityDetailGroupSections_(parsed.rows)
+  );
   const sectionsHtml = sections.map(function(section) {
     return renderActivityDetailGroupSection_(section, showChildColumns);
   }).join('');
@@ -1372,6 +1888,14 @@ function renderActivityDetailNoteHtml_(note) {
     '<div class="activity-detail-note-card">' +
       renderActivityDetailNoteMetaHtml_(parsed) +
       '<div class="activity-detail-groups">' + sectionsHtml + '</div>' +
+    '</div>';
+}
+
+function renderActivityDetailFallbackMetaR17_(dateRange) {
+  const value = normalizeActivityListText_(dateRange);
+  if (!value) return '';
+  return '<div class="activity-detail-note-meta activity-detail-note-meta-fallback">' +
+    '<div><span>期間：</span><strong>' + escapeActivityListHtml_(value) + '</strong></div>' +
     '</div>';
 }
 
@@ -1384,6 +1908,36 @@ function normalizeActivityDetailGroupTitle_(value) {
   if (text.indexOf('其他') === 0) return '其他';
 
   return text || '統計';
+}
+
+function normalizeDutyActivityTempleKeyR15_(value) {
+  return normalizeActivityListText_(value)
+    .toUpperCase()
+    .replace(/＿/g, '_')
+    .replace(/\s+/g, '');
+}
+
+function sortDutyActivitySectionsByMasterOrderR15_(sections) {
+  (sections || []).forEach(function(section) {
+    if (!section || !Array.isArray(section.rows)) return;
+    section.rows = section.rows.map(function(row, index) {
+      return { row: row, originalIndex: index };
+    }).sort(function(a, b) {
+      const keyA = normalizeDutyActivityTempleKeyR15_(a.row && a.row.temple);
+      const keyB = normalizeDutyActivityTempleKeyR15_(b.row && b.row.temple);
+      const orderA = Object.prototype.hasOwnProperty.call(DUTY_ACTIVITY_TEMPLE_ORDER_INDEX_R15, keyA)
+        ? DUTY_ACTIVITY_TEMPLE_ORDER_INDEX_R15[keyA]
+        : 999999;
+      const orderB = Object.prototype.hasOwnProperty.call(DUTY_ACTIVITY_TEMPLE_ORDER_INDEX_R15, keyB)
+        ? DUTY_ACTIVITY_TEMPLE_ORDER_INDEX_R15[keyB]
+        : 999999;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.originalIndex - b.originalIndex;
+    }).map(function(item) {
+      return item.row;
+    });
+  });
+  return sections;
 }
 
 function buildActivityDetailGroupSections_(rows) {
@@ -1436,6 +1990,8 @@ function buildActivityDetailGroupSections_(rows) {
     current.templeCount++;
   });
 
+  sortDutyActivitySectionsByMasterOrderR15_(sections);
+
   if (finalTotal) {
     sections.push({
       title: '',
@@ -1450,10 +2006,14 @@ function buildActivityDetailGroupSections_(rows) {
 }
 
 function renderActivityDetailGroupSection_(section, showChildColumns) {
+  const colgroup = showChildColumns
+    ? '<colgroup><col style="width:36%"><col style="width:20%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:11%"></colgroup>'
+    : '<colgroup><col style="width:44%"><col style="width:22%"><col style="width:17%"><col style="width:17%"></colgroup>';
+
   const headers = '' +
     '<tr>' +
-      '<th>所屬佛堂</th>' +
-      '<th>人數</th>' +
+      '<th class="temple-header">壇名</th>' +
+      '<th class="people-header">人數</th>' +
       '<th>乾</th>' +
       '<th>坤</th>' +
       (showChildColumns ? '<th>童</th>' : '') +
@@ -1465,19 +2025,21 @@ function renderActivityDetailGroupSection_(section, showChildColumns) {
   }).join('');
 
   let subtotalHtml = '';
+  const subtotalSource = section.subtotal ||
+    (!section.isGrandTotal ? sumDutyActivityRowsR15_(section.rows || []) : null);
 
-  if (section.subtotal) {
+  if (subtotalSource) {
     const label = section.isGrandTotal
       ? '總計'
-      : '小計：' + String(section.templeCount || 0) + '間';
+      : '小計：' + String(section.templeCount || (section.rows || []).length || 0);
 
     const subtotal = {
       temple: label,
-      total: section.subtotal.total,
-      qian: section.subtotal.qian,
-      kun: section.subtotal.kun,
-      tong: section.subtotal.tong,
-      nv: section.subtotal.nv
+      total: subtotalSource.total,
+      qian: subtotalSource.qian,
+      kun: subtotalSource.kun,
+      tong: subtotalSource.tong,
+      nv: subtotalSource.nv
     };
 
     subtotalHtml = renderActivityDetailDataRow_(
@@ -1491,6 +2053,7 @@ function renderActivityDetailGroupSection_(section, showChildColumns) {
     return '' +
       '<div class="activity-detail-grand-total">' +
         '<table class="activity-detail-note-table">' +
+          colgroup +
           '<tbody>' + subtotalHtml + '</tbody>' +
         '</table>' +
       '</div>';
@@ -1503,6 +2066,7 @@ function renderActivityDetailGroupSection_(section, showChildColumns) {
       '</div>' +
       '<div class="activity-detail-note-table-wrap">' +
         '<table class="activity-detail-note-table">' +
+          colgroup +
           '<thead>' + headers + '</thead>' +
           '<tbody>' + bodyRows + subtotalHtml + '</tbody>' +
         '</table>' +
@@ -1514,21 +2078,14 @@ function renderActivityDetailDataRow_(row, showChildColumns, className) {
   return '' +
     '<tr class="' + escapeActivityListHtml_(className || '') + '">' +
       '<td class="temple-cell">' + escapeActivityListHtml_(row.temple) + '</td>' +
-      '<td>' + escapeActivityListHtml_(row.total) + '</td>' +
-      '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.qian)) + '</td>' +
-      '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.kun)) + '</td>' +
-      (showChildColumns ? '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.tong)) + '</td>' : '') +
-      (showChildColumns ? '<td>' + escapeActivityListHtml_(formatActivityNoteZeroBlank_(row.nv)) + '</td>' : '') +
+      '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.total)) + '</td>' +
+      '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.qian)) + '</td>' +
+      '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.kun)) + '</td>' +
+      (showChildColumns ? '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.tong)) + '</td>' : '') +
+      (showChildColumns ? '<td>' + escapeActivityListHtml_(formatDutyActivityDisplayNumberR16_(row.nv)) + '</td>' : '') +
     '</tr>';
 }
 
-
-/* =========================
-函式名稱：renderActivityDetailNoteMetaHtml_
-功能說明：
-備註表格上方資訊列。
-沒有日期時不顯示日期；有地點才顯示地點。
-========================= */
 function renderActivityDetailNoteMetaHtml_(parsed) {
   const parts = [];
 
@@ -1565,7 +2122,7 @@ function renderActivityDetailNoteMetaHtml_(parsed) {
 function parseReceiveByTempleNote_(note) {
   const text = String(note || '').trim();
 
-  if (text.indexOf('所屬佛堂') < 0) {
+  if (text.indexOf('所屬佛堂') < 0 && text.indexOf('壇名') < 0) {
     return null;
   }
 
@@ -1619,7 +2176,7 @@ function parseReceiveByTempleNoteRowsFromLines_(text) {
     const cleanLine = line.trim();
 
     if (!cleanLine) return;
-    if (cleanLine.indexOf('所屬佛堂') >= 0) return;
+    if (cleanLine.indexOf('所屬佛堂') >= 0 || cleanLine.indexOf('壇名') >= 0) return;
     if (cleanLine.indexOf('求道統計+壇名') >= 0) return;
     if (cleanLine.indexOf('期間：') >= 0) return;
     if (cleanLine.indexOf('地點：') >= 0) return;
@@ -1703,15 +2260,17 @@ function parseReceiveByTempleNoteRowsFromLines_(text) {
 ========================= */
 function parseReceiveByTempleNoteRowsFromFlatText_(text) {
   const rows = [];
-  const headerIndex = text.indexOf('所屬佛堂');
+  const oldHeaderIndex = text.indexOf('所屬佛堂');
+  const newHeaderIndex = text.indexOf('壇名');
+  const headerIndex = oldHeaderIndex >= 0 ? oldHeaderIndex : newHeaderIndex;
 
   if (headerIndex < 0) return rows;
 
   let body = text.substring(headerIndex);
   const columnMode = detectActivityNoteColumnMode_(text);
 
-  body = body.replace(/^所屬佛堂\s*人數\s*乾\s*坤\s*童\s*女\s*/, '');
-  body = body.replace(/^所屬佛堂\s*人數\s*乾\s*坤\s*/, '');
+  body = body.replace(/^(?:所屬佛堂|壇名)\s*人數\s*乾\s*坤\s*童\s*女\s*/, '');
+  body = body.replace(/^(?:所屬佛堂|壇名)\s*人數\s*乾\s*坤\s*/, '');
   body = body.replace(/說明：[\s\S]*$/, '');
   body = body.replace(/^設定期間：[^\s]+\s*/, '');
   body = body.replace(/^資料期間：[^\s]+\s*/, '');
@@ -1748,7 +2307,7 @@ function parseReceiveByTempleNoteRowsFromFlatText_(text) {
 function detectActivityNoteColumnMode_(text) {
   const value = String(text || '');
 
-  if (value.indexOf('所屬佛堂') >= 0 && value.indexOf('童') < 0 && value.indexOf('女') < 0) {
+  if ((value.indexOf('所屬佛堂') >= 0 || value.indexOf('壇名') >= 0) && value.indexOf('童') < 0 && value.indexOf('女') < 0) {
     return 'qianKunOnly';
   }
 
@@ -1781,6 +2340,32 @@ function formatActivityNoteZeroBlank_(value) {
   }
 
   return text;
+}
+
+
+function formatDutyActivityDisplayNumberR16_(value) {
+  // R17_ZERO_VALUES_RENDER_AS_BLANK
+  const text = normalizeActivityListText_(value);
+
+  if (!text || /^0(?:\.0+)?$/.test(text)) {
+    return '';
+  }
+
+  return text;
+}
+
+function getDutyActivityVisibleSectionsR16_(sections) {
+  return (sections || []).filter(function(section) {
+    if (!section) return false;
+    if (section.isGrandTotal) return true;
+
+    const rows = Array.isArray(section.rows) ? section.rows : [];
+    const subtotal = section.subtotal || sumDutyActivityRowsR15_(rows);
+
+    return rows.length > 0 ||
+      Number(section.templeCount || 0) > 0 ||
+      Number(subtotal.total || 0) > 0;
+  });
 }
 
 
@@ -1847,7 +2432,7 @@ function injectActivityDetailNoteStyle_() {
       margin-bottom: 8px !important;
       text-align: center !important;
       color: #07365f !important;
-      font-family: BiauKai, "Kaiti TC", "DFKai-SB", "Noto Serif TC", serif !important;
+      font-family: "Kaiti TC", BiauKai, "DFKai-SB", "標楷體", "PingFang TC", "Microsoft JhengHei", serif !important;
       font-size: 30px !important;
       line-height: 1.25 !important;
       font-weight: 900 !important;
@@ -1855,17 +2440,35 @@ function injectActivityDetailNoteStyle_() {
 
     .activity-detail-actions {
       display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
       gap: 12px !important;
+      width: 100% !important;
+      height: 54px !important;
+      min-height: 54px !important;
+      max-height: 54px !important;
+      align-items: stretch !important;
       position: relative !important;
       z-index: 6 !important;
+      overflow: visible !important;
     }
 
     .activity-detail-close-btn,
     .activity-detail-share-btn {
+      position: static !important;
+      inset: auto !important;
+      flex: none !important;
+      align-self: stretch !important;
       width: 100% !important;
+      height: 54px !important;
       min-height: 54px !important;
+      max-height: 54px !important;
       margin: 0 !important;
+      padding: 0 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1 !important;
+      overflow: hidden !important;
       border-radius: 15px !important;
       font-size: 20px !important;
       font-weight: 900 !important;
@@ -1965,7 +2568,7 @@ function injectActivityDetailNoteStyle_() {
       font-size: 20px;
       font-weight: 900;
       text-align: center;
-      font-family: BiauKai, "Kaiti TC", "DFKai-SB", "Noto Serif TC", serif;
+      font-family: "Kaiti TC", BiauKai, "DFKai-SB", "標楷體", "PingFang TC", "Microsoft JhengHei", serif;
       border: 1px solid #d8e2ee;
       border-bottom: 0;
       border-radius: 10px 10px 0 0;
@@ -1994,11 +2597,11 @@ function injectActivityDetailNoteStyle_() {
     }
 
     .activity-detail-note-table {
-      width: auto;
+      width: 100%;
       min-width: 0;
-      max-width: none;
+      max-width: 100%;
       border-collapse: collapse;
-      table-layout: auto;
+      table-layout: fixed;
       font-size: 15px;
       margin: 0;
     }
@@ -2028,10 +2631,19 @@ function injectActivityDetailNoteStyle_() {
       font-weight: 800;
     }
 
+    .activity-detail-note-table th:first-child,
+    .activity-detail-note-table .temple-header,
     .activity-detail-note-table .temple-cell {
-      text-align: center;
+      text-align: center !important;
+      vertical-align: middle !important;
       font-weight: 700;
-      min-width: 110px;
+      min-width: 0;
+    }
+
+    .activity-detail-note-table .people-header,
+    .activity-detail-note-table th:nth-child(2),
+    .activity-detail-note-table td:nth-child(2) {
+      text-align: center !important;
     }
 
     .activity-detail-note-table td:not(.temple-cell),
@@ -2081,8 +2693,18 @@ function injectActivityDetailNoteStyle_() {
         padding: 5px 6px;
       }
 
+      .activity-detail-note-table th:first-child,
+      .activity-detail-note-table .temple-header,
       .activity-detail-note-table .temple-cell {
-        min-width: 102px;
+        min-width: 0;
+        text-align: center !important;
+        vertical-align: middle !important;
+      }
+
+      .activity-detail-actions {
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
       }
 
       .activity-detail-note-table td:not(.temple-cell),
