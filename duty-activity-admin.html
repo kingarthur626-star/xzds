@@ -2,11 +2,15 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="xzds-ui-version" content="20260803-019" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <title>道務活動設定</title>
 
-  <link rel="stylesheet" href="css/style.css?v=20260623-8" />
+  <link rel="stylesheet" href="css/style.css?v=20260803-19" />
 
   <style>
     a.action-pill {
@@ -17,10 +21,26 @@
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
+
+    .duty-status-note-grid {
+      display: grid;
+      grid-template-columns: minmax(96px, 1fr) minmax(0, 4fr);
+      gap: 12px;
+      align-items: end;
+    }
+
+    .duty-status-note-grid .form-group {
+      min-width: 0;
+    }
+
+    @media (max-width: 520px) {
+      .duty-status-note-grid {
+        grid-template-columns: minmax(88px, 1fr) minmax(0, 4fr);
+        gap: 8px;
+      }
+    }
   </style>
-
 </head>
-
 <body class="duty-activity-page">
   <div class="page">
     <div class="page-inner">
@@ -36,7 +56,6 @@
         <div class="small-text">新增、修改與停用道務活動</div>
 
         <div id="dutyActivityMessage" class="message"></div>
-
         <form id="dutyActivityForm" class="duty-activity-form">
           <input id="activityId" type="hidden" />
 
@@ -74,8 +93,9 @@
               <select id="peopleMode">
                 <option value="手動">手動</option>
                 <option value="求道統計">求道統計</option>
-                <option value="法會統計">法會統計</option>
                 <option value="求道統計+壇名">求道統計+壇名</option>
+                <option value="法會統計">法會統計</option>
+                <option value="法會統計+壇名">法會統計+壇名</option>
               </select>
             </div>
 
@@ -109,17 +129,19 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="activityStatus">狀態</label>
-            <select id="activityStatus">
-              <option value="啟用">啟用</option>
-              <option value="停用">停用</option>
-            </select>
-          </div>
+          <div class="duty-status-note-grid">
+            <div class="form-group">
+              <label for="activityStatus">狀態</label>
+              <select id="activityStatus">
+                <option value="啟用">啟用</option>
+                <option value="停用">停用</option>
+              </select>
+            </div>
 
-          <div class="form-group">
-            <label for="activityNote">備註</label>
-            <input id="activityNote" type="text" placeholder="可空白" autocomplete="off" />
+            <div class="form-group">
+              <label for="activityNote">備註</label>
+              <input id="activityNote" type="text" placeholder="可空白" autocomplete="off" />
+            </div>
           </div>
 
           <div class="duty-form-actions">
@@ -144,29 +166,7 @@
   <script src="js/config.js?v=20260622-8"></script>
   <script src="js/api.js?v=20260622-8"></script>
   <script src="js/common.js?v=20260622-8"></script>
-  <script src="js/duty-activity-admin.js?v=20260623-8"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var select = document.getElementById('peopleMode');
-      if (!select) return;
-
-      var exists = false;
-      for (var i = 0; i < select.options.length; i++) {
-        if (select.options[i].value === '求道統計+壇名') {
-          exists = true;
-          break;
-        }
-      }
-
-      if (!exists) {
-        var option = document.createElement('option');
-        option.value = '求道統計+壇名';
-        option.textContent = '求道統計+壇名';
-        select.appendChild(option);
-      }
-    });
-  </script>
-
+  <script src="js/duty-activity-admin.js?v=20260803-19"></script>
+  <script src="js/duty-activity-admin-r19.js?v=20260803-19"></script>
 </body>
 </html>

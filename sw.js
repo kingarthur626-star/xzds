@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-03 R18.1
+   Update: 2026-08-03 R19
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -8,7 +8,7 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260803-0181';
+const CACHE_NAME = CACHE_PREFIX + '20260803-0190';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -26,6 +26,7 @@ const STATIC_ASSETS = [
   './js/history.js',
   './js/duty-activity-list.js',
   './js/duty-activity-admin.js',
+  './js/duty-activity-admin-r19.js',
   './js/pwa.js'
 ];
 self.addEventListener('install', function(event) {
