@@ -1,15 +1,14 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-02 R17
+   Update: 2026-08-03 R18.1
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
    3. Never cache external Apps Script API requests.
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
-
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260802-017';
+const CACHE_NAME = CACHE_PREFIX + '20260803-0181';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -29,7 +28,6 @@ const STATIC_ASSETS = [
   './js/duty-activity-admin.js',
   './js/pwa.js'
 ];
-
 self.addEventListener('install', function(event) {
   event.waitUntil(
     precacheAvailableAssets_().then(function() {
@@ -37,7 +35,6 @@ self.addEventListener('install', function(event) {
     })
   );
 });
-
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
@@ -57,7 +54,6 @@ self.addEventListener('activate', function(event) {
     })
   );
 });
-
 self.addEventListener('fetch', function(event) {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -72,7 +68,6 @@ self.addEventListener('fetch', function(event) {
 
   event.respondWith(cacheFirst_(request));
 });
-
 self.addEventListener('message', function(event) {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
@@ -89,7 +84,6 @@ function isFreshnessCriticalRequest_(request, requestUrl) {
     path.endsWith('.json')
   );
 }
-
 function networkFirst_(request) {
   return caches.open(CACHE_NAME).then(function(cache) {
     return fetch(request, { cache: 'no-store' }).then(function(response) {
@@ -108,7 +102,6 @@ function networkFirst_(request) {
     });
   });
 }
-
 function cacheFirst_(request) {
   return caches.open(CACHE_NAME).then(function(cache) {
     return cache.match(request, { ignoreSearch: true }).then(function(cached) {
@@ -122,7 +115,6 @@ function cacheFirst_(request) {
     });
   });
 }
-
 async function precacheAvailableAssets_() {
   const cache = await caches.open(CACHE_NAME);
   await Promise.all(
