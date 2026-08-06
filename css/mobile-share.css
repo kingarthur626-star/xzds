@@ -4,7 +4,7 @@
 1. 手機成果分享頁專用版面。
 2. 顯示五項大組摘要、壇名明細與三色進度。
 3. 支援 iPhone、Android、平板及桌機。
-版本：v1.0.0R5
+版本：v1.0.0R6
 */
 
 :root {
@@ -33,53 +33,66 @@
   padding: max(12px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
 }
 
+.mobile-share-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: 0 -2px 18px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: rgba(245, 247, 251, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.mobile-share-nav-title {
+  pointer-events: none;
+}
+
 .mobile-share-header {
-  display: grid;
-  grid-template-columns: 54px 1fr 54px;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 0 14px;
+  padding: 2px 0 18px;
   text-align: center;
 }
 
 .mobile-share-header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1.2;
 }
 
 .mobile-share-user-text {
-  min-height: 18px;
-  margin-top: 3px;
+  min-height: 20px;
+  margin-top: 7px;
   color: var(--ms-muted);
-  font-size: 13px;
-}
-
-.mobile-share-icon-btn {
-  min-width: 48px;
-  min-height: 44px;
-  padding: 8px;
-  border: 0;
-  border-radius: 14px;
-  background: #e7eef8;
-  color: #25415e;
   font-size: 15px;
-  font-weight: 800;
 }
 
 .mobile-share-control-card {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--ms-line);
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(27, 55, 88, 0.08);
 }
 
+.mobile-share-target-row,
+.mobile-share-report-row {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-share-target-row {
+  grid-template-columns: auto minmax(92px, .72fr) auto;
+}
+
+.mobile-share-report-row {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
 .mobile-share-control-card label {
+  margin: 0;
   white-space: nowrap;
   font-size: 15px;
   font-weight: 800;
@@ -99,8 +112,8 @@
 }
 
 .mobile-share-target-badge {
-  min-width: 92px;
-  padding: 8px 12px;
+  min-width: 104px;
+  padding: 10px 13px;
   border-radius: 12px;
   background: linear-gradient(135deg, #12a943, #0b8c32);
   color: #fff;
@@ -364,9 +377,20 @@
 
 @media (max-width: 390px) {
   .mobile-share-page { padding-left: 8px; padding-right: 8px; }
-  .mobile-share-control-card { grid-template-columns: auto 1fr; }
-  .mobile-share-control-card label { text-align: right; }
-  .mobile-share-control-card select { grid-column: 1 / -1; }
+  .mobile-share-target-row {
+    grid-template-columns: auto minmax(78px, 1fr) auto;
+    gap: 7px;
+  }
+  .mobile-share-report-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 7px;
+  }
+  .mobile-share-target-badge {
+    min-width: 92px;
+    padding-left: 9px;
+    padding-right: 9px;
+    font-size: 15px;
+  }
   .mobile-share-summary { gap: 4px; }
   .mobile-share-summary-card { padding-left: 2px; padding-right: 2px; }
   .mobile-share-detail-head,
