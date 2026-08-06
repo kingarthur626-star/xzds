@@ -7,7 +7,7 @@
 檢查登入狀態
 顯示登入者壇名
 綁定首頁功能按鈕
-依照權限顯示「更新報表」與「系統後台」
+依照權限顯示「道親資料更新」與「系統後台」
 只有 admin 顯示「最後更新時間」
 user 不顯示「最後更新時間」
 ========================= */
@@ -92,7 +92,7 @@ function bindHomeButtons() {
 const btnAnnual = document.getElementById('btnAnnual');
 const btnHistory = document.getElementById('btnHistory');
 const btnDutyActivityList = document.getElementById('btnDutyActivityList');
-const btnUpdate = document.getElementById('btnUpdate');
+const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
 const btnLogout = document.getElementById('btnLogout');
 
 if (btnAnnual) {
@@ -113,8 +113,10 @@ if (btnDutyActivityList) {
   });
 }
 
-if (btnUpdate) {
-btnUpdate.addEventListener('click', updateTaoReport);
+if (btnTaoMobileUpdate) {
+btnTaoMobileUpdate.addEventListener('click', function () {
+location.href = 'tao-mobile-update.html';
+});
 }
 
 if (btnLogout) {
@@ -132,10 +134,10 @@ const HOME_PERMISSION_CACHE_SECONDS = 600; // 10分鐘
 函式名稱：loadHomePermissions
 功能說明：
 讀取首頁權限。
-用來控制「更新報表」與「系統後台」是否顯示。
+用來控制「道親資料更新」與「系統後台」是否顯示。
 ========================= */
 async function loadHomePermissions(user) {
-const btnUpdate = document.getElementById('btnUpdate');
+const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
 const btnMore = document.getElementById('btnMore');
 
 // 預設先隱藏，避免沒權限的人看到
@@ -188,11 +190,11 @@ adminPanel: false
 依照後端回傳權限，控制首頁按鈕顯示。
 ========================= */
 function applyHomePermissions_(permissions) {
-const btnUpdate = document.getElementById('btnUpdate');
+const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
 const btnMore = document.getElementById('btnMore');
 
-if (btnUpdate) {
-btnUpdate.style.display = permissions.updateTaoReport ? 'flex' : 'none';
+if (btnTaoMobileUpdate) {
+btnTaoMobileUpdate.style.display = permissions.updateTaoReport ? 'flex' : 'none';
 }
 
 if (btnMore) {
@@ -338,85 +340,6 @@ area.style.display = '';
 }
 }
 }
-
-/* =========================
-函式名稱：updateTaoReport
-功能說明：
-更新即時道務報表。
-通常只有 admin 或有權限者可以看到此按鈕。
-========================= */
-async function updateTaoReport() {
-const ok = confirm('是否更新即時道務報表？');
-
-if (!ok) return;
-
-const btn = document.getElementById('btnUpdate');
-
-setUpdateButtonLoading(btn, true);
-
-try {
-const result = await callApi({
-action: 'updateTaoReport01Stored'
-});
-
-if (result.success) {
-  if (result.updatedAt) {
-    localStorage.setItem('taoReportLastUpdate', result.updatedAt);
-
-    const area = document.getElementById('lastUpdateText');
-    if (area) {
-      area.textContent = '最後更新：' + result.updatedAt;
-    }
-  }
-
-  alert(
-    '更新完成\n\n' +
-    '求道筆數：' + result.qiudaoRows + '\n' +
-    '法會筆數：' + result.fahuiRows + '\n' +
-    '更新時間：' + result.updatedAt
-  );
-
-  loadTaoReportLastUpdate();
-
-} else {
-  alert(result.message || '更新失敗');
-}
-
-} catch (err) {
-alert(err.message || '系統連線失敗，請稍後再試');
-
-} finally {
-setUpdateButtonLoading(btn, false);
-}
-}
-
-/* =========================
-函式名稱：setUpdateButtonLoading
-功能說明：
-控制更新報表按鈕的載入狀態。
-========================= */
-function setUpdateButtonLoading(btn, isLoading) {
-if (!btn) return;
-
-btn.disabled = isLoading;
-
-if (isLoading) {
-btn.classList.add('disabled');
-
-btn.innerHTML =
-  '<span class="home-menu-main">更新中</span>' +
-  '<span class="home-menu-sub">請稍候...</span>';
-
-} else {
-btn.classList.remove('disabled');
-
-btn.innerHTML =
-  '<span class="home-menu-main">更新報表</span>' +
-  '<span class="home-menu-sub">即時同步</span>';
-
-}
-}
-
 
 /* =========================
 函式名稱：applyRecentDutyButtonText_

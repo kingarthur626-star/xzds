@@ -43,17 +43,10 @@ function bindAdminButtons() {
   const reloadBtn = document.getElementById('reloadAccountsBtn');
   const searchInput = document.getElementById('adminSearchInput');
   const btnDutyActivityAdmin = document.getElementById('btnDutyActivityAdmin');
-  const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
 
   if (btnDutyActivityAdmin) {
     btnDutyActivityAdmin.addEventListener('click', function () {
       location.href = 'duty-activity-admin.html';
-    });
-  }
-
-  if (btnTaoMobileUpdate) {
-    btnTaoMobileUpdate.addEventListener('click', function () {
-      location.href = 'tao-mobile-update.html';
     });
   }
 
@@ -106,12 +99,6 @@ async function checkAdminPermissionAndLoad_() {
       }, 900);
 
       return;
-    }
-
-    const mobileUpdateBtn = document.getElementById('btnTaoMobileUpdate');
-
-    if (mobileUpdateBtn) {
-      mobileUpdateBtn.hidden = !permissions.updateTaoReport;
     }
 
     loadAdminAccounts_();
