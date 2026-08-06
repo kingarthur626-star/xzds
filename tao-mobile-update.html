@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f8fafc" />
+
+  <title>道親資料更新｜新莊區道務檢視</title>
+
+  <link rel="stylesheet" href="css/style.css?v=20260806-0200" />
+</head>
+
+<body class="tao-mobile-update-page">
+  <div class="page">
+    <div class="page-inner">
+
+      <div class="page-action-bar three-actions tao-mobile-action-bar">
+        <button class="action-pill" id="backAdminBtn" type="button">← 系統後台</button>
+        <button class="action-pill" id="refreshStatusBtn" type="button">重新整理</button>
+        <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
+      </div>
+
+      <main class="card wide-card tao-mobile-card">
+        <h1>道親資料更新</h1>
+        <div class="small-text tao-mobile-subtitle">完整稽核 → 主檔更新 → 正式明細 → 年度統計</div>
+
+        <div id="taoMobileMessage" class="message" role="status" aria-live="polite"></div>
+
+        <section class="tao-mobile-range-panel" aria-labelledby="rangeTitle">
+          <h2 id="rangeTitle">更新期間</h2>
+
+          <div class="tao-mobile-date-grid">
+            <label class="tao-mobile-date-field">
+              <span>開始日期</span>
+              <input id="startDateInput" type="date" autocomplete="off" />
+            </label>
+
+            <label class="tao-mobile-date-field">
+              <span>結束日期</span>
+              <input id="endDateInput" type="date" autocomplete="off" />
+            </label>
+          </div>
+
+          <button id="loadRangeBtn" class="tao-mobile-secondary-btn" type="button">查詢此期間狀態</button>
+
+          <div class="tao-mobile-range-note">
+            每一步都由後端再次檢查；前一步未完成，下一步不會開放。
+          </div>
+        </section>
+
+        <section id="operationBanner" class="tao-mobile-operation-banner" hidden>
+          <div class="tao-mobile-operation-title" id="operationTitle">目前作業</div>
+          <div class="tao-mobile-operation-text" id="operationText"></div>
+        </section>
+
+        <section id="stepList" class="tao-mobile-step-list" aria-label="更新步驟">
+          <div class="tao-mobile-loading">讀取狀態中...</div>
+        </section>
+
+        <button id="toggleDetailsBtn" class="tao-mobile-progress-btn" type="button" disabled>
+          查看進度與結果
+        </button>
+
+        <section id="detailsPanel" class="tao-mobile-details" hidden>
+          <h2>進度與結果</h2>
+          <div id="detailsContent"></div>
+        </section>
+
+        <div id="generatedAtText" class="small-text tao-mobile-generated-at"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <script src="js/config.js?v=20260620-1"></script>
+  <script src="js/api.js?v=20260620-1"></script>
+  <script src="js/common.js?v=20260620-1"></script>
+  <script src="js/tao-mobile-update.js?v=20260806-0200"></script>
+</body>
+</html>

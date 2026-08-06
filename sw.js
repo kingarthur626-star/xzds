@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-03 R19
+   Update: 2026-08-06 Mobile Update UI v0.1.0R1
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -8,7 +8,7 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260803-0190';
+const CACHE_NAME = CACHE_PREFIX + '20260806-0200';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -17,6 +17,8 @@ const STATIC_ASSETS = [
   './history.html',
   './duty-activity-list.html',
   './duty-activity-admin.html',
+  './admin.html',
+  './tao-mobile-update.html',
   './manifest.json',
   './css/style.css',
   './js/config.js',
@@ -27,6 +29,8 @@ const STATIC_ASSETS = [
   './js/duty-activity-list.js',
   './js/duty-activity-admin.js',
   './js/duty-activity-admin-r19.js',
+  './js/admin.js',
+  './js/tao-mobile-update.js',
   './js/pwa.js'
 ];
 self.addEventListener('install', function(event) {
