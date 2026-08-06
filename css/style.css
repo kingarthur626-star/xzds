@@ -3909,3 +3909,92 @@ body.tao-mobile-update-page .action-pill:disabled {
     justify-self: start;
   }
 }
+/* =========================
+程式區塊：導覽列版面修正 v0.1.3R1
+功能說明：
+1. 道親資料更新：左登出、中間較小重新整理、右首頁。
+2. 系統後台：左登出、右首頁。
+3. 按鈕高度與字級比照今年／近五年道務上方導覽列。
+4. 本區只調整上方按鈕，不修改頁面資料與內容卡片。
+========================= */
+
+/* 道親資料更新：三欄固定配置，縮小中間「重新整理」 */
+body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar {
+  display: grid !important;
+  grid-template-columns: auto 132px auto !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+}
+
+body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar .action-pill {
+  flex: none !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  height: 40px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+}
+
+body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar #logoutBtn {
+  justify-self: start !important;
+}
+
+body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar #refreshStatusBtn {
+  width: 132px !important;
+  justify-self: center !important;
+}
+
+body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar #backHomeBtn {
+  justify-self: end !important;
+}
+
+/* 系統後台：左登出、右首頁，大小比照今年／近五年道務 */
+body.admin-page .page-action-bar.admin-top-action-bar {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+  justify-content: stretch !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+}
+
+body.admin-page .page-action-bar.admin-top-action-bar .action-pill {
+  flex: none !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  height: 40px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+}
+
+body.admin-page .page-action-bar.admin-top-action-bar #logoutBtn {
+  grid-column: 1 !important;
+  justify-self: start !important;
+}
+
+body.admin-page .page-action-bar.admin-top-action-bar #backBtn {
+  grid-column: 3 !important;
+  justify-self: end !important;
+}
+
+@media (max-width: 390px) {
+  body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar {
+    grid-template-columns: auto 118px auto !important;
+    column-gap: 6px !important;
+  }
+
+  body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar .action-pill,
+  body.admin-page .page-action-bar.admin-top-action-bar .action-pill {
+    height: 40px !important;
+    padding: 0 9px !important;
+    font-size: 13px !important;
+  }
+
+  body.tao-mobile-update-page .page-action-bar.tao-mobile-action-bar #refreshStatusBtn {
+    width: 118px !important;
+  }
+}
