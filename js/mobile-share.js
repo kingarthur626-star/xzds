@@ -6,12 +6,17 @@
  * 3. 依月份目標顯示壇名三色。
  * 4. 產生完整 PNG，使用手機原生分享選單分享到 LINE。
  *
- * 版本：v1.0.0R5
+ * 版本：v1.0.0R6
  * 最後更新：2026/08/06
  */
 
 const MOBILE_SHARE_STORAGE_KEY = 'XZDS_MOBILE_SHARE_REPORT_KEY';
 const MOBILE_SHARE_REPORT_KEYS = ['qiu1', 'qiu2', 'qiu3', 'fa1', 'fa2', 'fa3'];
+const MOBILE_SHARE_TARGET_PERCENT_ = {
+  1: 8, 2: 17, 3: 25, 4: 33, 5: 42, 6: 50,
+  7: 58, 8: 67, 9: 75, 10: 83, 11: 92, 12: 100
+};
+let mobileShareSourceReport_ = null;
 let mobileShareCurrentReport_ = null;
 let mobileShareCurrentUser_ = null;
 let mobileShareRequestSerial_ = 0;
@@ -59,6 +64,7 @@ function bindMobileShareEvents_() {
   const homeBtn = document.getElementById('mobileShareHomeBtn');
   const logoutBtn = document.getElementById('mobileShareLogoutBtn');
   const select = document.getElementById('mobileShareReportSelect');
+  const targetMonthSelect = document.getElementById('mobileShareTargetMonthSelect');
   const reloadBtn = document.getElementById('mobileShareReloadBtn');
   const shareBtn = document.getElementById('mobileShareLineBtn');
 
@@ -78,6 +84,12 @@ function bindMobileShareEvents_() {
     select.addEventListener('change', function () {
       localStorage.setItem(MOBILE_SHARE_STORAGE_KEY, select.value);
       loadMobileShareReport_(select.value);
+    });
+  }
+
+  if (targetMonthSelect) {
+    targetMonthSelect.addEventListener('change', function () {
+      applyMobileShareTargetMonth_(Number(targetMonthSelect.value));
     });
   }
 
@@ -125,19 +137,84 @@ async function loadMobileShareReport_(reportKey) {
       throw new Error(result.message || '報表讀取失敗');
     }
 
-    mobileShareCurrentReport_ = result.report;
-    renderMobileShareReport_(result.report);
+    mobileShareSourceReport_ = result.report;
+    const targetMonthSelect = document.getElementById('mobileShareTargetMonthSelect');
+    if (targetMonthSelect) {
+      targetMonthSelect.value = String(result.report.month || new Date().getMonth() + 1);
+    }
+    applyMobileShareTargetMonth_(Number(targetMonthSelect ? targetMonthSelect.value : result.report.month));
 
   } catch (error) {
     if (serial !== mobileShareRequestSerial_) return;
+    mobileShareSourceReport_ = null;
     mobileShareCurrentReport_ = null;
-    showMobileShareError_(error.message || '系統連線失敗，請稍後再試');
+    const message = String(error && error.message ? error.message : '系統連線失敗，請稍後再試');
+    showMobileShareError_(message === '未知的操作'
+      ? '後端尚未啟用三大組月報 API。請清除重複的備份 .gs 路由檔，重新建立 Apps Script 新版本並更新正式部署。'
+      : message);
 
   } finally {
     if (serial === mobileShareRequestSerial_) {
       setMobileShareLoading_(false);
     }
   }
+}
+
+
+/**
+ * 功能：依下拉選擇的目標月份，重新計算目標百分比、三色與大組達標狀態。
+ * 注意：來源報表的實際月份與當月數字不變，避免把 8 月資料誤標為其他月份。
+ */
+function applyMobileShareTargetMonth_(targetMonth) {
+  if (!mobileShareSourceReport_) return;
+
+  const month = Number(targetMonth);
+  const safeMonth = Number.isInteger(month) && month >= 1 && month <= 12
+    ? month
+    : Number(mobileShareSourceReport_.month || 1);
+
+  mobileShareCurrentReport_ = buildMobileShareViewReport_(mobileShareSourceReport_, safeMonth);
+  renderMobileShareReport_(mobileShareCurrentReport_);
+}
+
+
+/**
+ * 功能：建立前端顯示用報表副本，不修改後端原始回傳資料。
+ */
+function buildMobileShareViewReport_(sourceReport, targetMonth) {
+  const report = JSON.parse(JSON.stringify(sourceReport));
+  const percent = MOBILE_SHARE_TARGET_PERCENT_[targetMonth] || 100;
+  const target = Number(report.summary && report.summary.target || 0);
+  const cumulative = Number(report.summary && report.summary.cumulative || 0);
+  const targetToDate = target * percent / 100;
+  const delta = cumulative - targetToDate;
+
+  report.targetMonth = targetMonth;
+  report.monthTargetPercent = percent;
+  report.summary.targetToDate = targetToDate;
+  report.summary.delta = delta;
+  report.summary.statusLabel = delta >= 0 ? '目前達標' : '目前尚缺';
+  report.summary.statusValue = delta >= 0
+    ? '+' + Math.round(delta)
+    : String(Math.round(Math.abs(delta)));
+  report.summary.statusTone = delta >= 0 ? 'green' : 'red';
+
+  report.details = (report.details || []).map(function (item) {
+    item.tone = getMobileShareTone_(Number(item.ratePercent || 0), percent);
+    return item;
+  });
+
+  return report;
+}
+
+
+/**
+ * 功能：依目標百分比套用綠、黃、紅三色。
+ */
+function getMobileShareTone_(ratePercent, targetPercent) {
+  if (ratePercent >= targetPercent) return 'green';
+  if (ratePercent >= targetPercent - 10) return 'yellow';
+  return 'red';
 }
 
 
@@ -159,7 +236,7 @@ function renderMobileShareReport_(report) {
   setText_('mobileShareSummaryRate', formatMobileShareNumber_(report.summary.ratePercent) + '%');
   setText_('mobileShareStatusLabel', report.summary.statusLabel);
   setText_('mobileShareStatusValue', report.summary.statusValue);
-  setText_('mobileShareGeneratedText', '資料產生：' + (report.generatedAt || ''));
+  setText_('mobileShareGeneratedText', '目標月份：' + report.targetMonth + '月｜資料產生：' + (report.generatedAt || ''));
 
   if (targetBadge) {
     targetBadge.textContent = '目標 ' + report.monthTargetPercent + '%';
@@ -325,7 +402,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     132,
     196,
     56,
-    '目標 ' + report.monthTargetPercent + '%',
+    report.targetMonth + '月目標 ' + report.monthTargetPercent + '%',
     colors.green
   );
 
@@ -426,7 +503,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   ctx.fillStyle = '#46604a';
   ctx.textAlign = 'center';
   ctx.font = '700 25px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('月份依來源月報自動更新｜資料產生 ' + (report.generatedAt || ''), width / 2, footerY + 31);
+  ctx.fillText('報表月份依來源月報更新｜目標月份 ' + report.targetMonth + '月｜資料產生 ' + (report.generatedAt || ''), width / 2, footerY + 31);
 
   ctx.fillStyle = colors.muted;
   ctx.font = '600 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
@@ -563,12 +640,14 @@ function setMobileShareLoading_(loading) {
   const loadingArea = document.getElementById('mobileShareLoading');
   const reportArea = document.getElementById('mobileShareReport');
   const select = document.getElementById('mobileShareReportSelect');
+  const targetMonthSelect = document.getElementById('mobileShareTargetMonthSelect');
   const reload = document.getElementById('mobileShareReloadBtn');
   const share = document.getElementById('mobileShareLineBtn');
 
   if (loadingArea) loadingArea.hidden = !loading;
   if (reportArea && loading) reportArea.hidden = true;
   if (select) select.disabled = loading;
+  if (targetMonthSelect) targetMonthSelect.disabled = loading;
   if (reload) reload.disabled = loading;
   if (share) share.disabled = loading;
 }

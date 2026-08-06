@@ -7,7 +7,7 @@
 檢查登入狀態
 顯示登入者壇名
 綁定首頁功能按鈕
-依照權限顯示「手機分享」、「道親資料更新」、「更新報表」與「系統後台」
+依照權限顯示「三大組月報」、「道親資料更新」、「更新報表」與「系統後台」
 只有 admin 顯示「最後更新時間」
 user 不顯示「最後更新時間」
 ========================= */
@@ -146,7 +146,7 @@ const HOME_PERMISSION_CACHE_SECONDS = 600; // 10分鐘
 函式名稱：loadHomePermissions
 功能說明：
 讀取首頁權限。
-用來控制「手機分享」、「道親資料更新」、「更新報表」與「系統後台」是否顯示。
+用來控制「三大組月報」、「道親資料更新」、「更新報表」與「系統後台」是否顯示。
 ========================= */
 async function loadHomePermissions(user) {
 const btnUpdate = document.getElementById('btnUpdate');
