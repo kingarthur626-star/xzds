@@ -3553,3 +3553,374 @@ border-bottom: 1px solid #e2e8f0 !important;
     font-size: 14px !important;
   }
 }
+
+/* =========================
+程式區塊：手機道親資料更新管理中心 v0.1.0R1
+更新日期：2026-08-06
+========================= */
+
+.admin-nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.admin-nav-grid .admin-nav-btn {
+  min-width: 0;
+}
+
+.admin-nav-grid .admin-nav-btn[hidden] {
+  display: none !important;
+}
+
+body.tao-mobile-update-page {
+  width: 100%;
+  min-height: 100svh;
+  overflow-x: hidden;
+  background: #f8fafc;
+}
+
+body.tao-mobile-update-page .page {
+  width: 100%;
+  min-height: 100svh;
+}
+
+body.tao-mobile-update-page .page-inner {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding-left: 14px;
+  padding-right: 14px;
+  padding-bottom: calc(34px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+body.tao-mobile-update-page .tao-mobile-action-bar {
+  width: calc(100% - 28px);
+  max-width: 402px;
+}
+
+body.tao-mobile-update-page .tao-mobile-action-bar .action-pill {
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.tao-mobile-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+
+.tao-mobile-subtitle {
+  margin-top: 4px;
+  margin-bottom: 18px;
+}
+
+.tao-mobile-range-panel,
+.tao-mobile-details {
+  border: 1px solid #dbe5ef;
+  border-radius: 16px;
+  background: #f8fbff;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.tao-mobile-range-panel h2,
+.tao-mobile-details h2 {
+  margin: 0 0 12px;
+  color: #143b63;
+  font-size: 17px;
+  text-align: left;
+}
+
+.tao-mobile-date-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tao-mobile-date-field span {
+  display: block;
+  margin-bottom: 6px;
+  color: #174869;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tao-mobile-date-field input {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+  border: 1px solid #cad8e6;
+  border-radius: 12px;
+  padding: 0 9px;
+  background: #ffffff;
+  color: #1f3b57;
+  font-size: 14px;
+}
+
+.tao-mobile-date-field input:disabled {
+  background: #edf2f7;
+  color: #64748b;
+}
+
+.tao-mobile-secondary-btn,
+.tao-mobile-progress-btn,
+.tao-mobile-step-btn {
+  width: 100%;
+  min-height: 42px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tao-mobile-secondary-btn {
+  margin-top: 12px;
+  border: 1px solid #2f80ed;
+  background: #eef5ff;
+  color: #2f80ed;
+}
+
+.tao-mobile-range-note {
+  margin-top: 10px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.tao-mobile-operation-banner {
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.tao-mobile-operation-banner.running {
+  border: 1px solid #f2c94c;
+  background: #fff9e8;
+  color: #7a5b00;
+}
+
+.tao-mobile-operation-banner.success {
+  border: 1px solid #b8e1c8;
+  background: #edf9f2;
+  color: #1d6f42;
+}
+
+.tao-mobile-operation-banner.error {
+  border: 1px solid #f0b6b2;
+  background: #fff1f0;
+  color: #a3231c;
+}
+
+.tao-mobile-operation-title {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.tao-mobile-operation-text {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.tao-mobile-step-list {
+  display: grid;
+  gap: 12px;
+}
+
+.tao-mobile-loading {
+  padding: 22px;
+  text-align: center;
+  color: #64748b;
+}
+
+.tao-mobile-step-card {
+  border: 1px solid #dce5ee;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.tao-mobile-step-card.success {
+  border-color: #b8e1c8;
+}
+
+.tao-mobile-step-card.running {
+  border-color: #f0cb5c;
+}
+
+.tao-mobile-step-card.error {
+  border-color: #efb6b1;
+}
+
+.tao-mobile-step-head {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: start;
+}
+
+.tao-mobile-step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf3ff;
+  color: #2f80ed;
+  font-weight: 900;
+}
+
+.tao-mobile-step-heading h2 {
+  margin: 1px 0 3px;
+  color: #143b63;
+  font-size: 16px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.tao-mobile-step-reason {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.tao-mobile-status-badge {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.tao-mobile-status-badge.success {
+  background: #e9f8ef;
+  color: #1d7a43;
+}
+
+.tao-mobile-status-badge.running {
+  background: #fff5d6;
+  color: #806100;
+}
+
+.tao-mobile-status-badge.error {
+  background: #fff0f0;
+  color: #b42318;
+}
+
+.tao-mobile-status-badge.locked {
+  background: #eef2f7;
+  color: #64748b;
+}
+
+.tao-mobile-step-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.tao-mobile-metric {
+  border-radius: 10px;
+  background: #f7f9fc;
+  padding: 8px 9px;
+  text-align: left;
+}
+
+.tao-mobile-metric span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.tao-mobile-metric strong {
+  display: block;
+  margin-top: 2px;
+  color: #183b5b;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.tao-mobile-step-btn {
+  margin-top: 12px;
+  background: #2f80ed;
+  color: #ffffff;
+}
+
+.tao-mobile-step-btn:disabled,
+.tao-mobile-secondary-btn:disabled,
+.tao-mobile-progress-btn:disabled,
+body.tao-mobile-update-page .action-pill:disabled {
+  background: #e8edf3;
+  border-color: #d7e0e9;
+  color: #8a98a8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.tao-mobile-progress-btn {
+  margin-top: 14px;
+  background: #174869;
+  color: #ffffff;
+}
+
+.tao-mobile-details {
+  margin-top: 14px;
+  background: #ffffff;
+}
+
+.tao-mobile-detail-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 40%) minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #edf1f5;
+  text-align: left;
+}
+
+.tao-mobile-detail-row:last-child {
+  border-bottom: none;
+}
+
+.tao-mobile-detail-row span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.tao-mobile-detail-row strong {
+  color: #183b5b;
+  font-size: 12px;
+  text-align: right;
+  word-break: break-all;
+}
+
+.tao-mobile-generated-at {
+  margin-top: 14px;
+}
+
+@media (max-width: 370px) {
+  .admin-nav-grid,
+  .tao-mobile-date-grid,
+  .tao-mobile-step-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .tao-mobile-step-head {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .tao-mobile-status-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
