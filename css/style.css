@@ -3555,24 +3555,9 @@ border-bottom: 1px solid #e2e8f0 !important;
 }
 
 /* =========================
-程式區塊：手機道親資料更新管理中心 v0.1.0R1
-更新日期：2026-08-06
+程式區塊：手機道親資料更新管理中心 v0.1.2R1
+只新增本頁樣式，不修改既有首頁、今年道務、近五年道務樣式。
 ========================= */
-
-.admin-nav-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 12px 0 4px;
-}
-
-.admin-nav-grid .admin-nav-btn {
-  min-width: 0;
-}
-
-.admin-nav-grid .admin-nav-btn[hidden] {
-  display: none !important;
-}
 
 body.tao-mobile-update-page {
   width: 100%;
