@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-06 Mobile Update Home Entry v0.1.1R1
+   Update: 2026-08-06 Emergency Restore v0.1.2R1
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -8,17 +8,16 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260806-0310';
+const CACHE_NAME = CACHE_PREFIX + '20260806-0120';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './home.html',
   './annual.html',
   './history.html',
+  './tao-mobile-update.html',
   './duty-activity-list.html',
   './duty-activity-admin.html',
-  './admin.html',
-  './tao-mobile-update.html',
   './manifest.json',
   './css/style.css',
   './js/config.js',
@@ -26,11 +25,10 @@ const STATIC_ASSETS = [
   './js/common.js',
   './js/annual.js',
   './js/history.js',
+  './js/tao-mobile-update.js',
   './js/duty-activity-list.js',
   './js/duty-activity-admin.js',
   './js/duty-activity-admin-r19.js',
-  './js/admin.js',
-  './js/tao-mobile-update.js',
   './js/pwa.js'
 ];
 self.addEventListener('install', function(event) {
