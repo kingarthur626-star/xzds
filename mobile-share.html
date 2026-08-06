@@ -3,9 +3,9 @@
 <!-- =========================
      程式名稱：mobile-share.html
      功能說明：
-     1. 顯示求道／法會三大組手機成果報表。
-     2. 依來源工作表月份自動顯示當月目標。
-     3. 顯示壇名達成率三色。
+     1. 顯示求道／法會三大組月報。
+     2. 顯示來源月報月份，並提供目標月份下拉選單。
+     3. 依選定目標月份套用目標百分比及三色判斷。
      4. 產生完整 PNG，透過手機分享選單分享到 LINE。
 
      注意事項：
@@ -18,35 +18,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>手機成果分享｜新莊區道務檢視</title>
+  <meta name="xzds-ui-version" content="20260806-mobile-share-100r6">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>三大組月報｜新莊區道務檢視</title>
   <meta name="theme-color" content="#f5f7fb">
   <link rel="manifest" href="./manifest.json?v=20260623-001">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./css/style.css?v=20260623-04">
-  <link rel="stylesheet" href="./css/mobile-share.css?v=20260806-mobile-share-100r1">
+  <link rel="stylesheet" href="./css/style.css?v=20260801-5">
+  <link rel="stylesheet" href="./css/mobile-share.css?v=20260806-mobile-share-100r6">
 </head>
 <body class="mobile-share-body">
   <main class="mobile-share-page">
+    <div class="page-action-bar unified-nav-action-bar mobile-share-nav">
+      <button class="action-pill logout" id="mobileShareLogoutBtn" type="button">登出</button>
+      <button class="action-pill mobile-share-nav-title" type="button" tabindex="-1" aria-disabled="true">三大組月報</button>
+      <button class="action-pill" id="mobileShareHomeBtn" type="button">← 首頁</button>
+    </div>
+
     <header class="mobile-share-header">
-      <button id="mobileShareHomeBtn" class="mobile-share-icon-btn" type="button" aria-label="回首頁">⌂</button>
-      <div>
-        <h1>手機分享</h1>
-        <div id="mobileShareUserText" class="mobile-share-user-text"></div>
-      </div>
-      <button id="mobileShareLogoutBtn" class="mobile-share-icon-btn" type="button" aria-label="登出">登出</button>
+      <h1>三大組月報</h1>
+      <div id="mobileShareUserText" class="mobile-share-user-text"></div>
     </header>
 
-    <section class="mobile-share-control-card" aria-label="報表選擇">
-      <div id="mobileShareTargetBadge" class="mobile-share-target-badge">目標 --%</div>
-      <label for="mobileShareReportSelect">報表選擇</label>
-      <select id="mobileShareReportSelect">
-        <option value="qiu1">求道 第一組</option>
-        <option value="qiu2">求道 第二組</option>
-        <option value="qiu3">求道 第三組</option>
-        <option value="fa1">法會 第一組</option>
-        <option value="fa2">法會 第二組</option>
-        <option value="fa3">法會 第三組</option>
-      </select>
+    <section class="mobile-share-control-card" aria-label="報表與目標月份選擇">
+      <div class="mobile-share-target-row">
+        <label for="mobileShareTargetMonthSelect">目標月份</label>
+        <select id="mobileShareTargetMonthSelect" aria-label="目標月份">
+          <option value="1">1月</option>
+          <option value="2">2月</option>
+          <option value="3">3月</option>
+          <option value="4">4月</option>
+          <option value="5">5月</option>
+          <option value="6">6月</option>
+          <option value="7">7月</option>
+          <option value="8">8月</option>
+          <option value="9">9月</option>
+          <option value="10">10月</option>
+          <option value="11">11月</option>
+          <option value="12">12月</option>
+        </select>
+        <div id="mobileShareTargetBadge" class="mobile-share-target-badge">目標 --%</div>
+      </div>
+
+      <div class="mobile-share-report-row">
+        <label for="mobileShareReportSelect">報表選擇</label>
+        <select id="mobileShareReportSelect">
+          <option value="qiu1">求道 第一組</option>
+          <option value="qiu2">求道 第二組</option>
+          <option value="qiu3">求道 第三組</option>
+          <option value="fa1">法會 第一組</option>
+          <option value="fa2">法會 第二組</option>
+          <option value="fa3">法會 第三組</option>
+        </select>
+      </div>
     </section>
 
     <section id="mobileShareLoading" class="mobile-share-message">讀取報表中...</section>
@@ -89,7 +115,7 @@
         <div id="mobileShareDetailRows"></div>
       </section>
 
-      <div class="mobile-share-info-strip">ⓘ 月份依來源月報自動更新</div>
+      <div class="mobile-share-info-strip">ⓘ 報表月份依來源月報更新；目標月份可自行切換</div>
 
       <div class="mobile-share-legend" aria-label="達成率顏色說明">
         <span><i class="green"></i>達標</span>
@@ -112,7 +138,7 @@
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20260619-2"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/mobile-share.js?v=20260806-mobile-share-100r1"></script>
-  <script src="./js/pwa.js?v=20260623-04"></script>
+  <script src="./js/mobile-share.js?v=20260806-mobile-share-100r6"></script>
+  <script src="./js/pwa.js?v=20260801-5"></script>
 </body>
 </html>
