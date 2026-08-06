@@ -7,7 +7,7 @@
 檢查登入狀態
 顯示登入者壇名
 綁定首頁功能按鈕
-依照權限顯示「道親資料更新」、「更新報表」與「系統後台」
+依照權限顯示「手機分享」、「道親資料更新」、「更新報表」與「系統後台」
 只有 admin 顯示「最後更新時間」
 user 不顯示「最後更新時間」
 ========================= */
@@ -92,6 +92,7 @@ function bindHomeButtons() {
 const btnAnnual = document.getElementById('btnAnnual');
 const btnHistory = document.getElementById('btnHistory');
 const btnDutyActivityList = document.getElementById('btnDutyActivityList');
+const btnMobileShare = document.getElementById('btnMobileShare');
 const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnLogout = document.getElementById('btnLogout');
@@ -111,6 +112,12 @@ location.href = 'history.html';
 if (btnDutyActivityList) {
   btnDutyActivityList.addEventListener('click', function () {
     location.href = 'duty-activity-list.html';
+  });
+}
+
+if (btnMobileShare) {
+  btnMobileShare.addEventListener('click', function () {
+    location.href = 'mobile-share.html';
   });
 }
 
@@ -139,7 +146,7 @@ const HOME_PERMISSION_CACHE_SECONDS = 600; // 10分鐘
 函式名稱：loadHomePermissions
 功能說明：
 讀取首頁權限。
-用來控制「道親資料更新」、「更新報表」與「系統後台」是否顯示。
+用來控制「手機分享」、「道親資料更新」、「更新報表」與「系統後台」是否顯示。
 ========================= */
 async function loadHomePermissions(user) {
 const btnUpdate = document.getElementById('btnUpdate');
@@ -196,11 +203,16 @@ adminPanel: false
 ========================= */
 function applyHomePermissions_(permissions) {
 const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
+const btnMobileShare = document.getElementById('btnMobileShare');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnMore = document.getElementById('btnMore');
 
 if (btnTaoMobileUpdate) {
 btnTaoMobileUpdate.style.display = permissions.updateTaoReport ? 'flex' : 'none';
+}
+
+if (btnMobileShare) {
+btnMobileShare.style.display = (permissions.updateTaoReport || permissions.adminPanel) ? 'flex' : 'none';
 }
 
 if (btnUpdate) {
