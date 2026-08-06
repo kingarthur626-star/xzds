@@ -1,6 +1,6 @@
 /* =========================
 程式名稱：tao-mobile-update.js
-版本：v0.1.0R1
+版本：v0.1.2R1
 功能說明：
 手機道親資料更新管理中心前端。
 
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function bindTaoMobileButtons_() {
-  const backBtn = document.getElementById('backAdminBtn');
+  const backBtn = document.getElementById('backHomeBtn');
   const refreshBtn = document.getElementById('refreshStatusBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const loadRangeBtn = document.getElementById('loadRangeBtn');
@@ -50,7 +50,7 @@ function bindTaoMobileButtons_() {
 
   if (backBtn) {
     backBtn.addEventListener('click', function () {
-      location.href = 'admin.html';
+      location.href = 'home.html';
     });
   }
 

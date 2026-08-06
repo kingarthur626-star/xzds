@@ -42,15 +42,7 @@ function bindAdminButtons() {
   const logoutBtn = document.getElementById('logoutBtn');
   const reloadBtn = document.getElementById('reloadAccountsBtn');
   const searchInput = document.getElementById('adminSearchInput');
-  const btnDutyActivityAdmin = document.getElementById('btnDutyActivityAdmin');
-
-  if (btnDutyActivityAdmin) {
-    btnDutyActivityAdmin.addEventListener('click', function () {
-      location.href = 'duty-activity-admin.html';
-    });
-  }
-
-  if (backBtn) {
+if (backBtn) {
     backBtn.addEventListener('click', function () {
       location.href = 'home.html';
     });
