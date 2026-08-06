@@ -1,0 +1,379 @@
+/*
+程式名稱：mobile-share.css
+功能說明：
+1. 手機成果分享頁專用版面。
+2. 顯示五項大組摘要、壇名明細與三色進度。
+3. 支援 iPhone、Android、平板及桌機。
+版本：v1.0.0R5
+*/
+
+:root {
+  --ms-blue: #1559d6;
+  --ms-purple: #7b2fc4;
+  --ms-green: #0b8f2d;
+  --ms-yellow: #f39a00;
+  --ms-red: #e11515;
+  --ms-ink: #15243a;
+  --ms-muted: #65758a;
+  --ms-line: #dce3ec;
+  --ms-bg: #f5f7fb;
+}
+
+.mobile-share-body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ms-bg);
+  color: var(--ms-ink);
+}
+
+.mobile-share-page {
+  width: min(100%, 620px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
+}
+
+.mobile-share-header {
+  display: grid;
+  grid-template-columns: 54px 1fr 54px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 14px;
+  text-align: center;
+}
+
+.mobile-share-header h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.mobile-share-user-text {
+  min-height: 18px;
+  margin-top: 3px;
+  color: var(--ms-muted);
+  font-size: 13px;
+}
+
+.mobile-share-icon-btn {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 14px;
+  background: #e7eef8;
+  color: #25415e;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.mobile-share-control-card {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--ms-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(27, 55, 88, 0.08);
+}
+
+.mobile-share-control-card label {
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.mobile-share-control-card select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0 38px 0 13px;
+  border: 1px solid #c4cfdd;
+  border-radius: 12px;
+  background: #fff;
+  color: #18283b;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.mobile-share-target-badge {
+  min-width: 92px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #12a943, #0b8c32);
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 5px 12px rgba(9, 143, 45, 0.22);
+}
+
+.mobile-share-message {
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ms-muted);
+  text-align: center;
+}
+
+.mobile-share-message.error {
+  border: 1px solid #ffd1d1;
+  background: #fff4f4;
+  color: #b00020;
+}
+
+.mobile-share-report > h2 {
+  margin: 22px 0 14px;
+  color: var(--ms-blue);
+  text-align: center;
+  font-size: clamp(30px, 9vw, 46px);
+  line-height: 1.08;
+  letter-spacing: 1px;
+}
+
+.mobile-share-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.mobile-share-summary-card {
+  min-width: 0;
+  padding: 12px 3px 14px;
+  border: 1px solid #dfe4ed;
+  border-top: 3px solid #6b49d6;
+  border-radius: 13px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(39, 56, 82, 0.06);
+}
+
+.mobile-share-summary-card span {
+  display: block;
+  min-height: 31px;
+  color: #263347;
+  font-size: clamp(10px, 2.8vw, 13px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.mobile-share-summary-card strong {
+  display: block;
+  margin-top: 7px;
+  overflow: hidden;
+  color: var(--ms-purple);
+  font-size: clamp(23px, 7.5vw, 34px);
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-share-summary-card.status-card.green {
+  border-top-color: var(--ms-green);
+}
+
+.mobile-share-summary-card.status-card.green span,
+.mobile-share-summary-card.status-card.green strong {
+  color: var(--ms-green);
+}
+
+.mobile-share-summary-card.status-card.red {
+  border-top-color: var(--ms-red);
+}
+
+.mobile-share-summary-card.status-card.red span,
+.mobile-share-summary-card.status-card.red strong {
+  color: var(--ms-red);
+}
+
+.mobile-share-detail-card {
+  overflow: hidden;
+  border: 1px solid var(--ms-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(27, 55, 88, 0.07);
+}
+
+.mobile-share-detail-head,
+.mobile-share-detail-row {
+  display: grid;
+  grid-template-columns: minmax(92px, 1.65fr) minmax(38px, .58fr) minmax(36px, .55fr) minmax(42px, .62fr) minmax(76px, 1fr);
+  align-items: center;
+  column-gap: 5px;
+}
+
+.mobile-share-detail-head {
+  padding: 12px 10px;
+  background: #f2f5f9;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 900;
+}
+
+.mobile-share-detail-head span:not(:first-child) {
+  text-align: center;
+}
+
+.mobile-share-detail-row {
+  min-height: 53px;
+  padding: 8px 10px;
+  border-top: 1px solid #e7ebf1;
+  font-size: clamp(12px, 3.45vw, 15px);
+}
+
+.mobile-share-detail-row > span:first-child {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-share-detail-row > span:not(:first-child) {
+  text-align: center;
+}
+
+.mobile-share-rate-cell {
+  display: grid;
+  grid-template-columns: minmax(36px, 1fr) 34px;
+  align-items: center;
+  gap: 5px;
+  font-weight: 900;
+}
+
+.mobile-share-rate-cell .rate-number {
+  text-align: right;
+}
+
+.mobile-share-mini-track {
+  height: 9px;
+  overflow: hidden;
+  border: 1px solid #d2d9e2;
+  border-radius: 99px;
+  background: #f7f8fa;
+}
+
+.mobile-share-mini-track i {
+  display: block;
+  width: 78%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.mobile-share-rate-cell.green { color: var(--ms-green); }
+.mobile-share-rate-cell.green .mobile-share-mini-track i { background: var(--ms-green); }
+.mobile-share-rate-cell.yellow { color: var(--ms-yellow); }
+.mobile-share-rate-cell.yellow .mobile-share-mini-track i { background: var(--ms-yellow); }
+.mobile-share-rate-cell.red { color: var(--ms-red); }
+.mobile-share-rate-cell.red .mobile-share-mini-track i { background: var(--ms-red); }
+
+.mobile-share-info-strip {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #cfe4cf;
+  border-radius: 13px;
+  background: #f2faf2;
+  color: #46604a;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.mobile-share-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  padding: 12px 4px 4px;
+  color: var(--ms-muted);
+  font-size: 12px;
+}
+
+.mobile-share-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mobile-share-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.mobile-share-legend i.green { background: var(--ms-green); }
+.mobile-share-legend i.yellow { background: var(--ms-yellow); }
+.mobile-share-legend i.red { background: var(--ms-red); }
+
+.mobile-share-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.45fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mobile-share-actions button {
+  min-height: 50px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.mobile-share-secondary-btn {
+  background: #dde6f1;
+  color: #29425e;
+}
+
+.mobile-share-line-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #08a83a;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(8, 168, 58, .22);
+}
+
+.mobile-share-line-mark {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #fff;
+  color: #08a83a;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.mobile-share-actions button:disabled {
+  opacity: .55;
+}
+
+.mobile-share-generated-text {
+  padding: 12px 4px 0;
+  color: var(--ms-muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 390px) {
+  .mobile-share-page { padding-left: 8px; padding-right: 8px; }
+  .mobile-share-control-card { grid-template-columns: auto 1fr; }
+  .mobile-share-control-card label { text-align: right; }
+  .mobile-share-control-card select { grid-column: 1 / -1; }
+  .mobile-share-summary { gap: 4px; }
+  .mobile-share-summary-card { padding-left: 2px; padding-right: 2px; }
+  .mobile-share-detail-head,
+  .mobile-share-detail-row {
+    grid-template-columns: minmax(82px, 1.55fr) 34px 32px 38px 72px;
+    column-gap: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+}
