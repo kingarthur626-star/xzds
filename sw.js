@@ -8,23 +8,27 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260806-0130';
+const CACHE_NAME = CACHE_PREFIX + '20260806-mobile-share-100r5';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './home.html',
   './annual.html',
   './history.html',
+  './mobile-share.html',
   './tao-mobile-update.html',
   './duty-activity-list.html',
   './duty-activity-admin.html',
   './manifest.json',
   './css/style.css',
+  './css/mobile-share.css',
   './js/config.js',
   './js/api.js',
   './js/common.js',
+  './js/home.js',
   './js/annual.js',
   './js/history.js',
+  './js/mobile-share.js',
   './js/tao-mobile-update.js',
   './js/duty-activity-list.js',
   './js/duty-activity-admin.js',
@@ -60,7 +64,6 @@ self.addEventListener('activate', function(event) {
 self.addEventListener('fetch', function(event) {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const requestUrl = new URL(request.url);
   if (requestUrl.origin !== self.location.origin) return;
 
@@ -76,7 +79,6 @@ self.addEventListener('message', function(event) {
     self.skipWaiting();
   }
 });
-
 function isFreshnessCriticalRequest_(request, requestUrl) {
   if (request.mode === 'navigate') return true;
   const path = requestUrl.pathname.toLowerCase();

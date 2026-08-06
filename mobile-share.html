@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<!-- =========================
+     程式名稱：mobile-share.html
+     功能說明：
+     1. 顯示求道／法會三大組手機成果報表。
+     2. 依來源工作表月份自動顯示當月目標。
+     3. 顯示壇名達成率三色。
+     4. 產生完整 PNG，透過手機分享選單分享到 LINE。
+
+     注意事項：
+     1. 本頁只讀取資料，不修改 Google Sheet。
+     2. 未登入時導回登入頁。
+     3. 實際權限由 Apps Script 後端再次檢查。
+========================= -->
+
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>手機成果分享｜新莊區道務檢視</title>
+  <meta name="theme-color" content="#f5f7fb">
+  <link rel="manifest" href="./manifest.json?v=20260623-001">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css?v=20260623-04">
+  <link rel="stylesheet" href="./css/mobile-share.css?v=20260806-mobile-share-100r1">
+</head>
+<body class="mobile-share-body">
+  <main class="mobile-share-page">
+    <header class="mobile-share-header">
+      <button id="mobileShareHomeBtn" class="mobile-share-icon-btn" type="button" aria-label="回首頁">⌂</button>
+      <div>
+        <h1>手機分享</h1>
+        <div id="mobileShareUserText" class="mobile-share-user-text"></div>
+      </div>
+      <button id="mobileShareLogoutBtn" class="mobile-share-icon-btn" type="button" aria-label="登出">登出</button>
+    </header>
+
+    <section class="mobile-share-control-card" aria-label="報表選擇">
+      <div id="mobileShareTargetBadge" class="mobile-share-target-badge">目標 --%</div>
+      <label for="mobileShareReportSelect">報表選擇</label>
+      <select id="mobileShareReportSelect">
+        <option value="qiu1">求道 第一組</option>
+        <option value="qiu2">求道 第二組</option>
+        <option value="qiu3">求道 第三組</option>
+        <option value="fa1">法會 第一組</option>
+        <option value="fa2">法會 第二組</option>
+        <option value="fa3">法會 第三組</option>
+      </select>
+    </section>
+
+    <section id="mobileShareLoading" class="mobile-share-message">讀取報表中...</section>
+    <section id="mobileShareError" class="mobile-share-message error" hidden></section>
+
+    <section id="mobileShareReport" class="mobile-share-report" hidden>
+      <h2 id="mobileShareTitle">月份 成果達成</h2>
+
+      <div class="mobile-share-summary" aria-label="大組成果摘要">
+        <article class="mobile-share-summary-card">
+          <span>目標</span>
+          <strong id="mobileShareSummaryTarget">0</strong>
+        </article>
+        <article class="mobile-share-summary-card">
+          <span id="mobileShareMonthCardLabel">當月達成</span>
+          <strong id="mobileShareSummaryMonth">0</strong>
+        </article>
+        <article class="mobile-share-summary-card">
+          <span id="mobileShareCumulativeCardLabel">今年累計</span>
+          <strong id="mobileShareSummaryCumulative">0</strong>
+        </article>
+        <article class="mobile-share-summary-card">
+          <span>實際達成率</span>
+          <strong id="mobileShareSummaryRate">0%</strong>
+        </article>
+        <article id="mobileShareStatusCard" class="mobile-share-summary-card status-card">
+          <span id="mobileShareStatusLabel">目前尚缺</span>
+          <strong id="mobileShareStatusValue">0</strong>
+        </article>
+      </div>
+
+      <section class="mobile-share-detail-card">
+        <div class="mobile-share-detail-head">
+          <span>壇名</span>
+          <span>目標</span>
+          <span id="mobileShareDetailMonthLabel">當月</span>
+          <span>累計</span>
+          <span>達成率</span>
+        </div>
+        <div id="mobileShareDetailRows"></div>
+      </section>
+
+      <div class="mobile-share-info-strip">ⓘ 月份依來源月報自動更新</div>
+
+      <div class="mobile-share-legend" aria-label="達成率顏色說明">
+        <span><i class="green"></i>達標</span>
+        <span><i class="yellow"></i>差距 10% 以內</span>
+        <span><i class="red"></i>落後超過 10%</span>
+      </div>
+
+      <div class="mobile-share-actions">
+        <button id="mobileShareReloadBtn" class="mobile-share-secondary-btn" type="button">重新讀取</button>
+        <button id="mobileShareLineBtn" class="mobile-share-line-btn" type="button">
+          <span class="mobile-share-line-mark">LINE</span>
+          分享成果圖片
+        </button>
+      </div>
+
+      <div id="mobileShareGeneratedText" class="mobile-share-generated-text"></div>
+    </section>
+  </main>
+
+  <script src="./js/config.js?v=20260619-2"></script>
+  <script src="./js/api.js?v=20260619-2"></script>
+  <script src="./js/common.js?v=20260623-04"></script>
+  <script src="./js/mobile-share.js?v=20260806-mobile-share-100r1"></script>
+  <script src="./js/pwa.js?v=20260623-04"></script>
+</body>
+</html>
