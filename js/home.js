@@ -7,7 +7,7 @@
 檢查登入狀態
 顯示登入者壇名
 綁定首頁功能按鈕
-依照權限顯示「三大組月報」、「道親資料更新」、「更新報表」與「系統後台」
+依照權限顯示「三大組月報」、「道親資料更新－資料同步」、「道親資料更新－一鍵更新」、「更新報表」與「系統後台」
 只有 admin 顯示「最後更新時間」
 user 不顯示「最後更新時間」
 ========================= */
@@ -94,6 +94,7 @@ const btnHistory = document.getElementById('btnHistory');
 const btnDutyActivityList = document.getElementById('btnDutyActivityList');
 const btnMobileShare = document.getElementById('btnMobileShare');
 const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
+const btnTaoMobileOneClick = document.getElementById('btnTaoMobileOneClick');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnLogout = document.getElementById('btnLogout');
 
@@ -124,6 +125,12 @@ if (btnMobileShare) {
 if (btnTaoMobileUpdate) {
   btnTaoMobileUpdate.addEventListener('click', function () {
     location.href = 'tao-mobile-update.html';
+  });
+}
+
+if (btnTaoMobileOneClick) {
+  btnTaoMobileOneClick.addEventListener('click', function () {
+    location.href = 'tao-mobile-update-oneclick.html';
   });
 }
 
@@ -203,12 +210,17 @@ adminPanel: false
 ========================= */
 function applyHomePermissions_(permissions) {
 const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
+const btnTaoMobileOneClick = document.getElementById('btnTaoMobileOneClick');
 const btnMobileShare = document.getElementById('btnMobileShare');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnMore = document.getElementById('btnMore');
 
 if (btnTaoMobileUpdate) {
 btnTaoMobileUpdate.style.display = permissions.updateTaoReport ? 'flex' : 'none';
+}
+
+if (btnTaoMobileOneClick) {
+btnTaoMobileOneClick.style.display = permissions.updateTaoReport ? 'flex' : 'none';
 }
 
 if (btnMobileShare) {
