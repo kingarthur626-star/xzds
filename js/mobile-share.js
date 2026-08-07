@@ -3,10 +3,10 @@
  * 功能說明：
  * 1. 讀取三大組月報 API。
  * 2. 月份切換時，重新向後端讀取該月達成與 1～該月累計。
- * 3. 動態顯示目前報表壇數，並在明細中段重複表頭。
- * 4. 產生完整 PNG，使用手機原生分享選單分享到 LINE。
+ * 3. 動態顯示「月份成果＋壇數」，並在明細中段重複表頭。
+ * 4. 達成率顯示 10 格進度條，並產生完整 PNG 分享。
  *
- * 版本：v1.0.0R7
+ * 版本：v1.0.0R8
  * 最後更新：2026/08/07
  */
 
@@ -288,13 +288,43 @@ function renderMobileShareDetailRows_(details, monthLabel) {
           '<span class="rate-number">' +
             formatMobileShareNumber_(item.ratePercent) + '%' +
           '</span>' +
-          '<span class="mobile-share-mini-track"><i></i></span>' +
+          buildMobileShareSegmentTrackHtml_(item.ratePercent) +
         '</span>' +
       '</div>'
     );
   });
 
   area.innerHTML = parts.join('');
+}
+
+
+/**
+ * 功能：依達成率換算 10 格進度條。
+ * 規則：10%以下1格、11～20%為2格，100%以上固定10格。
+ */
+function getMobileShareProgressSegments_(ratePercent) {
+  const rate = Number(ratePercent);
+
+  if (!Number.isFinite(rate) || rate <= 10) {
+    return 1;
+  }
+
+  return Math.min(10, Math.ceil(rate / 10));
+}
+
+
+/**
+ * 功能：建立畫面用 10 格進度條 HTML。
+ */
+function buildMobileShareSegmentTrackHtml_(ratePercent) {
+  const activeCount = getMobileShareProgressSegments_(ratePercent);
+  let segments = '';
+
+  for (let index = 1; index <= 10; index += 1) {
+    segments += '<b' + (index <= activeCount ? ' class="active"' : '') + '></b>';
+  }
+
+  return '<span class="mobile-share-mini-track" aria-hidden="true">' + segments + '</span>';
 }
 
 
@@ -421,65 +451,71 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   ctx.textAlign = 'center';
   ctx.fillStyle = colors.ink;
   ctx.font =
-    '900 44px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    '900 52px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.fillText(
-    '三大組月報 ' + report.templeCount + '壇',
+    report.title + '  ' + report.templeCount + '壇',
     width / 2,
-    82
+    92
   );
 
-  ctx.fillStyle = colors.muted;
+  const controlY = 138;
+  const controlGap = 14;
+  const monthWidth = 245;
+  const targetWidth = 230;
+  const reportWidth = width - padding * 2 - monthWidth - targetWidth - controlGap * 2;
+
+  drawCanvasRoundRect_(
+    ctx,
+    padding,
+    controlY,
+    monthWidth,
+    70,
+    18,
+    '#ffffff',
+    '#cbd5e1'
+  );
+  ctx.fillStyle = colors.ink;
   ctx.font =
-    '700 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(report.label, width / 2, 126);
+    '900 36px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(report.month + '月', padding + monthWidth / 2, controlY + 35);
 
   drawCanvasPill_(
     ctx,
-    padding,
-    158,
-    208,
-    56,
-    report.month + '月目標 ' + report.monthTargetPercent + '%',
+    padding + monthWidth + controlGap,
+    controlY,
+    targetWidth,
+    70,
+    '目標 ' + report.monthTargetPercent + '%',
     colors.green
   );
 
-  ctx.textAlign = 'center';
-  ctx.fillStyle = colors.blue;
+  const reportX = padding + monthWidth + controlGap + targetWidth + controlGap;
+  drawCanvasRoundRect_(
+    ctx,
+    reportX,
+    controlY,
+    reportWidth,
+    70,
+    18,
+    '#ffffff',
+    '#cbd5e1'
+  );
+  ctx.fillStyle = colors.ink;
   ctx.font =
-    '900 66px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(report.title, width / 2, 252);
+    '850 28px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(report.label, reportX + reportWidth / 2, controlY + 35);
 
-  const cardY = 310;
+  const cardY = 242;
   const cardGap = 12;
   const cardWidth =
     (width - padding * 2 - cardGap * 4) / 5;
   const cardHeight = 154;
   const cards = [
-    {
-      label: '目標',
-      value: summary.target,
-      tone: 'purple'
-    },
-    {
-      label: report.monthColumnLabel + '達成',
-      value: summary.monthValue,
-      tone: 'purple'
-    },
-    {
-      label: report.cumulativeLabel,
-      value: summary.cumulative,
-      tone: 'purple'
-    },
-    {
-      label: '實際達成率',
-      value: summary.ratePercent + '%',
-      tone: 'purple'
-    },
-    {
-      label: summary.statusLabel,
-      value: summary.statusValue,
-      tone: summary.statusTone
-    }
+    { label: '目標', value: summary.target, tone: 'purple' },
+    { label: report.monthColumnLabel + '達成', value: summary.monthValue, tone: 'purple' },
+    { label: report.cumulativeLabel, value: summary.cumulative, tone: 'purple' },
+    { label: '實際達成率', value: summary.ratePercent + '%', tone: 'purple' },
+    { label: summary.statusLabel, value: summary.statusValue, tone: summary.statusTone }
   ];
 
   cards.forEach(function (card, index) {
@@ -490,57 +526,33 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
         ? colors.red
         : colors.purple;
 
-    drawCanvasRoundRect_(
-      ctx,
-      x,
-      cardY,
-      cardWidth,
-      cardHeight,
-      18,
-      '#ffffff',
-      colors.line
-    );
-
+    drawCanvasRoundRect_(ctx, x, cardY, cardWidth, cardHeight, 18, '#ffffff', colors.line);
     ctx.fillStyle = toneColor;
     ctx.fillRect(x + 1, cardY + 1, cardWidth - 2, 5);
 
     ctx.textAlign = 'center';
-    ctx.fillStyle =
-      card.tone === 'green' || card.tone === 'red'
-        ? toneColor
-        : colors.ink;
-    ctx.font =
-      '800 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    drawCanvasWrappedText_(
-      ctx,
-      String(card.label),
-      x + cardWidth / 2,
-      cardY + 42,
-      cardWidth - 14,
-      25,
-      2
-    );
+    ctx.fillStyle = card.tone === 'green' || card.tone === 'red' ? toneColor : colors.ink;
+    ctx.font = '800 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    drawCanvasWrappedText_(ctx, String(card.label), x + cardWidth / 2, cardY + 42, cardWidth - 14, 25, 2);
 
     ctx.fillStyle = toneColor;
-    ctx.font =
-      '900 41px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(
-      String(card.value),
-      x + cardWidth / 2,
-      cardY + 112
-    );
+    ctx.font = '900 41px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(String(card.value), x + cardWidth / 2, cardY + 112);
   });
 
   const tableX = padding;
-  const tableY = 500;
+  const tableY = 430;
   const tableWidth = width - padding * 2;
   const headerHeight = 60;
   const col = {
-    temple: tableX + tableWidth * 0.21,
-    target: tableX + tableWidth * 0.54,
-    month: tableX + tableWidth * 0.665,
-    cumulative: tableX + tableWidth * 0.785,
-    rate: tableX + tableWidth * 0.93
+    temple: tableX + tableWidth * 0.16,
+    target: tableX + tableWidth * 0.37,
+    month: tableX + tableWidth * 0.47,
+    cumulative: tableX + tableWidth * 0.57,
+    rateHeader: tableX + tableWidth * 0.82,
+    rateText: tableX + tableWidth * 0.69,
+    progressX: tableX + tableWidth * 0.76,
+    progressWidth: tableWidth * 0.21
   };
 
   function drawHeader_(y, repeat) {
@@ -556,18 +568,13 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     );
 
     ctx.fillStyle = colors.ink;
-    ctx.font =
-      '900 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.font = '900 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('壇名', col.temple, y + headerHeight / 2);
     ctx.fillText('目標', col.target, y + headerHeight / 2);
-    ctx.fillText(
-      report.monthColumnLabel,
-      col.month,
-      y + headerHeight / 2
-    );
+    ctx.fillText(report.monthColumnLabel, col.month, y + headerHeight / 2);
     ctx.fillText('累計', col.cumulative, y + headerHeight / 2);
-    ctx.fillText('達成率', col.rate, y + headerHeight / 2);
+    ctx.fillText('達成率', col.rateHeader, y + headerHeight / 2);
   }
 
   drawHeader_(tableY, false);
@@ -581,51 +588,22 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
       rowY += headerHeight;
     }
 
-    const background =
-      index % 2 === 0 ? '#ffffff' : '#fbfcfe';
-
-    drawCanvasRoundRect_(
-      ctx,
-      tableX,
-      rowY,
-      tableWidth,
-      rowHeight,
-      0,
-      background,
-      colors.line
-    );
+    const background = index % 2 === 0 ? '#ffffff' : '#fbfcfe';
+    drawCanvasRoundRect_(ctx, tableX, rowY, tableWidth, rowHeight, 0, background, colors.line);
 
     ctx.fillStyle = colors.ink;
-    ctx.font =
-      '800 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.font = '800 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      truncateCanvasText_(
-        ctx,
-        item.temple,
-        tableWidth * 0.35
-      ),
+      truncateCanvasText_(ctx, item.temple, tableWidth * 0.29),
       col.temple,
       rowY + rowHeight / 2
     );
 
-    ctx.font =
-      '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(
-      String(item.target),
-      col.target,
-      rowY + rowHeight / 2
-    );
-    ctx.fillText(
-      String(item.monthValue),
-      col.month,
-      rowY + rowHeight / 2
-    );
-    ctx.fillText(
-      String(item.cumulative),
-      col.cumulative,
-      rowY + rowHeight / 2
-    );
+    ctx.font = '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(String(item.target), col.target, rowY + rowHeight / 2);
+    ctx.fillText(String(item.monthValue), col.month, rowY + rowHeight / 2);
+    ctx.fillText(String(item.cumulative), col.cumulative, rowY + rowHeight / 2);
 
     const toneColor = item.tone === 'green'
       ? colors.green
@@ -634,29 +612,24 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
         : colors.red;
 
     ctx.fillStyle = toneColor;
-    ctx.font =
-      '900 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(
-      item.ratePercent + '%',
-      col.rate - 10,
-      rowY + rowHeight / 2
-    );
+    ctx.font = '900 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(item.ratePercent + '%', col.rateText, rowY + rowHeight / 2);
 
     drawCanvasProgress_(
       ctx,
-      tableX + tableWidth - 50,
-      rowY + rowHeight / 2 - 8,
-      34,
-      16,
-      toneColor
+      col.progressX,
+      rowY + rowHeight / 2 - 7,
+      col.progressWidth,
+      14,
+      toneColor,
+      item.ratePercent
     );
 
     rowY += rowHeight;
   });
 
   ctx.fillStyle = colors.muted;
-  ctx.font =
-    '600 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.font = '600 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(
     '綠：達標　黃：差距 10% 以內　紅：落後超過 10%',
@@ -764,29 +737,26 @@ function drawCanvasProgress_(
   y,
   width,
   height,
-  color
+  color,
+  ratePercent
 ) {
-  drawCanvasRoundRect_(
-    ctx,
-    x,
-    y,
-    width,
-    height,
-    height / 2,
-    '#f4f6f8',
-    '#d4dae2'
-  );
+  const segments = 10;
+  const activeCount = getMobileShareProgressSegments_(ratePercent);
+  const gap = 3;
+  const segmentWidth = (width - gap * (segments - 1)) / segments;
 
-  drawCanvasRoundRect_(
-    ctx,
-    x + 1,
-    y + 1,
-    width * 0.76,
-    height - 2,
-    (height - 2) / 2,
-    color,
-    null
-  );
+  for (let index = 0; index < segments; index += 1) {
+    drawCanvasRoundRect_(
+      ctx,
+      x + index * (segmentWidth + gap),
+      y,
+      segmentWidth,
+      height,
+      2,
+      index < activeCount ? color : '#dfe4ec',
+      null
+    );
+  }
 }
 
 
