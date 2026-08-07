@@ -1,7 +1,7 @@
 /**
  * 程式名稱：mobile-share-summary.js
  * 功能：讀取六張各壇月報，彙整成求道／法會三大組累計達成，並產生 LINE 分享圖片。
- * 版本：v1.0.0R10
+ * 版本：v1.0.0R11
  */
 
 const MOBILE_CUMULATIVE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
@@ -338,7 +338,7 @@ async function shareMobileCumulativeImage_() {
 
 function buildMobileCumulativePngBlob_(report) {
   const width = 1080;
-  const height = 1320;
+  const height = 1230;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -383,19 +383,19 @@ function drawMobileCumulativeCanvas_(ctx, canvas, report) {
   ctx.font = '900 58px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.fillText('三大組 累計達成', width / 2, 92);
 
-  cumulativeRoundRect_(ctx, 315, 140, 190, 70, 18, '#ffffff', '#cbd5e1');
+  cumulativeRoundRect_(ctx, 315, 195, 190, 70, 18, '#ffffff', '#cbd5e1');
   ctx.fillStyle = colors.blue;
   ctx.font = '900 38px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(report.month + '月', 410, 175);
+  ctx.fillText(report.month + '月', 410, 230);
 
-  cumulativeRoundRect_(ctx, 525, 140, 240, 70, 18, '#0b9732', null);
+  cumulativeRoundRect_(ctx, 525, 195, 240, 70, 18, '#0b9732', null);
   ctx.fillStyle = '#ffffff';
   ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('目標 ' + report.targetPercent + '%', 645, 175);
+  ctx.fillText('目標 ' + report.targetPercent + '%', 645, 230);
 
-  let y = 252;
+  let y = 310;
   y = drawMobileCumulativeTableCanvas_(ctx, report.receive.rows, '求道', report.month, y, colors);
-  y += 42;
+  y += 32;
   drawMobileCumulativeTableCanvas_(ctx, report.seminar.rows, '法會', report.month, y, colors);
 }
 
@@ -429,10 +429,13 @@ function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, co
   ctx.fillStyle = colors.ink;
   ctx.font = '900 25px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.fillText('組別', centers[0], startY + headerHeight / 2);
-  ctx.fillStyle = colors.blue;
-  ctx.fillText(category, centers[1], startY + 25);
-  ctx.fillStyle = colors.ink;
-  ctx.fillText('目標', centers[1], startY + 49);
+  drawMobileCumulativeMixedTargetHeader_(
+    ctx,
+    category,
+    centers[1],
+    startY + headerHeight / 2,
+    colors
+  );
   ctx.fillText(month + '月達成', centers[2], startY + headerHeight / 2);
   ctx.fillText('今年累計', centers[3], startY + headerHeight / 2);
   ctx.fillText('實際達成率', centers[4], startY + headerHeight / 2);
@@ -467,14 +470,46 @@ function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, co
     ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.fillText(formatMobileCumulativeNumber_(row.ratePercent) + '%', centers[4], rowY + rowHeight / 2);
 
-    ctx.fillStyle = toneColor;
-    ctx.fillRect(x + width * columns[5] + 1, rowY, width * (columns[6] - columns[5]) - 2, rowHeight);
-    ctx.fillStyle = '#ffffff';
+    const deltaX = x + width * columns[5] + 1;
+    const deltaWidth = width * (columns[6] - columns[5]) - 2;
+
+    if (row.tone === 'green') {
+      ctx.fillStyle = colors.green;
+      ctx.fillRect(deltaX, rowY, deltaWidth, rowHeight);
+      ctx.fillStyle = '#ffffff';
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(deltaX, rowY, deltaWidth, rowHeight);
+      ctx.fillStyle = colors.red;
+    }
+
     ctx.font = '950 34px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.fillText(row.deltaText, centers[5], rowY + rowHeight / 2);
   });
 
   return startY + headerHeight + rowHeight * rows.length;
+}
+
+
+function drawMobileCumulativeMixedTargetHeader_(ctx, category, centerX, centerY, colors) {
+  const font = '900 24px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  const suffix = '目標';
+
+  ctx.font = font;
+  const categoryWidth = ctx.measureText(category).width;
+  const suffixWidth = ctx.measureText(suffix).width;
+  const totalWidth = categoryWidth + suffixWidth;
+  let x = centerX - totalWidth / 2;
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = colors.blue;
+  ctx.fillText(category, x, centerY);
+
+  x += categoryWidth;
+  ctx.fillStyle = colors.ink;
+  ctx.fillText(suffix, x, centerY);
+
+  ctx.textAlign = 'center';
 }
 
 
