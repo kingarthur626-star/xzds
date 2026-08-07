@@ -1,10 +1,11 @@
 /*
 程式名稱：mobile-share.css
 功能說明：
-1. 手機成果分享頁專用版面。
-2. 顯示五項大組摘要、壇名明細與三色進度。
-3. 支援 iPhone、Android、平板及桌機。
-版本：v1.0.0R6
+1. 三大組月報手機版面。
+2. 頂部導覽固定為「登出／三大組月報／首頁」。
+3. 月份、目標百分比與報表選單維持同一行。
+4. 摘要與明細表完整置中，支援中段重複表頭。
+版本：v1.0.0R7
 */
 
 :root {
@@ -19,6 +20,12 @@
   --ms-bg: #f5f7fb;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .mobile-share-body {
   margin: 0;
   min-height: 100vh;
@@ -26,22 +33,39 @@
   color: var(--ms-ink);
 }
 
+.mobile-share-page,
+.mobile-share-page * {
+  box-sizing: border-box;
+}
+
 .mobile-share-page {
   width: min(100%, 620px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: max(12px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
+  padding: max(10px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
 }
 
 .mobile-share-nav {
   position: sticky;
   top: 0;
   z-index: 20;
-  margin: 0 -2px 18px;
-  padding-top: max(8px, env(safe-area-inset-top));
-  background: rgba(245, 247, 251, 0.96);
+  display: grid !important;
+  grid-template-columns: minmax(72px, .8fr) minmax(138px, 1.45fr) minmax(72px, .8fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 18px !important;
+  padding: max(8px, env(safe-area-inset-top)) 0 10px !important;
+  background: rgba(245, 247, 251, 0.97);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.mobile-share-nav .action-pill {
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  white-space: nowrap;
 }
 
 .mobile-share-nav-title {
@@ -54,72 +78,63 @@
 }
 
 .mobile-share-header h1 {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
   margin: 0;
-  font-size: 30px;
+  color: #173f63;
+  font-size: clamp(28px, 8.4vw, 38px);
   line-height: 1.2;
 }
 
-.mobile-share-user-text {
-  min-height: 20px;
-  margin-top: 7px;
+.mobile-share-header h1 small {
   color: var(--ms-muted);
-  font-size: 15px;
+  font-size: .48em;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .mobile-share-control-card {
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  grid-template-columns: minmax(70px, .68fr) minmax(94px, .82fr) minmax(145px, 1.5fr);
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 12px;
   border: 1px solid var(--ms-line);
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(27, 55, 88, 0.08);
 }
 
-.mobile-share-target-row,
-.mobile-share-report-row {
-  display: grid;
-  align-items: center;
-  gap: 10px;
-}
-
-.mobile-share-target-row {
-  grid-template-columns: auto minmax(92px, .72fr) auto;
-}
-
-.mobile-share-report-row {
-  grid-template-columns: auto minmax(0, 1fr);
-}
-
-.mobile-share-control-card label {
-  margin: 0;
-  white-space: nowrap;
-  font-size: 15px;
-  font-weight: 800;
-}
-
 .mobile-share-control-card select {
   width: 100%;
   min-width: 0;
-  height: 44px;
-  padding: 0 38px 0 13px;
+  height: 46px;
+  padding: 0 34px 0 11px;
   border: 1px solid #c4cfdd;
-  border-radius: 12px;
+  border-radius: 13px;
   background: #fff;
   color: #18283b;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: clamp(13px, 3.7vw, 16px);
+  font-weight: 850;
+}
+
+.mobile-share-control-card select:disabled {
+  color: #8a96a5;
+  background: #f1f4f8;
 }
 
 .mobile-share-target-badge {
-  min-width: 104px;
-  padding: 10px 13px;
-  border-radius: 12px;
+  min-width: 0;
+  padding: 12px 7px;
+  border-radius: 13px;
   background: linear-gradient(135deg, #12a943, #0b8c32);
   color: #fff;
   text-align: center;
   white-space: nowrap;
-  font-size: 16px;
+  font-size: clamp(13px, 3.7vw, 16px);
   font-weight: 900;
   box-shadow: 0 5px 12px rgba(9, 143, 45, 0.22);
 }
@@ -140,24 +155,25 @@
 }
 
 .mobile-share-report > h2 {
-  margin: 22px 0 14px;
+  margin: 24px 0 16px;
   color: var(--ms-blue);
   text-align: center;
-  font-size: clamp(30px, 9vw, 46px);
+  font-size: clamp(30px, 8.7vw, 46px);
   line-height: 1.08;
-  letter-spacing: 1px;
+  letter-spacing: .5px;
 }
 
 .mobile-share-summary {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
+  width: 100%;
   margin-bottom: 14px;
 }
 
 .mobile-share-summary-card {
   min-width: 0;
-  padding: 12px 3px 14px;
+  padding: 11px 2px 14px;
   border: 1px solid #dfe4ed;
   border-top: 3px solid #6b49d6;
   border-radius: 13px;
@@ -167,23 +183,34 @@
 }
 
 .mobile-share-summary-card span {
-  display: block;
-  min-height: 31px;
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
   color: #263347;
-  font-size: clamp(10px, 2.8vw, 13px);
-  font-weight: 800;
-  line-height: 1.2;
+  font-size: clamp(9px, 2.65vw, 12.5px);
+  font-weight: 850;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .mobile-share-summary-card strong {
   display: block;
+  min-width: 0;
   margin-top: 7px;
-  overflow: hidden;
   color: var(--ms-purple);
-  font-size: clamp(23px, 7.5vw, 34px);
+  font-size: clamp(22px, 7vw, 34px);
   line-height: 1;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mobile-share-rate-summary-card span {
+  font-size: clamp(8.5px, 2.4vw, 11.5px);
+  letter-spacing: -.35px;
+}
+
+.mobile-share-rate-summary-card strong {
+  font-size: clamp(20px, 6.2vw, 31px);
 }
 
 .mobile-share-summary-card.status-card.green {
@@ -206,6 +233,7 @@
 
 .mobile-share-detail-card {
   overflow: hidden;
+  width: 100%;
   border: 1px solid var(--ms-line);
   border-radius: 16px;
   background: #fff;
@@ -215,50 +243,69 @@
 .mobile-share-detail-head,
 .mobile-share-detail-row {
   display: grid;
-  grid-template-columns: minmax(92px, 1.65fr) minmax(38px, .58fr) minmax(36px, .55fr) minmax(42px, .62fr) minmax(76px, 1fr);
+  grid-template-columns:
+    minmax(102px, 1.55fr)
+    minmax(40px, .52fr)
+    minmax(38px, .48fr)
+    minmax(44px, .57fr)
+    minmax(76px, .94fr);
   align-items: center;
-  column-gap: 5px;
-}
-
-.mobile-share-detail-head {
-  padding: 12px 10px;
-  background: #f2f5f9;
-  font-size: clamp(11px, 3vw, 14px);
-  font-weight: 900;
-}
-
-.mobile-share-detail-head span:not(:first-child) {
+  column-gap: 3px;
+  width: 100%;
   text-align: center;
 }
 
+.mobile-share-detail-head {
+  min-height: 48px;
+  padding: 10px 7px;
+  background: #f2f5f9;
+  font-size: clamp(10.5px, 2.9vw, 14px);
+  font-weight: 900;
+}
+
+.mobile-share-detail-head-repeat {
+  border-top: 3px solid #d8e1ed;
+  border-bottom: 1px solid #d8e1ed;
+  background: #eef3f9;
+}
+
+.mobile-share-detail-head > span:first-child,
+.mobile-share-detail-row > span:first-child {
+  padding-left: 8px;
+  text-align: center;
+}
+
+.mobile-share-detail-head > span:not(:first-child),
+.mobile-share-detail-row > span:not(:first-child) {
+  transform: translateX(-2px);
+}
+
 .mobile-share-detail-row {
-  min-height: 53px;
-  padding: 8px 10px;
+  min-height: 54px;
+  padding: 8px 7px;
   border-top: 1px solid #e7ebf1;
-  font-size: clamp(12px, 3.45vw, 15px);
+  font-size: clamp(12px, 3.35vw, 15px);
 }
 
 .mobile-share-detail-row > span:first-child {
   overflow: hidden;
-  font-weight: 800;
+  font-weight: 850;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.mobile-share-detail-row > span:not(:first-child) {
-  text-align: center;
-}
-
 .mobile-share-rate-cell {
   display: grid;
-  grid-template-columns: minmax(36px, 1fr) 34px;
+  grid-template-columns: minmax(37px, 1fr) 30px;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  min-width: 0;
   font-weight: 900;
 }
 
 .mobile-share-rate-cell .rate-number {
   text-align: right;
+  white-space: nowrap;
 }
 
 .mobile-share-mini-track {
@@ -283,24 +330,12 @@
 .mobile-share-rate-cell.red { color: var(--ms-red); }
 .mobile-share-rate-cell.red .mobile-share-mini-track i { background: var(--ms-red); }
 
-.mobile-share-info-strip {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border: 1px solid #cfe4cf;
-  border-radius: 13px;
-  background: #f2faf2;
-  color: #46604a;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-}
-
 .mobile-share-legend {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px 14px;
-  padding: 12px 4px 4px;
+  padding: 14px 4px 4px;
   color: var(--ms-muted);
   font-size: 12px;
 }
@@ -368,36 +403,61 @@
   opacity: .55;
 }
 
-.mobile-share-generated-text {
-  padding: 12px 4px 0;
-  color: var(--ms-muted);
-  text-align: center;
-  font-size: 12px;
-}
-
 @media (max-width: 390px) {
-  .mobile-share-page { padding-left: 8px; padding-right: 8px; }
-  .mobile-share-target-row {
-    grid-template-columns: auto minmax(78px, 1fr) auto;
+  .mobile-share-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .mobile-share-nav {
+    grid-template-columns: 68px minmax(122px, 1fr) 68px;
     gap: 7px;
   }
-  .mobile-share-report-row {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 7px;
+
+  .mobile-share-nav .action-pill {
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 14px;
   }
+
+  .mobile-share-control-card {
+    grid-template-columns: 67px 88px minmax(118px, 1fr);
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .mobile-share-control-card select {
+    height: 44px;
+    padding-left: 8px;
+    padding-right: 27px;
+    font-size: 13px;
+  }
+
   .mobile-share-target-badge {
-    min-width: 92px;
-    padding-left: 9px;
-    padding-right: 9px;
-    font-size: 15px;
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 13px;
   }
-  .mobile-share-summary { gap: 4px; }
-  .mobile-share-summary-card { padding-left: 2px; padding-right: 2px; }
+
+  .mobile-share-summary {
+    gap: 4px;
+  }
+
+  .mobile-share-summary-card {
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+
   .mobile-share-detail-head,
   .mobile-share-detail-row {
-    grid-template-columns: minmax(82px, 1.55fr) 34px 32px 38px 72px;
-    column-gap: 3px;
-    padding-left: 7px;
-    padding-right: 7px;
+    grid-template-columns: minmax(92px, 1.48fr) 36px 34px 39px minmax(68px, .9fr);
+    column-gap: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .mobile-share-rate-cell {
+    grid-template-columns: minmax(35px, 1fr) 25px;
+    gap: 3px;
   }
 }
