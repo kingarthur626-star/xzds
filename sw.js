@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-06 Mobile Share v1.0.0R6
+   Update: 2026-08-07 Mobile Share v1.0.0R7
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -8,7 +8,7 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260806-mobile-share-100r6';
+const CACHE_NAME = CACHE_PREFIX + '20260807-mobile-share-100r7';
 const STATIC_ASSETS = [
   './',
   './index.html',
