@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="xzds-ui-version" content="20260807-mobile-share-100r7">
+  <meta name="xzds-ui-version" content="20260807-mobile-share-100r8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -27,19 +27,18 @@
   <link rel="manifest" href="./manifest.json?v=20260623-001">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./css/style.css?v=20260801-5">
-  <link rel="stylesheet" href="./css/mobile-share.css?v=20260807-mobile-share-100r7">
+  <link rel="stylesheet" href="./css/mobile-share.css?v=20260807-mobile-share-100r8">
 </head>
 <body class="mobile-share-body">
   <main class="mobile-share-page">
     <nav class="page-action-bar unified-nav-action-bar mobile-share-nav" aria-label="頁面導覽">
       <button class="action-pill logout" id="mobileShareLogoutBtn" type="button">登出</button>
-      <button class="action-pill mobile-share-nav-title" type="button" tabindex="-1" aria-disabled="true">三大組月報</button>
       <button class="action-pill" id="mobileShareHomeBtn" type="button">首頁</button>
     </nav>
 
     <header class="mobile-share-header">
       <h1>
-        三大組月報
+        <span id="mobileShareTitle">月份成果達成</span>
         <small id="mobileShareTempleCount">--壇</small>
       </h1>
     </header>
@@ -76,8 +75,6 @@
     <section id="mobileShareError" class="mobile-share-message error" hidden></section>
 
     <section id="mobileShareReport" class="mobile-share-report" hidden>
-      <h2 id="mobileShareTitle">月份成果達成</h2>
-
       <div class="mobile-share-summary" aria-label="大組成果摘要">
         <article class="mobile-share-summary-card">
           <span>目標</span>
@@ -131,7 +128,7 @@
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20260619-2"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/mobile-share.js?v=20260807-mobile-share-100r7"></script>
+  <script src="./js/mobile-share.js?v=20260807-mobile-share-100r8"></script>
   <script src="./js/pwa.js?v=20260801-5"></script>
 </body>
 </html>
