@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="xzds-ui-version" content="20260807-mobile-share-summary-100r9">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>三大組累計達成｜新莊區道務檢視</title>
+  <meta name="theme-color" content="#f5f7fb">
+  <link rel="manifest" href="./manifest.json?v=20260623-001">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css?v=20260801-5">
+  <link rel="stylesheet" href="./css/mobile-share.css?v=20260807-mobile-share-100r9">
+  <link rel="stylesheet" href="./css/mobile-share-summary.css?v=20260807-mobile-share-summary-100r9">
+</head>
+<body class="mobile-share-body mobile-cumulative-body">
+  <main class="mobile-share-page mobile-cumulative-page">
+    <nav class="mobile-share-fixed-nav" aria-label="頁面導覽">
+      <button class="action-pill logout" id="mobileCumulativeLogoutBtn" type="button">登出</button>
+      <button class="action-pill mobile-share-nav-center" id="mobileCumulativeDetailBtn" type="button">三大組各壇月報</button>
+      <button class="action-pill" id="mobileCumulativeHomeBtn" type="button">首頁</button>
+    </nav>
+
+    <header class="mobile-cumulative-header">
+      <h1>三大組 <span>累計達成</span></h1>
+      <div class="mobile-cumulative-month-row">
+        <select id="mobileCumulativeMonthSelect" aria-label="月份">
+          <option value="1">1月</option>
+          <option value="2">2月</option>
+          <option value="3">3月</option>
+          <option value="4">4月</option>
+          <option value="5">5月</option>
+          <option value="6">6月</option>
+          <option value="7">7月</option>
+          <option value="8">8月</option>
+          <option value="9">9月</option>
+          <option value="10">10月</option>
+          <option value="11">11月</option>
+          <option value="12">12月</option>
+        </select>
+        <div id="mobileCumulativeTargetBadge" class="mobile-share-target-badge">目標 --%</div>
+      </div>
+    </header>
+
+    <section id="mobileCumulativeLoading" class="mobile-share-message">讀取三大組累計中...</section>
+    <section id="mobileCumulativeError" class="mobile-share-message error" hidden></section>
+
+    <section id="mobileCumulativeReport" class="mobile-cumulative-report" hidden>
+      <section class="mobile-cumulative-section" aria-labelledby="mobileCumulativeReceiveTitle">
+        <h2 id="mobileCumulativeReceiveTitle">求道達成</h2>
+        <div class="mobile-cumulative-table">
+          <div class="mobile-cumulative-table-head">
+            <span>組別</span><span>目標</span><span id="mobileCumulativeReceiveMonthHead">當月<br>達成</span><span>今年<br>累計</span><span>實際<br>達成率</span><span>目前<br>增減</span>
+          </div>
+          <div id="mobileCumulativeReceiveRows"></div>
+        </div>
+      </section>
+
+      <section class="mobile-cumulative-section" aria-labelledby="mobileCumulativeSeminarTitle">
+        <h2 id="mobileCumulativeSeminarTitle">法會達成</h2>
+        <div class="mobile-cumulative-table">
+          <div class="mobile-cumulative-table-head">
+            <span>組別</span><span>目標</span><span id="mobileCumulativeSeminarMonthHead">當月<br>達成</span><span>今年<br>累計</span><span>實際<br>達成率</span><span>目前<br>增減</span>
+          </div>
+          <div id="mobileCumulativeSeminarRows"></div>
+        </div>
+      </section>
+
+      <button id="mobileCumulativeReloadBtn" class="mobile-cumulative-reload-btn" type="button">重新讀取</button>
+    </section>
+  </main>
+
+  <script src="./js/config.js?v=20260619-2"></script>
+  <script src="./js/api.js?v=20260619-2"></script>
+  <script src="./js/common.js?v=20260623-04"></script>
+  <script src="./js/mobile-share-summary.js?v=20260807-mobile-share-summary-100r9"></script>
+  <script src="./js/pwa.js?v=20260801-5"></script>
+</body>
+</html>
