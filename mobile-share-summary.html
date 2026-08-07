@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="xzds-ui-version" content="20260807-mobile-share-summary-100r9">
+  <meta name="xzds-ui-version" content="20260807-mobile-share-summary-100r10">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -14,8 +14,8 @@
   <link rel="manifest" href="./manifest.json?v=20260623-001">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./css/style.css?v=20260801-5">
-  <link rel="stylesheet" href="./css/mobile-share.css?v=20260807-mobile-share-100r9">
-  <link rel="stylesheet" href="./css/mobile-share-summary.css?v=20260807-mobile-share-summary-100r9">
+  <link rel="stylesheet" href="./css/mobile-share.css?v=20260807-mobile-share-100r10">
+  <link rel="stylesheet" href="./css/mobile-share-summary.css?v=20260807-mobile-share-summary-100r10">
 </head>
 <body class="mobile-share-body mobile-cumulative-body">
   <main class="mobile-share-page mobile-cumulative-page">
@@ -50,34 +50,48 @@
     <section id="mobileCumulativeError" class="mobile-share-message error" hidden></section>
 
     <section id="mobileCumulativeReport" class="mobile-cumulative-report" hidden>
-      <section class="mobile-cumulative-section" aria-labelledby="mobileCumulativeReceiveTitle">
-        <h2 id="mobileCumulativeReceiveTitle">求道達成</h2>
+      <section class="mobile-cumulative-section" aria-label="求道三大組累計">
         <div class="mobile-cumulative-table">
           <div class="mobile-cumulative-table-head">
-            <span>組別</span><span>目標</span><span id="mobileCumulativeReceiveMonthHead">當月<br>達成</span><span>今年<br>累計</span><span>實際<br>達成率</span><span>目前<br>增減</span>
+            <span>組別</span>
+            <span class="mobile-cumulative-target-head"><b>求道</b>目標</span>
+            <span id="mobileCumulativeReceiveMonthHead">當月<br>達成</span>
+            <span>今年<br>累計</span>
+            <span>實際<br>達成率</span>
+            <span>目前<br>增減</span>
           </div>
           <div id="mobileCumulativeReceiveRows"></div>
         </div>
       </section>
 
-      <section class="mobile-cumulative-section" aria-labelledby="mobileCumulativeSeminarTitle">
-        <h2 id="mobileCumulativeSeminarTitle">法會達成</h2>
+      <section class="mobile-cumulative-section" aria-label="法會三大組累計">
         <div class="mobile-cumulative-table">
           <div class="mobile-cumulative-table-head">
-            <span>組別</span><span>目標</span><span id="mobileCumulativeSeminarMonthHead">當月<br>達成</span><span>今年<br>累計</span><span>實際<br>達成率</span><span>目前<br>增減</span>
+            <span>組別</span>
+            <span class="mobile-cumulative-target-head"><b>法會</b>目標</span>
+            <span id="mobileCumulativeSeminarMonthHead">當月<br>達成</span>
+            <span>今年<br>累計</span>
+            <span>實際<br>達成率</span>
+            <span>目前<br>增減</span>
           </div>
           <div id="mobileCumulativeSeminarRows"></div>
         </div>
       </section>
 
-      <button id="mobileCumulativeReloadBtn" class="mobile-cumulative-reload-btn" type="button">重新讀取</button>
+      <div class="mobile-cumulative-actions">
+        <button id="mobileCumulativeReloadBtn" class="mobile-cumulative-reload-btn" type="button">重新讀取</button>
+        <button id="mobileCumulativeLineBtn" class="mobile-cumulative-line-btn" type="button">
+          <span class="mobile-share-line-mark">LINE</span>
+          分享累計圖片
+        </button>
+      </div>
     </section>
   </main>
 
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20260619-2"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/mobile-share-summary.js?v=20260807-mobile-share-summary-100r9"></script>
+  <script src="./js/mobile-share-summary.js?v=20260807-mobile-share-summary-100r10"></script>
   <script src="./js/pwa.js?v=20260801-5"></script>
 </body>
 </html>
