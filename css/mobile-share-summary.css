@@ -1,7 +1,7 @@
 /*
 程式名稱：mobile-share-summary.css
 功能：三大組求道／法會累計達成頁與 LINE 分享。
-版本：v1.0.0R10
+版本：v1.0.0R11
 */
 
 .mobile-cumulative-page {
@@ -32,7 +32,7 @@
   grid-template-columns: minmax(104px, 145px) minmax(106px, 145px);
   align-items: center;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 44px;
 }
 
 .mobile-cumulative-month-row select {
@@ -95,13 +95,16 @@
 }
 
 .mobile-cumulative-target-head {
-  flex-direction: column;
-  gap: 1px;
+  flex-direction: row;
+  gap: 0;
+  white-space: nowrap;
+  letter-spacing: -.18px;
+  font-size: clamp(9px, 2.48vw, 12px);
 }
 
 .mobile-cumulative-target-head b {
   color: #064cff;
-  font-size: 1.02em;
+  font-size: 1em;
   font-weight: 950;
 }
 
@@ -154,17 +157,18 @@
 }
 
 .mobile-cumulative-row .delta-cell {
-  color: #fff;
   font-size: clamp(16px, 4.9vw, 23px);
   font-weight: 950;
 }
 
 .mobile-cumulative-row .delta-cell.green {
   background: #0b9732;
+  color: #fff;
 }
 
 .mobile-cumulative-row .delta-cell.red {
-  background: #f10d17;
+  background: #fff;
+  color: #e11515;
 }
 
 .mobile-cumulative-row.total-row {
@@ -227,7 +231,7 @@
 
   .mobile-cumulative-table-head,
   .mobile-cumulative-row {
-    grid-template-columns: minmax(61px, 1.14fr) 46px 41px 44px 51px 49px;
+    grid-template-columns: minmax(58px, 1.08fr) 54px 40px 43px 50px 48px;
   }
 
   .mobile-cumulative-table-head > span,
