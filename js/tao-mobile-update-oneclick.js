@@ -1,6 +1,6 @@
 /* =========================
 程式名稱：tao-mobile-update-oneclick.js
-版本：v0.3.0R2
+版本：v0.3.0R2F1
 功能說明：
 手機道親資料更新「一鍵更新」獨立頁面前端。
 
@@ -12,7 +12,7 @@
 5. 暫時性錯誤由後端自動重試；不可恢復錯誤停止並顯示原因。
 ========================= */
 
-const TAO_MOBILE_POLL_MS = 10000;
+const TAO_MOBILE_POLL_MS = 5000;
 
 
 const TAO_MOBILE_ALL_ACTIONS = {
@@ -160,7 +160,7 @@ async function loadTaoMobileStatus_(showLoading, useBackendRange) {
     renderTaoMobileStatus_();
 
     if (showLoading) {
-      showTaoMobileMessage_('已讀取最新狀態。', 'success');
+      showTaoMobileMessage_(taoMobileCurrentStateMessage_(), 'success');
     } else {
       showTaoMobileMessage_('', '');
     }
@@ -260,7 +260,8 @@ function renderTaoMobileOneClick_() {
   const failed = String(oneClick.status || '').toUpperCase() === 'ERROR';
   const completed = Boolean(oneClick.alreadyCompleted) ||
     String(oneClick.status || '').toUpperCase() === 'SUCCESS';
-  const visible = active || failed || completed || Boolean(oneClick.runId);
+  // 一鍵頁永遠顯示單一總狀態，避免使用者不知道是否已啟動。
+  const visible = true;
 
   if (banner) {
     banner.hidden = !visible;
@@ -271,7 +272,14 @@ function renderTaoMobileOneClick_() {
   }
 
   if (statusText) {
-    statusText.textContent = oneClick.lastMessage || oneClick.message || '';
+    statusText.textContent = oneClick.lastMessage || oneClick.message ||
+      (active
+        ? '一鍵更新正在背景執行，請勿重複按。'
+        : failed
+          ? '一鍵更新已停止，請查看錯誤原因。'
+          : completed
+            ? '此期間第1～第4步已全部完成。'
+            : '尚未開始；確認日期後只需按一次。');
   }
 
   if (progressText) {
@@ -284,8 +292,12 @@ function renderTaoMobileOneClick_() {
 
   if (stepText) {
     stepText.textContent = completed
-      ? '第1～第4步全部完成'
-      : ('目前：' + (oneClick.currentStepLabel || '等待啟動'));
+      ? '第1～第4步全部完成，不需再按'
+      : active
+        ? ('目前執行：' + (oneClick.currentStepLabel || '背景處理中'))
+        : failed
+          ? '流程已停止，可在修正後安全續跑'
+          : '目前尚未開始';
   }
 
   if (errorText) {
@@ -299,7 +311,7 @@ function renderTaoMobileOneClick_() {
       runAllBtn.disabled = taoMobileRequestRunning;
       runAllBtn.dataset.mode = 'resume';
     } else if (active) {
-      runAllBtn.textContent = '一鍵流程執行中';
+      runAllBtn.textContent = '執行中，請勿重複按';
       runAllBtn.disabled = true;
       runAllBtn.dataset.mode = 'active';
     } else if (completed) {
@@ -307,7 +319,7 @@ function renderTaoMobileOneClick_() {
       runAllBtn.disabled = true;
       runAllBtn.dataset.mode = 'completed';
     } else {
-      runAllBtn.textContent = '一鍵執行第1～第4步';
+      runAllBtn.textContent = '按一次開始自動更新';
       runAllBtn.disabled = !oneClick.canStart || taoMobileRequestRunning;
       runAllBtn.dataset.mode = 'start';
     }
@@ -315,8 +327,12 @@ function renderTaoMobileOneClick_() {
 
   if (hint) {
     hint.textContent = failed
-      ? '修正錯誤後按「從失敗步驟繼續」，已完成步驟不會重跑。'
-      : '系統會在背景逐步驗證；手機關閉後仍會繼續。';
+      ? '修正錯誤後按「從失敗步驟繼續」；已完成步驟不會重跑。'
+      : active
+        ? '系統正在背景執行，請勿再次按；手機可關閉。'
+        : completed
+          ? '此期間已完成，不需再按。'
+          : '確認期間後只按一次；啟動後按鈕會自動鎖定。';
   }
 }
 
@@ -483,9 +499,20 @@ async function scheduleTaoMobileAll_() {
   if (!confirmed) return;
 
   taoMobileRequestRunning = true;
+
+  const runAllBtn = document.getElementById('runAllBtn');
+  if (runAllBtn) {
+    runAllBtn.disabled = true;
+    runAllBtn.textContent = resume
+      ? '正在啟動安全續跑，請勿重複按'
+      : '正在啟動，請勿重複按';
+  }
+
   setTaoMobileControlsLoading_(true);
   showTaoMobileMessage_(
-    resume ? '正在啟動安全續跑...' : '正在啟動一鍵流程...',
+    resume
+      ? '正在啟動安全續跑，請勿重複按。'
+      : '正在啟動一鍵流程，請勿重複按。',
     'success'
   );
 
@@ -652,6 +679,32 @@ function setTaoMobileControlsLoading_(loading) {
     renderTaoMobileOneClick_();
     renderTaoMobileSteps_();
   }
+}
+
+
+
+/**
+ * 依後端一鍵狀態產生單一、明確的使用者提示。
+ */
+function taoMobileCurrentStateMessage_() {
+  const oneClick = taoMobileStatus && taoMobileStatus.oneClick
+    ? taoMobileStatus.oneClick
+    : {};
+  const status = String(oneClick.status || '').toUpperCase();
+
+  if (oneClick.active) {
+    return '一鍵更新正在執行，請勿重複按；手機可關閉。';
+  }
+
+  if (status === 'ERROR') {
+    return '一鍵更新已停止，請查看錯誤原因。';
+  }
+
+  if (oneClick.alreadyCompleted || status === 'SUCCESS') {
+    return '此期間第1～第4步已全部完成，不需再按。';
+  }
+
+  return '此期間尚未開始；確認日期後按一次即可。';
 }
 
 function showTaoMobileMessage_(text, type) {
