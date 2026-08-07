@@ -3998,3 +3998,163 @@ body.admin-page .page-action-bar.admin-top-action-bar #backBtn {
     width: 118px !important;
   }
 }
+
+/* ========================================================================== */
+/* 道親資料更新 v0.3.0R2：資料同步＋一鍵更新雙入口                                            */
+/* ========================================================================== */
+
+.tao-mobile-range-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.tao-mobile-primary-btn {
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 16px;
+  background: #1559d6;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(21, 89, 214, .22);
+}
+
+.tao-mobile-primary-btn:active {
+  transform: translateY(1px);
+}
+
+.tao-mobile-primary-btn:disabled {
+  background: #dfe6ef;
+  color: #91a0b2;
+  box-shadow: none;
+}
+
+.tao-mobile-oneclick-banner {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #cddbed;
+  border-radius: 18px;
+  background: #f5f9ff;
+}
+
+.tao-mobile-oneclick-banner.running {
+  border-color: #9ec0f4;
+  background: #edf5ff;
+}
+
+.tao-mobile-oneclick-banner.success {
+  border-color: #a8dfba;
+  background: #eefaf2;
+}
+
+.tao-mobile-oneclick-banner.error {
+  border-color: #f1b1b1;
+  background: #fff2f2;
+}
+
+.tao-mobile-oneclick-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tao-mobile-oneclick-title {
+  color: #123f69;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.tao-mobile-oneclick-status {
+  margin-top: 5px;
+  color: #5c6f84;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.tao-mobile-oneclick-head > strong {
+  flex: 0 0 auto;
+  color: #1559d6;
+  font-size: 22px;
+}
+
+.tao-mobile-oneclick-track {
+  height: 12px;
+  margin-top: 15px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #dce6f2;
+}
+
+.tao-mobile-oneclick-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1e73e8, #12a943);
+  transition: width .25s ease;
+}
+
+.tao-mobile-oneclick-step {
+  margin-top: 12px;
+  color: #123f69;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.tao-mobile-oneclick-error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+
+
+/* 首頁：資料同步與一鍵更新固定上下排列。 */
+.home-menu-btn.tao-mobile-home-entry {
+  grid-column: 1 / -1;
+}
+
+.home-menu-btn.oneclick {
+  background: #0b8f3a;
+}
+
+.home-menu-btn.oneclick:active {
+  background: #08772f;
+}
+
+/* 一鍵更新頁：第1～第4步只顯示狀態，不提供個別執行按鈕。 */
+.tao-mobile-step-readonly {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: #eef3f8;
+  color: #617286;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tao-mobile-step-card.running .tao-mobile-step-readonly {
+  background: #eaf3ff;
+  color: #1559d6;
+}
+
+.tao-mobile-step-card.success .tao-mobile-step-readonly {
+  background: #eaf8ef;
+  color: #0b7b31;
+}
+
+.tao-mobile-step-card.error .tao-mobile-step-readonly {
+  background: #fff0f0;
+  color: #b42318;
+}
