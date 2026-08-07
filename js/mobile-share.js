@@ -1,22 +1,18 @@
 /**
  * 程式名稱：mobile-share.js
  * 功能說明：
- * 1. 讀取手機成果分享 API。
- * 2. 顯示六種求道／法會分組報表。
- * 3. 依月份目標顯示壇名三色。
+ * 1. 讀取三大組月報 API。
+ * 2. 月份切換時，重新向後端讀取該月達成與 1～該月累計。
+ * 3. 動態顯示目前報表壇數，並在明細中段重複表頭。
  * 4. 產生完整 PNG，使用手機原生分享選單分享到 LINE。
  *
- * 版本：v1.0.0R6
- * 最後更新：2026/08/06
+ * 版本：v1.0.0R7
+ * 最後更新：2026/08/07
  */
 
 const MOBILE_SHARE_STORAGE_KEY = 'XZDS_MOBILE_SHARE_REPORT_KEY';
 const MOBILE_SHARE_REPORT_KEYS = ['qiu1', 'qiu2', 'qiu3', 'fa1', 'fa2', 'fa3'];
-const MOBILE_SHARE_TARGET_PERCENT_ = {
-  1: 8, 2: 17, 3: 25, 4: 33, 5: 42, 6: 50,
-  7: 58, 8: 67, 9: 75, 10: 83, 11: 92, 12: 100
-};
-let mobileShareSourceReport_ = null;
+
 let mobileShareCurrentReport_ = null;
 let mobileShareCurrentUser_ = null;
 let mobileShareRequestSerial_ = 0;
@@ -35,12 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
  * 功能：初始化頁面、事件與預設分組。
  */
 function initMobileSharePage_(user) {
-  const userText = document.getElementById('mobileShareUserText');
   const select = document.getElementById('mobileShareReportSelect');
-
-  if (userText) {
-    userText.textContent = user.temple || '';
-  }
 
   bindMobileShareEvents_();
 
@@ -53,18 +44,18 @@ function initMobileSharePage_(user) {
     select.value = defaultKey;
   }
 
-  loadMobileShareReport_(defaultKey);
+  loadMobileShareReport_(defaultKey, 0, false);
 }
 
 
 /**
- * 功能：綁定首頁、登出、下拉、重新讀取及分享事件。
+ * 功能：綁定首頁、登出、月份、報表、重新讀取及分享事件。
  */
 function bindMobileShareEvents_() {
   const homeBtn = document.getElementById('mobileShareHomeBtn');
   const logoutBtn = document.getElementById('mobileShareLogoutBtn');
-  const select = document.getElementById('mobileShareReportSelect');
-  const targetMonthSelect = document.getElementById('mobileShareTargetMonthSelect');
+  const reportSelect = document.getElementById('mobileShareReportSelect');
+  const monthSelect = document.getElementById('mobileShareTargetMonthSelect');
   const reloadBtn = document.getElementById('mobileShareReloadBtn');
   const shareBtn = document.getElementById('mobileShareLineBtn');
 
@@ -80,23 +71,26 @@ function bindMobileShareEvents_() {
     });
   }
 
-  if (select) {
-    select.addEventListener('change', function () {
-      localStorage.setItem(MOBILE_SHARE_STORAGE_KEY, select.value);
-      loadMobileShareReport_(select.value);
+  if (reportSelect) {
+    reportSelect.addEventListener('change', function () {
+      localStorage.setItem(MOBILE_SHARE_STORAGE_KEY, reportSelect.value);
+      const selectedMonth = monthSelect ? Number(monthSelect.value) : 0;
+      loadMobileShareReport_(reportSelect.value, selectedMonth, true);
     });
   }
 
-  if (targetMonthSelect) {
-    targetMonthSelect.addEventListener('change', function () {
-      applyMobileShareTargetMonth_(Number(targetMonthSelect.value));
+  if (monthSelect) {
+    monthSelect.addEventListener('change', function () {
+      const key = reportSelect ? reportSelect.value : 'qiu1';
+      loadMobileShareReport_(key, Number(monthSelect.value), true);
     });
   }
 
   if (reloadBtn) {
     reloadBtn.addEventListener('click', function () {
-      const key = select ? select.value : 'qiu1';
-      loadMobileShareReport_(key);
+      const key = reportSelect ? reportSelect.value : 'qiu1';
+      const selectedMonth = monthSelect ? Number(monthSelect.value) : 0;
+      loadMobileShareReport_(key, selectedMonth, true);
     });
   }
 
@@ -118,18 +112,29 @@ function inferMobileShareDefaultKey_(user) {
 
 
 /**
- * 功能：從後端讀取選定成果報表。
+ * 功能：從後端讀取選定報表與月份。
+ *
+ * selectedMonth：
+ * - 0：由後端採用目前正式月報月份。
+ * - 1～12：讀取該月達成及 1～該月累計。
  */
-async function loadMobileShareReport_(reportKey) {
+async function loadMobileShareReport_(reportKey, selectedMonth, preserveReport) {
   const serial = ++mobileShareRequestSerial_;
-  setMobileShareLoading_(true);
+  setMobileShareLoading_(true, preserveReport);
   showMobileShareError_('');
 
+  const payload = {
+    action: 'getMobileShareReport',
+    reportKey: reportKey
+  };
+
+  const month = Number(selectedMonth);
+  if (Number.isInteger(month) && month >= 1 && month <= 12) {
+    payload.month = month;
+  }
+
   try {
-    const result = await callApi({
-      action: 'getMobileShareReport',
-      reportKey: reportKey
-    });
+    const result = await callApi(payload);
 
     if (serial !== mobileShareRequestSerial_) return;
 
@@ -137,84 +142,49 @@ async function loadMobileShareReport_(reportKey) {
       throw new Error(result.message || '報表讀取失敗');
     }
 
-    mobileShareSourceReport_ = result.report;
-    const targetMonthSelect = document.getElementById('mobileShareTargetMonthSelect');
-    if (targetMonthSelect) {
-      targetMonthSelect.value = String(result.report.month || new Date().getMonth() + 1);
-    }
-    applyMobileShareTargetMonth_(Number(targetMonthSelect ? targetMonthSelect.value : result.report.month));
+    mobileShareCurrentReport_ = result.report;
+    syncMobileShareMonthOptions_(result.report);
+    renderMobileShareReport_(result.report);
 
   } catch (error) {
     if (serial !== mobileShareRequestSerial_) return;
-    mobileShareSourceReport_ = null;
+
     mobileShareCurrentReport_ = null;
-    const message = String(error && error.message ? error.message : '系統連線失敗，請稍後再試');
-    showMobileShareError_(message === '未知的操作'
-      ? '後端尚未啟用三大組月報 API。請清除重複的備份 .gs 路由檔，重新建立 Apps Script 新版本並更新正式部署。'
-      : message);
+    const message = String(
+      error && error.message
+        ? error.message
+        : '系統連線失敗，請稍後再試'
+    );
+
+    showMobileShareError_(
+      message === '未知的操作'
+        ? '後端尚未啟用三大組月報 API，請更新 Apps Script 正式部署。'
+        : message
+    );
 
   } finally {
     if (serial === mobileShareRequestSerial_) {
-      setMobileShareLoading_(false);
+      setMobileShareLoading_(false, preserveReport);
     }
   }
 }
 
 
 /**
- * 功能：依下拉選擇的目標月份，重新計算目標百分比、三色與大組達標狀態。
- * 注意：來源報表的實際月份與當月數字不變，避免把 8 月資料誤標為其他月份。
+ * 功能：月份預設為來源月報月份，未來月份禁止選取。
  */
-function applyMobileShareTargetMonth_(targetMonth) {
-  if (!mobileShareSourceReport_) return;
+function syncMobileShareMonthOptions_(report) {
+  const select = document.getElementById('mobileShareTargetMonthSelect');
+  if (!select) return;
 
-  const month = Number(targetMonth);
-  const safeMonth = Number.isInteger(month) && month >= 1 && month <= 12
-    ? month
-    : Number(mobileShareSourceReport_.month || 1);
+  const sourceMonth = Number(report.sourceMonth || report.month || 1);
+  const selectedMonth = Number(report.month || sourceMonth);
 
-  mobileShareCurrentReport_ = buildMobileShareViewReport_(mobileShareSourceReport_, safeMonth);
-  renderMobileShareReport_(mobileShareCurrentReport_);
-}
-
-
-/**
- * 功能：建立前端顯示用報表副本，不修改後端原始回傳資料。
- */
-function buildMobileShareViewReport_(sourceReport, targetMonth) {
-  const report = JSON.parse(JSON.stringify(sourceReport));
-  const percent = MOBILE_SHARE_TARGET_PERCENT_[targetMonth] || 100;
-  const target = Number(report.summary && report.summary.target || 0);
-  const cumulative = Number(report.summary && report.summary.cumulative || 0);
-  const targetToDate = target * percent / 100;
-  const delta = cumulative - targetToDate;
-
-  report.targetMonth = targetMonth;
-  report.monthTargetPercent = percent;
-  report.summary.targetToDate = targetToDate;
-  report.summary.delta = delta;
-  report.summary.statusLabel = delta >= 0 ? '目前達標' : '目前尚缺';
-  report.summary.statusValue = delta >= 0
-    ? '+' + Math.round(delta)
-    : String(Math.round(Math.abs(delta)));
-  report.summary.statusTone = delta >= 0 ? 'green' : 'red';
-
-  report.details = (report.details || []).map(function (item) {
-    item.tone = getMobileShareTone_(Number(item.ratePercent || 0), percent);
-    return item;
+  Array.from(select.options).forEach(function (option) {
+    option.disabled = Number(option.value) > sourceMonth;
   });
 
-  return report;
-}
-
-
-/**
- * 功能：依目標百分比套用綠、黃、紅三色。
- */
-function getMobileShareTone_(ratePercent, targetPercent) {
-  if (ratePercent >= targetPercent) return 'green';
-  if (ratePercent >= targetPercent - 10) return 'yellow';
-  return 'red';
+  select.value = String(selectedMonth);
 }
 
 
@@ -226,6 +196,7 @@ function renderMobileShareReport_(report) {
   const targetBadge = document.getElementById('mobileShareTargetBadge');
   const statusCard = document.getElementById('mobileShareStatusCard');
 
+  setText_('mobileShareTempleCount', formatMobileShareNumber_(report.templeCount) + '壇');
   setText_('mobileShareTitle', report.title);
   setText_('mobileShareMonthCardLabel', report.monthColumnLabel + '達成');
   setText_('mobileShareCumulativeCardLabel', report.cumulativeLabel);
@@ -236,7 +207,6 @@ function renderMobileShareReport_(report) {
   setText_('mobileShareSummaryRate', formatMobileShareNumber_(report.summary.ratePercent) + '%');
   setText_('mobileShareStatusLabel', report.summary.statusLabel);
   setText_('mobileShareStatusValue', report.summary.statusValue);
-  setText_('mobileShareGeneratedText', '目標月份：' + report.targetMonth + '月｜資料產生：' + (report.generatedAt || ''));
 
   if (targetBadge) {
     targetBadge.textContent = '目標 ' + report.monthTargetPercent + '%';
@@ -244,10 +214,17 @@ function renderMobileShareReport_(report) {
 
   if (statusCard) {
     statusCard.classList.remove('green', 'red');
-    statusCard.classList.add(report.summary.statusTone === 'green' ? 'green' : 'red');
+    statusCard.classList.add(
+      report.summary.statusTone === 'green'
+        ? 'green'
+        : 'red'
+    );
   }
 
-  renderMobileShareDetailRows_(report.details || []);
+  renderMobileShareDetailRows_(
+    report.details || [],
+    report.monthColumnLabel
+  );
 
   if (reportArea) {
     reportArea.hidden = false;
@@ -256,9 +233,27 @@ function renderMobileShareReport_(report) {
 
 
 /**
- * 功能：顯示壇名明細與三色達成率。
+ * 功能：建立欄位表頭。
  */
-function renderMobileShareDetailRows_(details) {
+function buildMobileShareDetailHeaderHtml_(monthLabel, repeat) {
+  return (
+    '<div class="mobile-share-detail-head' +
+      (repeat ? ' mobile-share-detail-head-repeat' : '') +
+    '">' +
+      '<span>壇名</span>' +
+      '<span>目標</span>' +
+      '<span>' + escapeHtml(monthLabel) + '</span>' +
+      '<span>累計</span>' +
+      '<span>達成率</span>' +
+    '</div>'
+  );
+}
+
+
+/**
+ * 功能：顯示壇名明細與三色達成率；資料中段重複一次表頭。
+ */
+function renderMobileShareDetailRows_(details, monthLabel) {
   const area = document.getElementById('mobileShareDetailRows');
   if (!area) return;
 
@@ -267,28 +262,44 @@ function renderMobileShareDetailRows_(details) {
     return;
   }
 
-  area.innerHTML = details.map(function (item) {
-    const tone = ['green', 'yellow', 'red'].includes(item.tone) ? item.tone : 'red';
+  const middleIndex = Math.ceil(details.length / 2);
+  const parts = [];
 
-    return (
+  details.forEach(function (item, index) {
+    if (index === middleIndex) {
+      parts.push(
+        buildMobileShareDetailHeaderHtml_(monthLabel, true)
+      );
+    }
+
+    const tone = ['green', 'yellow', 'red'].includes(item.tone)
+      ? item.tone
+      : 'red';
+
+    parts.push(
       '<div class="mobile-share-detail-row">' +
-        '<span title="' + escapeHtml(item.temple) + '">' + escapeHtml(item.temple) + '</span>' +
+        '<span title="' + escapeHtml(item.temple) + '">' +
+          escapeHtml(item.temple) +
+        '</span>' +
         '<span>' + formatMobileShareNumber_(item.target) + '</span>' +
         '<span>' + formatMobileShareNumber_(item.monthValue) + '</span>' +
         '<span>' + formatMobileShareNumber_(item.cumulative) + '</span>' +
         '<span class="mobile-share-rate-cell ' + tone + '">' +
-          '<span class="rate-number">' + formatMobileShareNumber_(item.ratePercent) + '%</span>' +
+          '<span class="rate-number">' +
+            formatMobileShareNumber_(item.ratePercent) + '%' +
+          '</span>' +
           '<span class="mobile-share-mini-track"><i></i></span>' +
         '</span>' +
       '</div>'
     );
-  }).join('');
+  });
+
+  area.innerHTML = parts.join('');
 }
 
 
 /**
  * 功能：建立完整成果 PNG，優先使用手機 Web Share 分享。
- * LINE 會出現在 iPhone／Android 的系統分享選單中。
  */
 async function shareMobileReportImage_() {
   if (!mobileShareCurrentReport_) {
@@ -311,7 +322,10 @@ async function shareMobileReportImage_() {
     ) {
       await navigator.share({
         title: mobileShareCurrentReport_.title,
-        text: mobileShareCurrentReport_.label + '｜' + mobileShareCurrentReport_.title,
+        text:
+          mobileShareCurrentReport_.label +
+          '｜' +
+          mobileShareCurrentReport_.title,
         files: [file]
       });
       return;
@@ -338,14 +352,22 @@ function buildMobileSharePngBlob_(report) {
   const padding = 54;
   const rowHeight = 70;
   const detailCount = (report.details || []).length;
-  const height = 690 + detailCount * rowHeight + 210;
+  const repeatHeaderHeight = detailCount > 1 ? 60 : 0;
+  const height =
+    620 +
+    detailCount * rowHeight +
+    repeatHeaderHeight +
+    180;
+
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    return Promise.reject(new Error('瀏覽器無法建立圖片畫布。'));
+    return Promise.reject(
+      new Error('瀏覽器無法建立圖片畫布。')
+    );
   }
 
   drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight);
@@ -368,6 +390,7 @@ function buildMobileSharePngBlob_(report) {
 function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   const width = canvas.width;
   const summary = report.summary;
+  const details = report.details || [];
   const colors = {
     blue: '#1559d6',
     purple: '#7b2fc4',
@@ -383,44 +406,80 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   ctx.fillStyle = '#f5f7fb';
   ctx.fillRect(0, 0, width, canvas.height);
 
-  drawCanvasRoundRect_(ctx, 28, 28, width - 56, canvas.height - 56, 34, '#ffffff', '#dfe5ed');
+  drawCanvasRoundRect_(
+    ctx,
+    28,
+    28,
+    width - 56,
+    canvas.height - 56,
+    34,
+    '#ffffff',
+    '#dfe5ed'
+  );
 
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
+  ctx.textAlign = 'center';
   ctx.fillStyle = colors.ink;
-  ctx.font = '900 42px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('新莊區 道務成果', padding, 90);
+  ctx.font =
+    '900 44px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(
+    '三大組月報 ' + report.templeCount + '壇',
+    width / 2,
+    82
+  );
 
-  ctx.textAlign = 'right';
   ctx.fillStyle = colors.muted;
-  ctx.font = '700 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(report.label, width - padding, 90);
+  ctx.font =
+    '700 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(report.label, width / 2, 126);
 
   drawCanvasPill_(
     ctx,
     padding,
-    132,
-    196,
+    158,
+    208,
     56,
-    report.targetMonth + '月目標 ' + report.monthTargetPercent + '%',
+    report.month + '月目標 ' + report.monthTargetPercent + '%',
     colors.green
   );
 
   ctx.textAlign = 'center';
   ctx.fillStyle = colors.blue;
-  ctx.font = '900 66px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(report.title, width / 2, 232);
+  ctx.font =
+    '900 66px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(report.title, width / 2, 252);
 
-  const cardY = 292;
+  const cardY = 310;
   const cardGap = 12;
-  const cardWidth = (width - padding * 2 - cardGap * 4) / 5;
+  const cardWidth =
+    (width - padding * 2 - cardGap * 4) / 5;
   const cardHeight = 154;
   const cards = [
-    { label: '目標', value: summary.target, tone: 'purple' },
-    { label: report.monthColumnLabel + '達成', value: summary.monthValue, tone: 'purple' },
-    { label: report.cumulativeLabel, value: summary.cumulative, tone: 'purple' },
-    { label: '實際達成率', value: summary.ratePercent + '%', tone: 'purple' },
-    { label: summary.statusLabel, value: summary.statusValue, tone: summary.statusTone }
+    {
+      label: '目標',
+      value: summary.target,
+      tone: 'purple'
+    },
+    {
+      label: report.monthColumnLabel + '達成',
+      value: summary.monthValue,
+      tone: 'purple'
+    },
+    {
+      label: report.cumulativeLabel,
+      value: summary.cumulative,
+      tone: 'purple'
+    },
+    {
+      label: '實際達成率',
+      value: summary.ratePercent + '%',
+      tone: 'purple'
+    },
+    {
+      label: summary.statusLabel,
+      value: summary.statusValue,
+      tone: summary.statusTone
+    }
   ];
 
   cards.forEach(function (card, index) {
@@ -431,57 +490,142 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
         ? colors.red
         : colors.purple;
 
-    drawCanvasRoundRect_(ctx, x, cardY, cardWidth, cardHeight, 18, '#ffffff', colors.line);
+    drawCanvasRoundRect_(
+      ctx,
+      x,
+      cardY,
+      cardWidth,
+      cardHeight,
+      18,
+      '#ffffff',
+      colors.line
+    );
+
     ctx.fillStyle = toneColor;
     ctx.fillRect(x + 1, cardY + 1, cardWidth - 2, 5);
+
     ctx.textAlign = 'center';
-    ctx.fillStyle = card.tone === 'green' || card.tone === 'red' ? toneColor : colors.ink;
-    ctx.font = '800 23px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    drawCanvasWrappedText_(ctx, String(card.label), x + cardWidth / 2, cardY + 42, cardWidth - 16, 26, 2);
+    ctx.fillStyle =
+      card.tone === 'green' || card.tone === 'red'
+        ? toneColor
+        : colors.ink;
+    ctx.font =
+      '800 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    drawCanvasWrappedText_(
+      ctx,
+      String(card.label),
+      x + cardWidth / 2,
+      cardY + 42,
+      cardWidth - 14,
+      25,
+      2
+    );
+
     ctx.fillStyle = toneColor;
-    ctx.font = '900 43px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(String(card.value), x + cardWidth / 2, cardY + 112);
+    ctx.font =
+      '900 41px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(
+      String(card.value),
+      x + cardWidth / 2,
+      cardY + 112
+    );
   });
 
   const tableX = padding;
-  const tableY = 480;
+  const tableY = 500;
   const tableWidth = width - padding * 2;
   const headerHeight = 60;
   const col = {
-    temple: tableX + 22,
-    target: tableX + tableWidth * 0.57,
-    month: tableX + tableWidth * 0.69,
-    cumulative: tableX + tableWidth * 0.80,
-    rate: tableX + tableWidth * 0.945
+    temple: tableX + tableWidth * 0.21,
+    target: tableX + tableWidth * 0.54,
+    month: tableX + tableWidth * 0.665,
+    cumulative: tableX + tableWidth * 0.785,
+    rate: tableX + tableWidth * 0.93
   };
 
-  drawCanvasRoundRect_(ctx, tableX, tableY, tableWidth, headerHeight, 16, colors.light, colors.line);
-  ctx.fillStyle = colors.ink;
-  ctx.font = '900 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('壇名', col.temple, tableY + headerHeight / 2);
-  ctx.textAlign = 'center';
-  ctx.fillText('目標', col.target, tableY + headerHeight / 2);
-  ctx.fillText(report.monthColumnLabel, col.month, tableY + headerHeight / 2);
-  ctx.fillText('累計', col.cumulative, tableY + headerHeight / 2);
-  ctx.fillText('達成率', col.rate, tableY + headerHeight / 2);
-
-  let rowY = tableY + headerHeight;
-
-  (report.details || []).forEach(function (item, index) {
-    const background = index % 2 === 0 ? '#ffffff' : '#fbfcfe';
-    drawCanvasRoundRect_(ctx, tableX, rowY, tableWidth, rowHeight, 0, background, colors.line);
+  function drawHeader_(y, repeat) {
+    drawCanvasRoundRect_(
+      ctx,
+      tableX,
+      y,
+      tableWidth,
+      headerHeight,
+      repeat ? 0 : 16,
+      repeat ? '#eef3f9' : colors.light,
+      colors.line
+    );
 
     ctx.fillStyle = colors.ink;
-    ctx.font = '800 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(truncateCanvasText_(ctx, item.temple, tableWidth * 0.45), col.temple, rowY + rowHeight / 2);
-
-    ctx.font = '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.font =
+      '900 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(String(item.target), col.target, rowY + rowHeight / 2);
-    ctx.fillText(String(item.monthValue), col.month, rowY + rowHeight / 2);
-    ctx.fillText(String(item.cumulative), col.cumulative, rowY + rowHeight / 2);
+    ctx.fillText('壇名', col.temple, y + headerHeight / 2);
+    ctx.fillText('目標', col.target, y + headerHeight / 2);
+    ctx.fillText(
+      report.monthColumnLabel,
+      col.month,
+      y + headerHeight / 2
+    );
+    ctx.fillText('累計', col.cumulative, y + headerHeight / 2);
+    ctx.fillText('達成率', col.rate, y + headerHeight / 2);
+  }
+
+  drawHeader_(tableY, false);
+
+  let rowY = tableY + headerHeight;
+  const middleIndex = Math.ceil(details.length / 2);
+
+  details.forEach(function (item, index) {
+    if (index === middleIndex) {
+      drawHeader_(rowY, true);
+      rowY += headerHeight;
+    }
+
+    const background =
+      index % 2 === 0 ? '#ffffff' : '#fbfcfe';
+
+    drawCanvasRoundRect_(
+      ctx,
+      tableX,
+      rowY,
+      tableWidth,
+      rowHeight,
+      0,
+      background,
+      colors.line
+    );
+
+    ctx.fillStyle = colors.ink;
+    ctx.font =
+      '800 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      truncateCanvasText_(
+        ctx,
+        item.temple,
+        tableWidth * 0.35
+      ),
+      col.temple,
+      rowY + rowHeight / 2
+    );
+
+    ctx.font =
+      '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(
+      String(item.target),
+      col.target,
+      rowY + rowHeight / 2
+    );
+    ctx.fillText(
+      String(item.monthValue),
+      col.month,
+      rowY + rowHeight / 2
+    );
+    ctx.fillText(
+      String(item.cumulative),
+      col.cumulative,
+      rowY + rowHeight / 2
+    );
 
     const toneColor = item.tone === 'green'
       ? colors.green
@@ -490,27 +634,34 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
         : colors.red;
 
     ctx.fillStyle = toneColor;
-    ctx.font = '900 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(item.ratePercent + '%', col.rate - 12, rowY + rowHeight / 2);
-    drawCanvasProgress_(ctx, tableX + tableWidth - 64, rowY + rowHeight / 2 - 8, 44, 16, toneColor);
+    ctx.font =
+      '900 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(
+      item.ratePercent + '%',
+      col.rate - 10,
+      rowY + rowHeight / 2
+    );
+
+    drawCanvasProgress_(
+      ctx,
+      tableX + tableWidth - 50,
+      rowY + rowHeight / 2 - 8,
+      34,
+      16,
+      toneColor
+    );
 
     rowY += rowHeight;
   });
 
-  const footerY = rowY + 34;
-  drawCanvasRoundRect_(ctx, padding, footerY, width - padding * 2, 62, 16, '#f1faf2', '#cce3cf');
-  ctx.fillStyle = '#46604a';
-  ctx.textAlign = 'center';
-  ctx.font = '700 25px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('報表月份依來源月報更新｜目標月份 ' + report.targetMonth + '月｜資料產生 ' + (report.generatedAt || ''), width / 2, footerY + 31);
-
   ctx.fillStyle = colors.muted;
-  ctx.font = '600 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.font =
+    '600 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.textAlign = 'center';
   ctx.fillText(
     '綠：達標　黃：差距 10% 以內　紅：落後超過 10%',
     width / 2,
-    footerY + 100
+    rowY + 62
   );
 }
 
@@ -518,16 +669,44 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
 /**
  * 功能：Canvas 圓角矩形。
  */
-function drawCanvasRoundRect_(ctx, x, y, width, height, radius, fill, stroke) {
-  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+function drawCanvasRoundRect_(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  radius,
+  fill,
+  stroke
+) {
+  const r = Math.max(
+    0,
+    Math.min(radius, width / 2, height / 2)
+  );
+
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + width - r, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.quadraticCurveTo(
+    x + width,
+    y,
+    x + width,
+    y + r
+  );
   ctx.lineTo(x + width, y + height - r);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.quadraticCurveTo(
+    x + width,
+    y + height,
+    x + width - r,
+    y + height
+  );
   ctx.lineTo(x + r, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.quadraticCurveTo(
+    x,
+    y + height,
+    x,
+    y + height - r
+  );
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
@@ -548,11 +727,30 @@ function drawCanvasRoundRect_(ctx, x, y, width, height, radius, fill, stroke) {
 /**
  * 功能：Canvas 目標膠囊。
  */
-function drawCanvasPill_(ctx, x, y, width, height, text, color) {
-  drawCanvasRoundRect_(ctx, x, y, width, height, height / 2, color, null);
+function drawCanvasPill_(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  text,
+  color
+) {
+  drawCanvasRoundRect_(
+    ctx,
+    x,
+    y,
+    width,
+    height,
+    height / 2,
+    color,
+    null
+  );
+
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
-  ctx.font = '900 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.font =
+    '900 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.fillText(text, x + width / 2, y + height / 2 + 1);
 }
 
@@ -560,23 +758,61 @@ function drawCanvasPill_(ctx, x, y, width, height, text, color) {
 /**
  * 功能：Canvas 小型狀態條。
  */
-function drawCanvasProgress_(ctx, x, y, width, height, color) {
-  drawCanvasRoundRect_(ctx, x, y, width, height, height / 2, '#f4f6f8', '#d4dae2');
-  drawCanvasRoundRect_(ctx, x + 1, y + 1, width * 0.76, height - 2, (height - 2) / 2, color, null);
+function drawCanvasProgress_(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  color
+) {
+  drawCanvasRoundRect_(
+    ctx,
+    x,
+    y,
+    width,
+    height,
+    height / 2,
+    '#f4f6f8',
+    '#d4dae2'
+  );
+
+  drawCanvasRoundRect_(
+    ctx,
+    x + 1,
+    y + 1,
+    width * 0.76,
+    height - 2,
+    (height - 2) / 2,
+    color,
+    null
+  );
 }
 
 
 /**
  * 功能：Canvas 卡片標題自動換行。
  */
-function drawCanvasWrappedText_(ctx, text, centerX, centerY, maxWidth, lineHeight, maxLines) {
+function drawCanvasWrappedText_(
+  ctx,
+  text,
+  centerX,
+  centerY,
+  maxWidth,
+  lineHeight,
+  maxLines
+) {
   const words = Array.from(String(text));
   const lines = [];
   let current = '';
 
   words.forEach(function (char) {
     const candidate = current + char;
-    if (ctx.measureText(candidate).width > maxWidth && current) {
+
+    if (
+      ctx.measureText(candidate).width > maxWidth &&
+      current
+    ) {
       lines.push(current);
       current = char;
     } else {
@@ -585,11 +821,18 @@ function drawCanvasWrappedText_(ctx, text, centerX, centerY, maxWidth, lineHeigh
   });
 
   if (current) lines.push(current);
+
   const visible = lines.slice(0, maxLines);
-  const startY = centerY - (visible.length - 1) * lineHeight / 2;
+  const startY =
+    centerY -
+    (visible.length - 1) * lineHeight / 2;
 
   visible.forEach(function (line, index) {
-    ctx.fillText(line, centerX, startY + index * lineHeight);
+    ctx.fillText(
+      line,
+      centerX,
+      startY + index * lineHeight
+    );
   });
 }
 
@@ -599,12 +842,19 @@ function drawCanvasWrappedText_(ctx, text, centerX, centerY, maxWidth, lineHeigh
  */
 function truncateCanvasText_(ctx, text, maxWidth) {
   const source = String(text || '');
-  if (ctx.measureText(source).width <= maxWidth) return source;
+  if (ctx.measureText(source).width <= maxWidth) {
+    return source;
+  }
 
   let value = source;
-  while (value.length > 1 && ctx.measureText(value + '…').width > maxWidth) {
+
+  while (
+    value.length > 1 &&
+    ctx.measureText(value + '…').width > maxWidth
+  ) {
     value = value.slice(0, -1);
   }
+
   return value + '…';
 }
 
@@ -620,7 +870,10 @@ function downloadMobileShareBlob_(blob, fileName) {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+
+  setTimeout(function () {
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 
@@ -628,26 +881,47 @@ function downloadMobileShareBlob_(blob, fileName) {
  * 功能：建立不含檔名非法字元的 PNG 名稱。
  */
 function buildMobileShareFileName_(report) {
-  const safeLabel = String(report.label || '道務成果').replace(/[\\/:*?"<>|]/g, '_');
-  return '新莊區_' + safeLabel + '_' + report.month + '月成果.png';
+  const safeLabel = String(
+    report.label || '道務成果'
+  ).replace(/[\\/:*?"<>|]/g, '_');
+
+  return (
+    '新莊區_' +
+    safeLabel +
+    '_' +
+    report.month +
+    '月成果.png'
+  );
 }
 
 
 /**
  * 功能：控制載入畫面。
  */
-function setMobileShareLoading_(loading) {
-  const loadingArea = document.getElementById('mobileShareLoading');
-  const reportArea = document.getElementById('mobileShareReport');
-  const select = document.getElementById('mobileShareReportSelect');
-  const targetMonthSelect = document.getElementById('mobileShareTargetMonthSelect');
-  const reload = document.getElementById('mobileShareReloadBtn');
-  const share = document.getElementById('mobileShareLineBtn');
+function setMobileShareLoading_(loading, preserveReport) {
+  const loadingArea =
+    document.getElementById('mobileShareLoading');
+  const reportArea =
+    document.getElementById('mobileShareReport');
+  const reportSelect =
+    document.getElementById('mobileShareReportSelect');
+  const monthSelect =
+    document.getElementById('mobileShareTargetMonthSelect');
+  const reload =
+    document.getElementById('mobileShareReloadBtn');
+  const share =
+    document.getElementById('mobileShareLineBtn');
 
-  if (loadingArea) loadingArea.hidden = !loading;
-  if (reportArea && loading) reportArea.hidden = true;
-  if (select) select.disabled = loading;
-  if (targetMonthSelect) targetMonthSelect.disabled = loading;
+  if (loadingArea) {
+    loadingArea.hidden = !loading;
+  }
+
+  if (reportArea && loading && !preserveReport) {
+    reportArea.hidden = true;
+  }
+
+  if (reportSelect) reportSelect.disabled = loading;
+  if (monthSelect) monthSelect.disabled = loading;
   if (reload) reload.disabled = loading;
   if (share) share.disabled = loading;
 }
@@ -657,7 +931,9 @@ function setMobileShareLoading_(loading) {
  * 功能：顯示或清除錯誤訊息。
  */
 function showMobileShareError_(message) {
-  const area = document.getElementById('mobileShareError');
+  const area =
+    document.getElementById('mobileShareError');
+
   if (!area) return;
 
   area.textContent = message || '';
@@ -670,6 +946,7 @@ function showMobileShareError_(message) {
  */
 function setMobileShareButtonLoading_(button, loading) {
   if (!button) return;
+
   button.disabled = loading;
   button.innerHTML = loading
     ? '圖片產生中...'
@@ -682,7 +959,10 @@ function setMobileShareButtonLoading_(button, loading) {
  */
 function setText_(id, value) {
   const element = document.getElementById(id);
-  if (element) element.textContent = value == null ? '' : String(value);
+  if (element) {
+    element.textContent =
+      value == null ? '' : String(value);
+  }
 }
 
 
@@ -691,6 +971,15 @@ function setText_(id, value) {
  */
 function formatMobileShareNumber_(value) {
   const number = Number(value || 0);
-  if (!Number.isFinite(number)) return '0';
-  return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+
+  if (!Number.isFinite(number)) {
+    return '0';
+  }
+
+  return Number.isInteger(number)
+    ? String(number)
+    : number
+        .toFixed(2)
+        .replace(/0+$/, '')
+        .replace(/\.$/, '');
 }
