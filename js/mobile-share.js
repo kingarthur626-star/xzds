@@ -6,11 +6,12 @@
  * 3. 動態顯示「月份成果＋壇數」，並在明細中段重複表頭。
  * 4. 達成率顯示 10 格進度條，並產生完整 PNG 分享。
  *
- * 版本：v1.0.0R8
+ * 版本：v1.0.0R9
  * 最後更新：2026/08/07
  */
 
 const MOBILE_SHARE_STORAGE_KEY = 'XZDS_MOBILE_SHARE_REPORT_KEY';
+const MOBILE_SHARE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
 const MOBILE_SHARE_REPORT_KEYS = ['qiu1', 'qiu2', 'qiu3', 'fa1', 'fa2', 'fa3'];
 
 let mobileShareCurrentReport_ = null;
@@ -44,7 +45,17 @@ function initMobileSharePage_(user) {
     select.value = defaultKey;
   }
 
-  loadMobileShareReport_(defaultKey, 0, false);
+  const savedMonth = Number(
+    localStorage.getItem(MOBILE_SHARE_MONTH_STORAGE_KEY) || 0
+  );
+
+  loadMobileShareReport_(
+    defaultKey,
+    Number.isInteger(savedMonth) && savedMonth >= 1 && savedMonth <= 12
+      ? savedMonth
+      : 0,
+    false
+  );
 }
 
 
@@ -54,6 +65,7 @@ function initMobileSharePage_(user) {
 function bindMobileShareEvents_() {
   const homeBtn = document.getElementById('mobileShareHomeBtn');
   const logoutBtn = document.getElementById('mobileShareLogoutBtn');
+  const summaryBtn = document.getElementById('mobileShareSummaryBtn');
   const reportSelect = document.getElementById('mobileShareReportSelect');
   const monthSelect = document.getElementById('mobileShareTargetMonthSelect');
   const reloadBtn = document.getElementById('mobileShareReloadBtn');
@@ -68,6 +80,12 @@ function bindMobileShareEvents_() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function () {
       logout();
+    });
+  }
+
+  if (summaryBtn) {
+    summaryBtn.addEventListener('click', function () {
+      location.href = 'mobile-share-summary.html';
     });
   }
 
@@ -185,6 +203,10 @@ function syncMobileShareMonthOptions_(report) {
   });
 
   select.value = String(selectedMonth);
+  localStorage.setItem(
+    MOBILE_SHARE_MONTH_STORAGE_KEY,
+    String(selectedMonth)
+  );
 }
 
 
