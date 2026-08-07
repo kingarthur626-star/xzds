@@ -6,7 +6,7 @@
  * 3. 動態顯示「月份成果＋壇數」，並在明細中段重複表頭。
  * 4. 達成率顯示 10 格進度條，並產生完整 PNG 分享。
  *
- * 版本：v1.0.0R9
+ * 版本：v1.0.0R10
  * 最後更新：2026/08/07
  */
 
@@ -405,11 +405,14 @@ function buildMobileSharePngBlob_(report) {
   const rowHeight = 70;
   const detailCount = (report.details || []).length;
   const repeatHeaderHeight = detailCount > 1 ? 60 : 0;
-  const height =
-    620 +
+  const tableY = 480;
+  const headerHeight = 60;
+  const contentBottom =
+    tableY +
+    headerHeight +
     detailCount * rowHeight +
-    repeatHeaderHeight +
-    180;
+    repeatHeaderHeight;
+  const height = contentBottom + 118;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -477,10 +480,11 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   ctx.fillText(
     report.title + '  ' + report.templeCount + '壇',
     width / 2,
-    92
+    88
   );
 
-  const controlY = 138;
+  /* 標題下方保留約兩行空間，讓 LINE 圖片更舒展。 */
+  const controlY = 188;
   const controlGap = 14;
   const monthWidth = 245;
   const targetWidth = 230;
@@ -527,7 +531,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     '850 28px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.fillText(report.label, reportX + reportWidth / 2, controlY + 35);
 
-  const cardY = 242;
+  const cardY = 292;
   const cardGap = 12;
   const cardWidth =
     (width - padding * 2 - cardGap * 4) / 5;
@@ -563,7 +567,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   });
 
   const tableX = padding;
-  const tableY = 430;
+  const tableY = 480;
   const tableWidth = width - padding * 2;
   const headerHeight = 60;
   const col = {
@@ -656,7 +660,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
   ctx.fillText(
     '綠：達標　黃：差距 10% 以內　紅：落後超過 10%',
     width / 2,
-    rowY + 62
+    rowY + 50
   );
 }
 

@@ -1,7 +1,7 @@
 /**
  * 程式名稱：mobile-share-summary.js
- * 功能：讀取六張各壇月報，彙整成求道／法會三大組累計達成。
- * 版本：v1.0.0R9
+ * 功能：讀取六張各壇月報，彙整成求道／法會三大組累計達成，並產生 LINE 分享圖片。
+ * 版本：v1.0.0R10
  */
 
 const MOBILE_CUMULATIVE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
@@ -17,6 +17,7 @@ const MOBILE_CUMULATIVE_GROUP_LABELS = {
 
 let mobileCumulativeRequestSerial_ = 0;
 let mobileCumulativeSourceMonth_ = 0;
+let mobileCumulativeCurrentReport_ = null;
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -43,6 +44,7 @@ function bindMobileCumulativeEvents_() {
   const homeBtn = document.getElementById('mobileCumulativeHomeBtn');
   const monthSelect = document.getElementById('mobileCumulativeMonthSelect');
   const reloadBtn = document.getElementById('mobileCumulativeReloadBtn');
+  const shareBtn = document.getElementById('mobileCumulativeLineBtn');
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function () {
@@ -73,6 +75,10 @@ function bindMobileCumulativeEvents_() {
       const month = monthSelect ? Number(monthSelect.value) : 0;
       loadMobileCumulativeReport_(month);
     });
+  }
+
+  if (shareBtn) {
+    shareBtn.addEventListener('click', shareMobileCumulativeImage_);
   }
 }
 
@@ -126,14 +132,22 @@ async function loadMobileCumulativeReport_(selectedMonth) {
       : Number(reports[0].month || 1);
 
     const reportMonth = Number(reports[0].month || mobileCumulativeSourceMonth_);
+    const targetPercent = Number(reports[0].monthTargetPercent || 0);
     syncMobileCumulativeMonthOptions_(reportMonth, mobileCumulativeSourceMonth_);
 
     const receive = buildMobileCumulativeCategory_(reports, '求道');
     const seminar = buildMobileCumulativeCategory_(reports, '法會');
 
+    mobileCumulativeCurrentReport_ = {
+      month: reportMonth,
+      targetPercent: targetPercent,
+      receive: receive,
+      seminar: seminar
+    };
+
     renderMobileCumulativeReport_(
       reportMonth,
-      Number(reports[0].monthTargetPercent || 0),
+      targetPercent,
       receive,
       seminar
     );
@@ -141,6 +155,7 @@ async function loadMobileCumulativeReport_(selectedMonth) {
   } catch (error) {
     if (serial !== mobileCumulativeRequestSerial_) return;
 
+    mobileCumulativeCurrentReport_ = null;
     showMobileCumulativeError_(
       String(error && error.message ? error.message : '累計報表讀取失敗')
     );
@@ -235,23 +250,11 @@ function renderMobileCumulativeReport_(month, targetPercent, receive, seminar) {
     targetBadge.textContent = '目標 ' + targetPercent + '%';
   }
 
-  setMobileCumulativeMonthHead_(
-    'mobileCumulativeReceiveMonthHead',
-    month
-  );
-  setMobileCumulativeMonthHead_(
-    'mobileCumulativeSeminarMonthHead',
-    month
-  );
+  setMobileCumulativeMonthHead_('mobileCumulativeReceiveMonthHead', month);
+  setMobileCumulativeMonthHead_('mobileCumulativeSeminarMonthHead', month);
 
-  renderMobileCumulativeRows_(
-    'mobileCumulativeReceiveRows',
-    receive.rows
-  );
-  renderMobileCumulativeRows_(
-    'mobileCumulativeSeminarRows',
-    seminar.rows
-  );
+  renderMobileCumulativeRows_('mobileCumulativeReceiveRows', receive.rows);
+  renderMobileCumulativeRows_('mobileCumulativeSeminarRows', seminar.rows);
 
   if (reportArea) {
     reportArea.hidden = false;
@@ -293,6 +296,236 @@ function renderMobileCumulativeRows_(elementId, rows) {
 }
 
 
+async function shareMobileCumulativeImage_() {
+  if (!mobileCumulativeCurrentReport_) {
+    alert('請先完成累計報表讀取。');
+    return;
+  }
+
+  const button = document.getElementById('mobileCumulativeLineBtn');
+  setMobileCumulativeShareLoading_(button, true);
+
+  try {
+    const blob = await buildMobileCumulativePngBlob_(mobileCumulativeCurrentReport_);
+    const fileName = '新莊區_三大組累計達成_' + mobileCumulativeCurrentReport_.month + '月.png';
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      await navigator.share({
+        title: '三大組累計達成',
+        text: mobileCumulativeCurrentReport_.month + '月 三大組累計達成',
+        files: [file]
+      });
+      return;
+    }
+
+    downloadMobileCumulativeBlob_(blob, fileName);
+    alert('此瀏覽器未支援直接分享檔案，已下載 PNG；請從照片或檔案分享到 LINE。');
+
+  } catch (error) {
+    if (error && error.name === 'AbortError') return;
+    alert(error && error.message ? error.message : '累計圖片產生失敗。');
+
+  } finally {
+    setMobileCumulativeShareLoading_(button, false);
+  }
+}
+
+
+function buildMobileCumulativePngBlob_(report) {
+  const width = 1080;
+  const height = 1320;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return Promise.reject(new Error('瀏覽器無法建立圖片畫布。'));
+  }
+
+  drawMobileCumulativeCanvas_(ctx, canvas, report);
+
+  return new Promise(function (resolve, reject) {
+    canvas.toBlob(function (blob) {
+      if (blob) resolve(blob);
+      else reject(new Error('PNG 轉換失敗。'));
+    }, 'image/png', 0.96);
+  });
+}
+
+
+function drawMobileCumulativeCanvas_(ctx, canvas, report) {
+  const width = canvas.width;
+  const colors = {
+    blue: '#064cff',
+    green: '#0b9732',
+    red: '#f10d17',
+    purple: '#5422bd',
+    ink: '#142238',
+    muted: '#667085',
+    line: '#cbd5e1',
+    head: '#f5f7fb',
+    total: '#b9cbea'
+  };
+
+  ctx.fillStyle = '#f5f7fb';
+  ctx.fillRect(0, 0, width, canvas.height);
+  cumulativeRoundRect_(ctx, 28, 28, width - 56, canvas.height - 56, 32, '#ffffff', '#dbe3ed');
+
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#173f63';
+  ctx.font = '900 58px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText('三大組 累計達成', width / 2, 92);
+
+  cumulativeRoundRect_(ctx, 315, 140, 190, 70, 18, '#ffffff', '#cbd5e1');
+  ctx.fillStyle = colors.blue;
+  ctx.font = '900 38px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(report.month + '月', 410, 175);
+
+  cumulativeRoundRect_(ctx, 525, 140, 240, 70, 18, '#0b9732', null);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText('目標 ' + report.targetPercent + '%', 645, 175);
+
+  let y = 252;
+  y = drawMobileCumulativeTableCanvas_(ctx, report.receive.rows, '求道', report.month, y, colors);
+  y += 42;
+  drawMobileCumulativeTableCanvas_(ctx, report.seminar.rows, '法會', report.month, y, colors);
+}
+
+
+function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, colors) {
+  const x = 58;
+  const width = 964;
+  const headerHeight = 72;
+  const rowHeight = 86;
+  const columns = [0, .23, .38, .53, .68, .84, 1];
+
+  cumulativeRoundRect_(ctx, x, startY, width, headerHeight + rowHeight * rows.length, 18, '#ffffff', colors.line);
+  ctx.fillStyle = colors.head;
+  ctx.fillRect(x + 1, startY + 1, width - 2, headerHeight - 1);
+
+  for (let i = 1; i < columns.length - 1; i += 1) {
+    ctx.strokeStyle = colors.line;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + width * columns[i], startY);
+    ctx.lineTo(x + width * columns[i], startY + headerHeight + rowHeight * rows.length);
+    ctx.stroke();
+  }
+
+  const centers = [];
+  for (let i = 0; i < columns.length - 1; i += 1) {
+    centers.push(x + width * (columns[i] + columns[i + 1]) / 2);
+  }
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = colors.ink;
+  ctx.font = '900 25px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText('組別', centers[0], startY + headerHeight / 2);
+  ctx.fillStyle = colors.blue;
+  ctx.fillText(category, centers[1], startY + 25);
+  ctx.fillStyle = colors.ink;
+  ctx.fillText('目標', centers[1], startY + 49);
+  ctx.fillText(month + '月達成', centers[2], startY + headerHeight / 2);
+  ctx.fillText('今年累計', centers[3], startY + headerHeight / 2);
+  ctx.fillText('實際達成率', centers[4], startY + headerHeight / 2);
+  ctx.fillText('目前增減', centers[5], startY + headerHeight / 2);
+
+  rows.forEach(function (row, index) {
+    const rowY = startY + headerHeight + index * rowHeight;
+    const background = row.total ? colors.total : '#ffffff';
+    ctx.fillStyle = background;
+    ctx.fillRect(x + 1, rowY, width - 2, rowHeight);
+    ctx.strokeStyle = colors.line;
+    ctx.beginPath();
+    ctx.moveTo(x, rowY);
+    ctx.lineTo(x + width, rowY);
+    ctx.stroke();
+
+    ctx.fillStyle = row.total ? '#12325a' : colors.purple;
+    ctx.font = '900 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(row.groupLabel, centers[0], rowY + 31);
+    ctx.fillStyle = colors.muted;
+    ctx.font = '800 18px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(row.templeCount + '壇', centers[0], rowY + 60);
+
+    ctx.fillStyle = colors.ink;
+    ctx.font = '800 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(formatMobileCumulativeNumber_(row.target), centers[1], rowY + rowHeight / 2);
+    ctx.fillText(formatMobileCumulativeNumber_(row.monthValue), centers[2], rowY + rowHeight / 2);
+    ctx.fillText(formatMobileCumulativeNumber_(row.cumulative), centers[3], rowY + rowHeight / 2);
+
+    const toneColor = row.tone === 'green' ? colors.green : colors.red;
+    ctx.fillStyle = toneColor;
+    ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(formatMobileCumulativeNumber_(row.ratePercent) + '%', centers[4], rowY + rowHeight / 2);
+
+    ctx.fillStyle = toneColor;
+    ctx.fillRect(x + width * columns[5] + 1, rowY, width * (columns[6] - columns[5]) - 2, rowHeight);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '950 34px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(row.deltaText, centers[5], rowY + rowHeight / 2);
+  });
+
+  return startY + headerHeight + rowHeight * rows.length;
+}
+
+
+function cumulativeRoundRect_(ctx, x, y, width, height, radius, fill, stroke) {
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+
+function downloadMobileCumulativeBlob_(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function () {
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
+
+
+function setMobileCumulativeShareLoading_(button, loading) {
+  if (!button) return;
+  button.disabled = loading;
+  button.innerHTML = loading
+    ? '圖片產生中...'
+    : '<span class="mobile-share-line-mark">LINE</span>分享累計圖片';
+}
+
+
 function syncMobileCumulativeMonthOptions_(selectedMonth, sourceMonth) {
   const select = document.getElementById('mobileCumulativeMonthSelect');
   if (!select) return;
@@ -302,10 +535,7 @@ function syncMobileCumulativeMonthOptions_(selectedMonth, sourceMonth) {
   });
 
   select.value = String(selectedMonth);
-  localStorage.setItem(
-    MOBILE_CUMULATIVE_MONTH_STORAGE_KEY,
-    String(selectedMonth)
-  );
+  localStorage.setItem(MOBILE_CUMULATIVE_MONTH_STORAGE_KEY, String(selectedMonth));
 }
 
 
@@ -313,10 +543,12 @@ function setMobileCumulativeLoading_(loading) {
   const loadingArea = document.getElementById('mobileCumulativeLoading');
   const monthSelect = document.getElementById('mobileCumulativeMonthSelect');
   const reloadBtn = document.getElementById('mobileCumulativeReloadBtn');
+  const shareBtn = document.getElementById('mobileCumulativeLineBtn');
 
   if (loadingArea) loadingArea.hidden = !loading;
   if (monthSelect) monthSelect.disabled = loading;
   if (reloadBtn) reloadBtn.disabled = loading;
+  if (shareBtn) shareBtn.disabled = loading;
 }
 
 
