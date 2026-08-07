@@ -23,6 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="xzds-ui-version" content="20260807-tao-mobile-dual-030r2">
 
   <title>新莊區 道務檢視</title>
   <!-- =========================
@@ -43,7 +44,7 @@
        功能說明：
        載入首頁、登入頁、今年道務、近五年道務等共用 CSS。
   ========================= -->
-  <link rel="stylesheet" href="./css/style.css?v=20260623-04">
+  <link rel="stylesheet" href="./css/style.css?v=20260807-tao-mobile-dual-030r2">
 </head>
 
 <body>
@@ -109,9 +110,19 @@
              位置：近五年道務正下方
              權限：沿用 UPDATE_TAO_REPORT
         ========================= -->
-        <button class="home-menu-btn update" id="btnTaoMobileUpdate" type="button" style="display:none;">
+        <button class="home-menu-btn update tao-mobile-home-entry" id="btnTaoMobileUpdate" type="button" style="display:none;">
           <span class="home-menu-main">道親資料更新</span>
           <span class="home-menu-sub">資料同步</span>
+        </button>
+
+        <!-- =========================
+             道親資料更新｜一鍵更新
+             位置：資料同步按鈕正下方
+             權限：沿用 UPDATE_TAO_REPORT
+        ========================= -->
+        <button class="home-menu-btn oneclick tao-mobile-home-entry" id="btnTaoMobileOneClick" type="button" style="display:none;">
+          <span class="home-menu-main">道親資料更新</span>
+          <span class="home-menu-sub">一鍵更新</span>
         </button>
 
 
@@ -164,7 +175,7 @@
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20260619-2"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/home.js?v=20260806-mobile-share-100r1"></script>
+  <script src="./js/home.js?v=20260807-tao-mobile-dual-030r2"></script>
   <!-- =========================
        PWA 控制程式
        功能說明：

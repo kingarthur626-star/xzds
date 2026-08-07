@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f8fafc" />
-  <meta name="xzds-ui-version" content="20260807-tao-mobile-sync-030r2" />
+  <meta name="xzds-ui-version" content="20260807-tao-mobile-oneclick-030r2" />
 
-  <title>道親資料更新－資料同步｜新莊區道務檢視</title>
+  <title>道親資料更新－一鍵更新｜新莊區道務檢視</title>
 
-  <link rel="stylesheet" href="css/style.css?v=20260807-tao-mobile-dual-030r2" />
+  <link rel="stylesheet" href="css/style.css?v=20260807-tao-mobile-oneclick-030r2" />
 </head>
 
 <body class="tao-mobile-update-page">
@@ -23,7 +23,7 @@
 
       <main class="card wide-card tao-mobile-card">
         <h1>道親資料更新</h1>
-        <div class="small-text tao-mobile-subtitle">資料同步（逐步執行）：完整稽核 → 主檔更新 → 正式明細 → 年度統計</div>
+        <div class="small-text tao-mobile-subtitle">一鍵更新：選定期間後按一次，自動完成第1～第4步</div>
 
         <div id="taoMobileMessage" class="message" role="status" aria-live="polite"></div>
 
@@ -42,11 +42,29 @@
             </label>
           </div>
 
-          <button id="loadRangeBtn" class="tao-mobile-secondary-btn" type="button">查詢此期間狀態</button>
-
-          <div class="tao-mobile-range-note">
-            每一步都由後端再次檢查；前一步未完成，下一步不會開放。
+          <div class="tao-mobile-range-actions">
+            <button id="loadRangeBtn" class="tao-mobile-secondary-btn" type="button">查詢此期間狀態</button>
+            <button id="runAllBtn" class="tao-mobile-primary-btn" type="button">一鍵執行第1～第4步</button>
           </div>
+
+          <div id="oneClickHint" class="tao-mobile-range-note">
+            系統會在背景逐步驗證；手機關閉後仍會繼續。
+          </div>
+        </section>
+
+        <section id="oneClickBanner" class="tao-mobile-oneclick-banner" hidden>
+          <div class="tao-mobile-oneclick-head">
+            <div>
+              <div class="tao-mobile-oneclick-title">一鍵到底</div>
+              <div id="oneClickStatusText" class="tao-mobile-oneclick-status"></div>
+            </div>
+            <strong id="oneClickProgressText">0／4</strong>
+          </div>
+          <div class="tao-mobile-oneclick-track" aria-label="一鍵流程進度">
+            <i id="oneClickProgressBar"></i>
+          </div>
+          <div id="oneClickStepText" class="tao-mobile-oneclick-step"></div>
+          <div id="oneClickErrorText" class="tao-mobile-oneclick-error" hidden></div>
         </section>
 
         <section id="operationBanner" class="tao-mobile-operation-banner" hidden>
@@ -76,6 +94,6 @@
   <script src="js/config.js?v=20260620-1"></script>
   <script src="js/api.js?v=20260620-1"></script>
   <script src="js/common.js?v=20260620-1"></script>
-  <script src="js/tao-mobile-update.js?v=20260807-tao-mobile-sync-030r2"></script>
+  <script src="js/tao-mobile-update.js?v=20260807-tao-mobile-oneclick-030r2"></script>
 </body>
 </html>
