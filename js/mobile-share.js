@@ -6,8 +6,8 @@
  * 3. 動態顯示「月份成果＋壇數」，並在明細中段重複表頭。
  * 4. 達成率顯示 10 格進度條，並產生完整 PNG 分享。
  *
- * 版本：v1.0.0R10
- * 最後更新：2026/08/07
+ * 版本：v1.0.0R12
+ * 最後更新：2026/08/07 R12
  */
 
 const MOBILE_SHARE_STORAGE_KEY = 'XZDS_MOBILE_SHARE_REPORT_KEY';
@@ -223,12 +223,12 @@ function renderMobileShareReport_(report) {
   setText_('mobileShareMonthCardLabel', report.monthColumnLabel + '達成');
   setText_('mobileShareCumulativeCardLabel', report.cumulativeLabel);
   setText_('mobileShareDetailMonthLabel', report.monthColumnLabel);
-  setText_('mobileShareSummaryTarget', formatMobileShareNumber_(report.summary.target));
-  setText_('mobileShareSummaryMonth', formatMobileShareNumber_(report.summary.monthValue));
-  setText_('mobileShareSummaryCumulative', formatMobileShareNumber_(report.summary.cumulative));
-  setText_('mobileShareSummaryRate', formatMobileShareNumber_(report.summary.ratePercent) + '%');
+  setText_('mobileShareSummaryTarget', formatMobileShareDisplay_(report.summary.target, { blankZero: true }));
+  setText_('mobileShareSummaryMonth', formatMobileShareDisplay_(report.summary.monthValue, { blankZero: true }));
+  setText_('mobileShareSummaryCumulative', formatMobileShareDisplay_(report.summary.cumulative, { blankZero: true }));
+  setText_('mobileShareSummaryRate', formatMobileShareDisplay_(report.summary.ratePercent, { blankZero: true, suffix: '%' }));
   setText_('mobileShareStatusLabel', report.summary.statusLabel);
-  setText_('mobileShareStatusValue', report.summary.statusValue);
+  setText_('mobileShareStatusValue', formatMobileShareStatusDisplay_(report.summary.statusValue));
 
   if (targetBadge) {
     targetBadge.textContent = '目標 ' + report.monthTargetPercent + '%';
@@ -303,12 +303,12 @@ function renderMobileShareDetailRows_(details, monthLabel) {
         '<span title="' + escapeHtml(item.temple) + '">' +
           escapeHtml(item.temple) +
         '</span>' +
-        '<span>' + formatMobileShareNumber_(item.target) + '</span>' +
-        '<span>' + formatMobileShareNumber_(item.monthValue) + '</span>' +
-        '<span>' + formatMobileShareNumber_(item.cumulative) + '</span>' +
+        '<span>' + formatMobileShareDisplay_(item.target, { blankZero: true }) + '</span>' +
+        '<span>' + formatMobileShareDisplay_(item.monthValue, { blankZero: true }) + '</span>' +
+        '<span>' + formatMobileShareDisplay_(item.cumulative, { blankZero: true }) + '</span>' +
         '<span class="mobile-share-rate-cell ' + tone + '">' +
           '<span class="rate-number">' +
-            formatMobileShareNumber_(item.ratePercent) + '%' +
+            formatMobileShareDisplay_(item.ratePercent, { blankZero: true, suffix: '%' }) +
           '</span>' +
           buildMobileShareSegmentTrackHtml_(item.ratePercent) +
         '</span>' +
@@ -537,11 +537,11 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     (width - padding * 2 - cardGap * 4) / 5;
   const cardHeight = 154;
   const cards = [
-    { label: '目標', value: summary.target, tone: 'purple' },
-    { label: report.monthColumnLabel + '達成', value: summary.monthValue, tone: 'purple' },
-    { label: report.cumulativeLabel, value: summary.cumulative, tone: 'purple' },
-    { label: '實際達成率', value: summary.ratePercent + '%', tone: 'purple' },
-    { label: summary.statusLabel, value: summary.statusValue, tone: summary.statusTone }
+    { label: '目標', value: formatMobileShareCanvasDisplay_(summary.target, { blankZero: true }), tone: 'purple' },
+    { label: report.monthColumnLabel + '達成', value: formatMobileShareCanvasDisplay_(summary.monthValue, { blankZero: true }), tone: 'purple' },
+    { label: report.cumulativeLabel, value: formatMobileShareCanvasDisplay_(summary.cumulative, { blankZero: true }), tone: 'purple' },
+    { label: '實際達成率', value: formatMobileShareCanvasDisplay_(summary.ratePercent, { blankZero: true, suffix: '%' }), tone: 'purple' },
+    { label: summary.statusLabel, value: formatMobileShareStatusDisplay_(summary.statusValue), tone: summary.statusTone }
   ];
 
   cards.forEach(function (card, index) {
@@ -627,9 +627,9 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     );
 
     ctx.font = '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(String(item.target), col.target, rowY + rowHeight / 2);
-    ctx.fillText(String(item.monthValue), col.month, rowY + rowHeight / 2);
-    ctx.fillText(String(item.cumulative), col.cumulative, rowY + rowHeight / 2);
+    ctx.fillText(formatMobileShareCanvasDisplay_(item.target, { blankZero: true }), col.target, rowY + rowHeight / 2);
+    ctx.fillText(formatMobileShareCanvasDisplay_(item.monthValue, { blankZero: true }), col.month, rowY + rowHeight / 2);
+    ctx.fillText(formatMobileShareCanvasDisplay_(item.cumulative, { blankZero: true }), col.cumulative, rowY + rowHeight / 2);
 
     const toneColor = item.tone === 'green'
       ? colors.green
@@ -639,7 +639,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
 
     ctx.fillStyle = toneColor;
     ctx.font = '900 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(item.ratePercent + '%', col.rateText, rowY + rowHeight / 2);
+    ctx.fillText(formatMobileShareCanvasDisplay_(item.ratePercent, { blankZero: true, suffix: '%' }), col.rateText, rowY + rowHeight / 2);
 
     drawCanvasProgress_(
       ctx,
@@ -947,6 +947,42 @@ function setMobileShareButtonLoading_(button, loading) {
   button.innerHTML = loading
     ? '圖片產生中...'
     : '<span class="mobile-share-line-mark">LINE</span>分享成果圖片';
+}
+
+
+
+function formatMobileShareDisplay_(value, options) {
+  const opts = options || {};
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number)) {
+    return '';
+  }
+
+  if (opts.blankZero && number === 0) {
+    return '';
+  }
+
+  return formatMobileShareNumber_(number) + (opts.suffix || '');
+}
+
+
+function formatMobileShareCanvasDisplay_(value, options) {
+  return formatMobileShareDisplay_(value, options);
+}
+
+
+function formatMobileShareStatusDisplay_(value) {
+  if (value == null) return '';
+  const text = String(value).trim();
+  if (!text) return '';
+
+  const normalized = text.replace(/,/g, '');
+  if (/^[+\-]?0(?:\.0+)?$/.test(normalized)) {
+    return '';
+  }
+
+  return text;
 }
 
 

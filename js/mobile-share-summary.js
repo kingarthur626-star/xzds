@@ -1,7 +1,7 @@
 /**
  * 程式名稱：mobile-share-summary.js
  * 功能：讀取六張各壇月報，彙整成求道／法會三大組累計達成，並產生 LINE 分享圖片。
- * 版本：v1.0.0R11
+ * 版本：v1.0.0R12
  */
 
 const MOBILE_CUMULATIVE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
@@ -194,9 +194,7 @@ function buildMobileCumulativeCategory_(reports, category) {
       cumulative: Number(summary.cumulative || 0),
       ratePercent: Number(summary.ratePercent || 0),
       delta: delta,
-      deltaText: delta >= 0
-        ? '+' + Math.abs(Math.round(delta))
-        : String(Math.abs(Math.round(delta))),
+      deltaText: formatMobileCumulativeDeltaText_(delta),
       tone: delta >= 0 ? 'green' : 'red'
     };
   });
@@ -228,9 +226,7 @@ function buildMobileCumulativeCategory_(reports, category) {
     cumulative: cumulative,
     ratePercent: ratePercent,
     delta: delta,
-    deltaText: delta >= 0
-      ? '+' + Math.abs(delta)
-      : String(Math.abs(delta)),
+    deltaText: formatMobileCumulativeDeltaText_(delta),
     tone: delta >= 0 ? 'green' : 'red',
     total: true
   });
@@ -281,14 +277,14 @@ function renderMobileCumulativeRows_(elementId, rows) {
           escapeHtml(row.groupLabel) +
           '<small>' + escapeHtml(String(row.templeCount)) + '壇</small>' +
         '</span>' +
-        '<span>' + formatMobileCumulativeNumber_(row.target) + '</span>' +
-        '<span>' + formatMobileCumulativeNumber_(row.monthValue) + '</span>' +
-        '<span>' + formatMobileCumulativeNumber_(row.cumulative) + '</span>' +
+        '<span>' + formatMobileCumulativeDisplay_(row.target, { blankZero: true }) + '</span>' +
+        '<span>' + formatMobileCumulativeDisplay_(row.monthValue, { blankZero: true }) + '</span>' +
+        '<span>' + formatMobileCumulativeDisplay_(row.cumulative, { blankZero: true }) + '</span>' +
         '<span class="rate-cell ' + row.tone + '">' +
-          formatMobileCumulativeNumber_(row.ratePercent) + '%' +
+          formatMobileCumulativeDisplay_(row.ratePercent, { blankZero: true, suffix: '%' }) +
         '</span>' +
         '<span class="delta-cell ' + row.tone + '">' +
-          escapeHtml(row.deltaText) +
+          escapeHtml(row.deltaText || '') +
         '</span>' +
       '</div>'
     );
@@ -461,14 +457,14 @@ function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, co
 
     ctx.fillStyle = colors.ink;
     ctx.font = '800 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(formatMobileCumulativeNumber_(row.target), centers[1], rowY + rowHeight / 2);
-    ctx.fillText(formatMobileCumulativeNumber_(row.monthValue), centers[2], rowY + rowHeight / 2);
-    ctx.fillText(formatMobileCumulativeNumber_(row.cumulative), centers[3], rowY + rowHeight / 2);
+    ctx.fillText(formatMobileCumulativeDisplay_(row.target, { blankZero: true }), centers[1], rowY + rowHeight / 2);
+    ctx.fillText(formatMobileCumulativeDisplay_(row.monthValue, { blankZero: true }), centers[2], rowY + rowHeight / 2);
+    ctx.fillText(formatMobileCumulativeDisplay_(row.cumulative, { blankZero: true }), centers[3], rowY + rowHeight / 2);
 
     const toneColor = row.tone === 'green' ? colors.green : colors.red;
     ctx.fillStyle = toneColor;
     ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(formatMobileCumulativeNumber_(row.ratePercent) + '%', centers[4], rowY + rowHeight / 2);
+    ctx.fillText(formatMobileCumulativeDisplay_(row.ratePercent, { blankZero: true, suffix: '%' }), centers[4], rowY + rowHeight / 2);
 
     const deltaX = x + width * columns[5] + 1;
     const deltaWidth = width * (columns[6] - columns[5]) - 2;
@@ -484,7 +480,7 @@ function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, co
     }
 
     ctx.font = '950 34px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(row.deltaText, centers[5], rowY + rowHeight / 2);
+    ctx.fillText(row.deltaText || '', centers[5], rowY + rowHeight / 2);
   });
 
   return startY + headerHeight + rowHeight * rows.length;
@@ -535,6 +531,24 @@ function cumulativeRoundRect_(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.lineWidth = 2;
     ctx.stroke();
   }
+}
+
+
+function formatMobileCumulativeDisplay_(value, options) {
+  const opts = options || {};
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number)) return '';
+  if (opts.blankZero && number === 0) return '';
+
+  return formatMobileCumulativeNumber_(number) + (opts.suffix || '');
+}
+
+
+function formatMobileCumulativeDeltaText_(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number === 0) return '';
+  return number > 0 ? '+' + Math.abs(Math.round(number)) : String(Math.abs(Math.round(number)));
 }
 
 
