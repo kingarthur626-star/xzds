@@ -1,7 +1,7 @@
 /*
 程式名稱：mobile-share-summary.css
-功能：三大組求道／法會累計達成頁。
-版本：v1.0.0R9
+功能：三大組求道／法會累計達成頁與 LINE 分享。
+版本：v1.0.0R10
 */
 
 .mobile-cumulative-page {
@@ -9,7 +9,7 @@
 }
 
 .mobile-cumulative-header {
-  padding: 14px 0 18px;
+  padding: 10px 0 16px;
   text-align: center;
 }
 
@@ -32,12 +32,12 @@
   grid-template-columns: minmax(104px, 145px) minmax(106px, 145px);
   align-items: center;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .mobile-cumulative-month-row select {
   width: 100%;
-  height: 52px;
+  height: 50px;
   padding: 0 38px 0 14px;
   border: 1px solid #c4cfdd;
   border-radius: 14px;
@@ -49,26 +49,17 @@
 }
 
 .mobile-cumulative-month-row .mobile-share-target-badge {
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding-top: 13px;
+  padding-bottom: 13px;
   font-size: clamp(14px, 4vw, 17px);
 }
 
 .mobile-cumulative-report {
-  padding-bottom: 18px;
+  padding-bottom: 10px;
 }
 
 .mobile-cumulative-section {
-  margin-top: 18px;
-}
-
-.mobile-cumulative-section h2 {
-  margin: 0 0 10px;
-  color: #063cff;
-  font-size: clamp(28px, 8vw, 38px);
-  font-weight: 900;
-  text-align: center;
-  line-height: 1.15;
+  margin-top: 16px;
 }
 
 .mobile-cumulative-table {
@@ -84,7 +75,7 @@
   display: grid;
   grid-template-columns:
     minmax(68px, 1.18fr)
-    minmax(45px, .72fr)
+    minmax(50px, .82fr)
     minmax(45px, .72fr)
     minmax(48px, .78fr)
     minmax(55px, .88fr)
@@ -95,12 +86,23 @@
 }
 
 .mobile-cumulative-table-head {
-  min-height: 54px;
+  min-height: 58px;
   background: #f5f7fb;
   color: #122742;
   font-size: clamp(10px, 2.75vw, 13px);
   font-weight: 900;
   line-height: 1.12;
+}
+
+.mobile-cumulative-target-head {
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mobile-cumulative-target-head b {
+  color: #064cff;
+  font-size: 1.02em;
+  font-weight: 950;
 }
 
 .mobile-cumulative-row {
@@ -174,20 +176,37 @@
   color: #12325a;
 }
 
-.mobile-cumulative-reload-btn {
-  display: block;
-  width: min(100%, 360px);
-  min-height: 50px;
-  margin: 20px auto 0;
+.mobile-cumulative-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.mobile-cumulative-actions button {
+  min-height: 48px;
   border: 0;
   border-radius: 14px;
-  background: #1c567d;
-  color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
 }
 
-.mobile-cumulative-reload-btn:disabled {
+.mobile-cumulative-reload-btn {
+  background: #dde6f1;
+  color: #29425e;
+}
+
+.mobile-cumulative-line-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #08a83a;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(8, 168, 58, .22);
+}
+
+.mobile-cumulative-actions button:disabled {
   opacity: .55;
 }
 
@@ -198,7 +217,7 @@
   }
 
   .mobile-cumulative-header {
-    padding-top: 10px;
+    padding-top: 8px;
   }
 
   .mobile-cumulative-month-row {
@@ -208,7 +227,7 @@
 
   .mobile-cumulative-table-head,
   .mobile-cumulative-row {
-    grid-template-columns: minmax(63px, 1.16fr) 42px 42px 45px 52px 50px;
+    grid-template-columns: minmax(61px, 1.14fr) 46px 41px 44px 51px 49px;
   }
 
   .mobile-cumulative-table-head > span,
