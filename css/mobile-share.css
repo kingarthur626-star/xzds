@@ -2,10 +2,10 @@
 程式名稱：mobile-share.css
 功能說明：
 1. 三大組月報手機版面。
-2. 頂部導覽固定為「登出／三大組月報／首頁」。
+2. 頂部導覽固定為「登出／首頁」，符合 iPhone 版面。
 3. 月份、目標百分比與報表選單維持同一行。
-4. 摘要與明細表完整置中，支援中段重複表頭。
-版本：v1.0.0R7
+4. 摘要與明細表完整置中，達成率使用 10 格進度條。
+版本：v1.0.0R8
 */
 
 :root {
@@ -50,12 +50,12 @@ body {
   top: 0;
   z-index: 20;
   display: grid !important;
-  grid-template-columns: minmax(72px, .8fr) minmax(138px, 1.45fr) minmax(72px, .8fr);
+  grid-template-columns: minmax(92px, 1fr) minmax(92px, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: clamp(34px, 18vw, 110px);
   width: 100%;
   margin: 0 0 18px !important;
-  padding: max(8px, env(safe-area-inset-top)) 0 10px !important;
+  padding: max(8px, env(safe-area-inset-top)) 8px 10px !important;
   background: rgba(245, 247, 251, 0.97);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -68,12 +68,8 @@ body {
   white-space: nowrap;
 }
 
-.mobile-share-nav-title {
-  pointer-events: none;
-}
-
 .mobile-share-header {
-  padding: 2px 0 18px;
+  padding: 4px 0 20px;
   text-align: center;
 }
 
@@ -81,25 +77,26 @@ body {
   display: inline-flex;
   align-items: baseline;
   justify-content: center;
-  gap: 8px;
+  gap: 9px;
   margin: 0;
   color: #173f63;
-  font-size: clamp(28px, 8.4vw, 38px);
-  line-height: 1.2;
+  font-size: clamp(28px, 8.2vw, 38px);
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .mobile-share-header h1 small {
   color: var(--ms-muted);
-  font-size: .48em;
+  font-size: .46em;
   font-weight: 800;
   white-space: nowrap;
 }
 
 .mobile-share-control-card {
   display: grid;
-  grid-template-columns: minmax(70px, .68fr) minmax(94px, .82fr) minmax(145px, 1.5fr);
+  grid-template-columns: minmax(92px, 1.12fr) minmax(92px, .9fr) minmax(126px, 1.18fr);
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
   padding: 12px;
   border: 1px solid var(--ms-line);
@@ -111,14 +108,23 @@ body {
 .mobile-share-control-card select {
   width: 100%;
   min-width: 0;
-  height: 46px;
-  padding: 0 34px 0 11px;
+  height: 48px;
+  padding: 0 32px 0 10px;
   border: 1px solid #c4cfdd;
   border-radius: 13px;
   background: #fff;
   color: #18283b;
-  font-size: clamp(13px, 3.7vw, 16px);
   font-weight: 850;
+}
+
+#mobileShareTargetMonthSelect {
+  font-size: clamp(18px, 5.2vw, 23px);
+  font-weight: 900;
+}
+
+#mobileShareReportSelect {
+  font-size: clamp(12px, 3.35vw, 14.5px);
+  letter-spacing: -.2px;
 }
 
 .mobile-share-control-card select:disabled {
@@ -154,21 +160,13 @@ body {
   color: #b00020;
 }
 
-.mobile-share-report > h2 {
-  margin: 24px 0 16px;
-  color: var(--ms-blue);
-  text-align: center;
-  font-size: clamp(30px, 8.7vw, 46px);
-  line-height: 1.08;
-  letter-spacing: .5px;
-}
 
 .mobile-share-summary {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   width: 100%;
-  margin-bottom: 14px;
+  margin: 22px 0 14px;
 }
 
 .mobile-share-summary-card {
@@ -244,13 +242,13 @@ body {
 .mobile-share-detail-row {
   display: grid;
   grid-template-columns:
-    minmax(102px, 1.55fr)
-    minmax(40px, .52fr)
-    minmax(38px, .48fr)
-    minmax(44px, .57fr)
-    minmax(76px, .94fr);
+    minmax(94px, 1.22fr)
+    minmax(36px, .43fr)
+    minmax(34px, .41fr)
+    minmax(39px, .47fr)
+    minmax(126px, 1.52fr);
   align-items: center;
-  column-gap: 3px;
+  column-gap: 2px;
   width: 100%;
   text-align: center;
 }
@@ -277,7 +275,7 @@ body {
 
 .mobile-share-detail-head > span:not(:first-child),
 .mobile-share-detail-row > span:not(:first-child) {
-  transform: translateX(-2px);
+  transform: translateX(-5px);
 }
 
 .mobile-share-detail-row {
@@ -296,9 +294,9 @@ body {
 
 .mobile-share-rate-cell {
   display: grid;
-  grid-template-columns: minmax(37px, 1fr) 30px;
+  grid-template-columns: minmax(38px, .58fr) minmax(78px, 1.42fr);
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
   font-weight: 900;
 }
@@ -309,26 +307,26 @@ body {
 }
 
 .mobile-share-mini-track {
-  height: 9px;
-  overflow: hidden;
-  border: 1px solid #d2d9e2;
-  border-radius: 99px;
-  background: #f7f8fa;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 1.5px;
+  width: 100%;
+  min-width: 0;
 }
 
-.mobile-share-mini-track i {
+.mobile-share-mini-track b {
   display: block;
-  width: 78%;
-  height: 100%;
-  border-radius: inherit;
+  height: 10px;
+  border-radius: 2px;
+  background: #dfe4ec;
 }
 
 .mobile-share-rate-cell.green { color: var(--ms-green); }
-.mobile-share-rate-cell.green .mobile-share-mini-track i { background: var(--ms-green); }
+.mobile-share-rate-cell.green .mobile-share-mini-track b.active { background: var(--ms-green); }
 .mobile-share-rate-cell.yellow { color: var(--ms-yellow); }
-.mobile-share-rate-cell.yellow .mobile-share-mini-track i { background: var(--ms-yellow); }
+.mobile-share-rate-cell.yellow .mobile-share-mini-track b.active { background: var(--ms-yellow); }
 .mobile-share-rate-cell.red { color: var(--ms-red); }
-.mobile-share-rate-cell.red .mobile-share-mini-track i { background: var(--ms-red); }
+.mobile-share-rate-cell.red .mobile-share-mini-track b.active { background: var(--ms-red); }
 
 .mobile-share-legend {
   display: flex;
@@ -410,8 +408,8 @@ body {
   }
 
   .mobile-share-nav {
-    grid-template-columns: 68px minmax(122px, 1fr) 68px;
-    gap: 7px;
+    grid-template-columns: minmax(88px, 1fr) minmax(88px, 1fr);
+    gap: clamp(32px, 18vw, 72px);
   }
 
   .mobile-share-nav .action-pill {
@@ -421,16 +419,23 @@ body {
   }
 
   .mobile-share-control-card {
-    grid-template-columns: 67px 88px minmax(118px, 1fr);
+    grid-template-columns: 88px 88px minmax(116px, 1fr);
     gap: 6px;
     padding: 10px;
   }
 
   .mobile-share-control-card select {
-    height: 44px;
+    height: 46px;
     padding-left: 8px;
     padding-right: 27px;
-    font-size: 13px;
+  }
+
+  #mobileShareTargetMonthSelect {
+    font-size: 19px;
+  }
+
+  #mobileShareReportSelect {
+    font-size: 12px;
   }
 
   .mobile-share-target-badge {
@@ -450,14 +455,22 @@ body {
 
   .mobile-share-detail-head,
   .mobile-share-detail-row {
-    grid-template-columns: minmax(92px, 1.48fr) 36px 34px 39px minmax(68px, .9fr);
-    column-gap: 2px;
-    padding-left: 5px;
-    padding-right: 5px;
+    grid-template-columns: minmax(82px, 1.08fr) 32px 31px 35px minmax(116px, 1.55fr);
+    column-gap: 1px;
+    padding-left: 4px;
+    padding-right: 4px;
   }
 
   .mobile-share-rate-cell {
-    grid-template-columns: minmax(35px, 1fr) 25px;
-    gap: 3px;
+    grid-template-columns: 36px minmax(76px, 1fr);
+    gap: 4px;
+  }
+
+  .mobile-share-mini-track {
+    gap: 1px;
+  }
+
+  .mobile-share-mini-track b {
+    height: 9px;
   }
 }
