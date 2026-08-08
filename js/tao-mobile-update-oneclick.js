@@ -1,6 +1,6 @@
 /* =========================
 程式名稱：tao-mobile-update-oneclick.js
-版本：v0.3.0R2F1
+版本：v0.3.0R2F2
 功能說明：
 手機道親資料更新「一鍵更新」獨立頁面前端。
 
@@ -12,7 +12,11 @@
 5. 暫時性錯誤由後端自動重試；不可恢復錯誤停止並顯示原因。
 ========================= */
 
-const TAO_MOBILE_POLL_MS = 5000;
+const TAO_MOBILE_POLL_MS = 15000;
+const TAO_MOBILE_RETRY_POLL_MS = 10000;
+const TAO_MOBILE_PERMISSION_TIMEOUT_MS = 30000;
+const TAO_MOBILE_STATUS_TIMEOUT_MS = 45000;
+const TAO_MOBILE_START_TIMEOUT_MS = 60000;
 
 
 const TAO_MOBILE_ALL_ACTIONS = {
@@ -31,6 +35,8 @@ let taoMobileStatus = null;
 let taoMobilePollTimer = null;
 let taoMobileRequestRunning = false;
 let taoMobileDetailsOpen = false;
+let taoMobileStartConfirmationPending = false;
+let taoMobileConsecutiveTimeouts = 0;
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -91,9 +97,9 @@ async function checkTaoMobilePermissionAndLoad_() {
   showTaoMobileMessage_('', '');
 
   try {
-    const result = await callApi({
+    const result = await callTaoMobileApi_({
       action: 'getMyPermissions'
-    });
+    }, TAO_MOBILE_PERMISSION_TIMEOUT_MS);
 
     const permissions = result && result.permissions
       ? result.permissions
@@ -112,6 +118,15 @@ async function checkTaoMobilePermissionAndLoad_() {
     await loadTaoMobileStatus_(false, true);
 
   } catch (error) {
+    if (isTaoMobileTimeoutError_(error)) {
+      showTaoMobileMessage_(
+        '系統回應較慢，正在自動重新確認權限，請勿重複操作。',
+        'warning'
+      );
+      setTimeout(checkTaoMobilePermissionAndLoad_, TAO_MOBILE_RETRY_POLL_MS);
+      return;
+    }
+
     showTaoMobileMessage_(
       error && error.message
         ? error.message
@@ -145,7 +160,10 @@ async function loadTaoMobileStatus_(showLoading, useBackendRange) {
       payload.endDate = range.endDate;
     }
 
-    const result = await callApi(payload);
+    const result = await callTaoMobileApi_(
+      payload,
+      TAO_MOBILE_STATUS_TIMEOUT_MS
+    );
 
     if (!result || !result.success) {
       throw new Error(
@@ -155,6 +173,8 @@ async function loadTaoMobileStatus_(showLoading, useBackendRange) {
       );
     }
 
+    taoMobileConsecutiveTimeouts = 0;
+    taoMobileStartConfirmationPending = false;
     taoMobileStatus = result;
     applyBackendRangeToInputs_(result.range || result.controlRange || {});
     renderTaoMobileStatus_();
@@ -168,17 +188,64 @@ async function loadTaoMobileStatus_(showLoading, useBackendRange) {
     updateTaoMobilePolling_();
 
   } catch (error) {
-    showTaoMobileMessage_(
-      error && error.message
-        ? error.message
-        : '系統連線失敗，請稍後再試。',
-      'error'
-    );
+    if (isTaoMobileTimeoutError_(error)) {
+      taoMobileConsecutiveTimeouts += 1;
+
+      const backgroundMayContinue =
+        taoMobileStartConfirmationPending ||
+        Boolean(taoMobileStatus && taoMobileStatus.busy) ||
+        Boolean(
+          taoMobileStatus &&
+          taoMobileStatus.oneClick &&
+          taoMobileStatus.oneClick.active
+        );
+
+      showTaoMobileMessage_(
+        backgroundMayContinue
+          ? '暫時未取得最新狀態；背景作業不受影響，請勿重複按。系統會自動再查詢。'
+          : '系統回應較慢，尚未判定為失敗；系統會自動重新查詢。',
+        'warning'
+      );
+
+      scheduleTaoMobilePolling_(TAO_MOBILE_RETRY_POLL_MS, true);
+    } else {
+      showTaoMobileMessage_(
+        error && error.message
+          ? error.message
+          : '系統連線失敗，請稍後再試。',
+        'error'
+      );
+    }
 
   } finally {
     taoMobileRequestRunning = false;
     setTaoMobileControlsLoading_(false);
   }
+}
+
+/**
+ * 一鍵頁專用 API 呼叫：允許較長回應時間，不影響其他既有頁面預設15秒。
+ */
+function callTaoMobileApi_(payload, timeoutMs) {
+  return callApi(payload, {
+    timeoutMs: timeoutMs,
+    timeoutMessage: '系統回應較慢，請稍後再確認狀態'
+  });
+}
+
+function isTaoMobileTimeoutError_(error) {
+  if (typeof isApiTimeoutError === 'function') {
+    return isApiTimeoutError(error);
+  }
+
+  return Boolean(
+    error &&
+    (
+      error.code === 'API_TIMEOUT' ||
+      error.isTimeout === true ||
+      String(error.message || '').indexOf('逾時') >= 0
+    )
+  );
 }
 
 function readTaoMobileRange_(required) {
@@ -256,7 +323,8 @@ function renderTaoMobileOneClick_() {
 
   const oneClick = taoMobileStatus.oneClick || {};
   const progress = Math.max(0, Math.min(4, Number(oneClick.progress || 0)));
-  const active = Boolean(oneClick.active);
+  const startPending = taoMobileStartConfirmationPending;
+  const active = Boolean(oneClick.active) || startPending;
   const failed = String(oneClick.status || '').toUpperCase() === 'ERROR';
   const completed = Boolean(oneClick.alreadyCompleted) ||
     String(oneClick.status || '').toUpperCase() === 'SUCCESS';
@@ -272,7 +340,9 @@ function renderTaoMobileOneClick_() {
   }
 
   if (statusText) {
-    statusText.textContent = oneClick.lastMessage || oneClick.message ||
+    statusText.textContent = startPending && !oneClick.active
+      ? '啟動要求已送出，正在確認背景作業；請勿重複按。'
+      : oneClick.lastMessage || oneClick.message ||
       (active
         ? '一鍵更新正在背景執行，請勿重複按。'
         : failed
@@ -293,8 +363,10 @@ function renderTaoMobileOneClick_() {
   if (stepText) {
     stepText.textContent = completed
       ? '第1～第4步全部完成，不需再按'
-      : active
-        ? ('目前執行：' + (oneClick.currentStepLabel || '背景處理中'))
+      : startPending && !oneClick.active
+        ? '目前狀態：啟動確認中'
+        : active
+          ? ('目前執行：' + (oneClick.currentStepLabel || '背景處理中'))
         : failed
           ? '流程已停止，可在修正後安全續跑'
           : '目前尚未開始';
@@ -306,7 +378,11 @@ function renderTaoMobileOneClick_() {
   }
 
   if (runAllBtn) {
-    if (oneClick.canResume) {
+    if (startPending) {
+      runAllBtn.textContent = '啟動確認中，請勿重複按';
+      runAllBtn.disabled = true;
+      runAllBtn.dataset.mode = 'confirming';
+    } else if (oneClick.canResume) {
       runAllBtn.textContent = '從失敗步驟繼續';
       runAllBtn.disabled = taoMobileRequestRunning;
       runAllBtn.dataset.mode = 'resume';
@@ -326,13 +402,15 @@ function renderTaoMobileOneClick_() {
   }
 
   if (hint) {
-    hint.textContent = failed
-      ? '修正錯誤後按「從失敗步驟繼續」；已完成步驟不會重跑。'
-      : active
-        ? '系統正在背景執行，請勿再次按；手機可關閉。'
-        : completed
-          ? '此期間已完成，不需再按。'
-          : '確認期間後只按一次；啟動後按鈕會自動鎖定。';
+    hint.textContent = startPending && !oneClick.active
+      ? '系統正在確認啟動結果；請勿再次按，手機可關閉。'
+      : failed
+        ? '修正錯誤後按「從失敗步驟繼續」；已完成步驟不會重跑。'
+        : active
+          ? '系統正在背景執行，請勿再次按；手機可關閉。'
+          : completed
+            ? '此期間已完成，不需再按。'
+            : '確認期間後只按一次；啟動後按鈕會自動鎖定。';
   }
 }
 
@@ -499,6 +577,7 @@ async function scheduleTaoMobileAll_() {
   if (!confirmed) return;
 
   taoMobileRequestRunning = true;
+  taoMobileStartConfirmationPending = true;
 
   const runAllBtn = document.getElementById('runAllBtn');
   if (runAllBtn) {
@@ -509,6 +588,7 @@ async function scheduleTaoMobileAll_() {
   }
 
   setTaoMobileControlsLoading_(true);
+  renderTaoMobileOneClick_();
   showTaoMobileMessage_(
     resume
       ? '正在啟動安全續跑，請勿重複按。'
@@ -517,11 +597,11 @@ async function scheduleTaoMobileAll_() {
   );
 
   try {
-    const result = await callApi({
+    const result = await callTaoMobileApi_({
       action: action,
       startDate: range.startDate,
       endDate: range.endDate
-    });
+    }, TAO_MOBILE_START_TIMEOUT_MS);
 
     if (!result || !result.success) {
       throw new Error(
@@ -531,6 +611,8 @@ async function scheduleTaoMobileAll_() {
       );
     }
 
+    taoMobileStartConfirmationPending = false;
+    taoMobileConsecutiveTimeouts = 0;
     taoMobileStatus = result.status || taoMobileStatus;
     renderTaoMobileStatus_();
     showTaoMobileMessage_(
@@ -540,12 +622,21 @@ async function scheduleTaoMobileAll_() {
     updateTaoMobilePolling_();
 
   } catch (error) {
-    showTaoMobileMessage_(
-      error && error.message
-        ? error.message
-        : '一鍵流程啟動失敗，請稍後再試。',
-      'error'
-    );
+    if (isTaoMobileTimeoutError_(error)) {
+      showTaoMobileMessage_(
+        '啟動回應較慢，已進入確認中；請勿重複按。系統會自動查詢背景作業是否已啟動。',
+        'warning'
+      );
+      scheduleTaoMobilePolling_(5000, true);
+    } else {
+      taoMobileStartConfirmationPending = false;
+      showTaoMobileMessage_(
+        error && error.message
+          ? error.message
+          : '一鍵流程啟動失敗，請稍後再試。',
+        'error'
+      );
+    }
 
   } finally {
     taoMobileRequestRunning = false;
@@ -620,18 +711,40 @@ function renderTaoMobileDetails_() {
   }).join('');
 }
 
-function updateTaoMobilePolling_() {
-  stopTaoMobilePolling_();
-
+function updateTaoMobilePolling_(force) {
   const oneClick = taoMobileStatus && taoMobileStatus.oneClick
     ? taoMobileStatus.oneClick
     : {};
 
-  if (!taoMobileStatus || (!taoMobileStatus.busy && !oneClick.active)) return;
+  const shouldPoll = Boolean(
+    force ||
+    taoMobileStartConfirmationPending ||
+    (taoMobileStatus && taoMobileStatus.busy) ||
+    oneClick.active
+  );
+
+  if (!shouldPoll) {
+    stopTaoMobilePolling_();
+    return;
+  }
+
+  scheduleTaoMobilePolling_(TAO_MOBILE_POLL_MS, true);
+}
+
+function scheduleTaoMobilePolling_(delayMs, force) {
+  stopTaoMobilePolling_();
+
+  if (
+    !force &&
+    !taoMobileStartConfirmationPending &&
+    !taoMobileStatus
+  ) {
+    return;
+  }
 
   taoMobilePollTimer = setTimeout(function () {
     loadTaoMobileStatus_(false);
-  }, TAO_MOBILE_POLL_MS);
+  }, Math.max(3000, Number(delayMs || TAO_MOBILE_POLL_MS)));
 }
 
 function stopTaoMobilePolling_() {
@@ -652,7 +765,7 @@ function setTaoMobileControlsLoading_(loading) {
     ? taoMobileStatus.oneClick
     : {};
   const busy = Boolean(taoMobileStatus && taoMobileStatus.busy);
-  const lockRange = loading || busy || Boolean(oneClick.active);
+  const lockRange = loading || busy || Boolean(oneClick.active) || taoMobileStartConfirmationPending;
 
   if (refreshBtn) {
     refreshBtn.disabled = loading;
@@ -660,7 +773,7 @@ function setTaoMobileControlsLoading_(loading) {
   }
 
   if (loadRangeBtn) {
-    loadRangeBtn.disabled = loading || busy || Boolean(oneClick.active);
+    loadRangeBtn.disabled = loading || busy || Boolean(oneClick.active) || taoMobileStartConfirmationPending;
   }
 
   if (runAllBtn && loading) {
@@ -692,6 +805,10 @@ function taoMobileCurrentStateMessage_() {
     : {};
   const status = String(oneClick.status || '').toUpperCase();
 
+  if (taoMobileStartConfirmationPending) {
+    return '啟動結果確認中，請勿重複按；系統會自動重新查詢。';
+  }
+
   if (oneClick.active) {
     return '一鍵更新正在執行，請勿重複按；手機可關閉。';
   }
@@ -720,7 +837,14 @@ function showTaoMobileMessage_(text, type) {
     return;
   }
 
-  element.classList.add(type === 'success' ? 'success' : 'error');
+  if (type === 'success') {
+    element.classList.add('success');
+  } else if (type === 'warning') {
+    element.classList.add('warning');
+  } else {
+    element.classList.add('error');
+  }
+
   element.style.display = 'block';
 }
 
