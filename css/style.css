@@ -191,6 +191,13 @@ select:disabled {
   border: 1px solid #f3b8b5;
 }
 
+.message.warning {
+  display: block;
+  background: #fff8e8;
+  color: #8a5a00;
+  border: 1px solid #efc45a;
+}
+
 .hidden {
   display: none;
 }
