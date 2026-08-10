@@ -1,13 +1,13 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-10 Member Search v1.0.0R1F3 UI Fix
+   Update: 2026-08-10 Member Search v1.0.0R1F4 QR Image Clean
    Merge baseline:
    - Daily Data Update Simplified UI R2
    - Mobile Share R13
-   - Member Search + Local QR R1F3 (fixed annual-style nav + no-wrap labels)
+   - Member Search + Local QR R1F4 (clean shared QR image)
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260810-member-search-100r1f3';
+const CACHE_NAME = CACHE_PREFIX + '20260810-member-search-100r1f4';
 const STATIC_ASSETS = [
   './',
   './index.html',
