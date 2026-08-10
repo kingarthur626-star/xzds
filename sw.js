@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-10 Daily Data Update v1.0.0R1
+   Update: 2026-08-10 Daily Data Update v1.0.0R2 Simplified UI
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -8,7 +8,7 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260810-daily-data-update-100r1';
+const CACHE_NAME = CACHE_PREFIX + '20260810-daily-data-update-100r2';
 const STATIC_ASSETS = [
   './',
   './index.html',
