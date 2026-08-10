@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="xzds-ui-version" content="20260810-daily-data-update-100r1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>每日資料更新｜新莊區道務檢視</title>
+  <meta name="theme-color" content="#f5f7fb">
+  <link rel="manifest" href="./manifest.json?v=20260623-001">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css?v=20260801-5">
+  <link rel="stylesheet" href="./css/daily-data-update.css?v=20260810-daily-data-update-100r1">
+</head>
+<body class="tdu-page">
+  <main class="tdu-shell">
+    <nav class="tdu-nav" aria-label="頁面導覽">
+      <button class="tdu-nav-btn tdu-logout" id="tduLogoutBtn" type="button">登出</button>
+      <div class="tdu-nav-title">每日資料更新</div>
+      <button class="tdu-nav-btn" id="tduHomeBtn" type="button">首頁</button>
+    </nav>
+
+    <header class="tdu-header">
+      <h1>每日資料更新</h1>
+      <p>手動更新與每日自動排程使用同一套正式差異更新流程</p>
+    </header>
+
+    <section class="tdu-card tdu-status-card" aria-labelledby="tduStatusTitle">
+      <div class="tdu-section-head">
+        <h2 id="tduStatusTitle">目前狀態</h2>
+        <button class="tdu-text-btn" id="tduRefreshBtn" type="button">重新整理</button>
+      </div>
+      <div class="tdu-status-line">
+        <span class="tdu-status-badge" id="tduStatusBadge">讀取中</span>
+        <span class="tdu-status-source" id="tduStatusSource"></span>
+      </div>
+      <div class="tdu-status-message" id="tduStatusMessage">正在讀取更新狀態…</div>
+      <div class="tdu-status-time" id="tduStatusTime"></div>
+    </section>
+
+    <section class="tdu-card tdu-manual-card" aria-labelledby="tduManualTitle">
+      <h2 id="tduManualTitle">手動更新資料</h2>
+      <p class="tdu-help">立即檢查最近差異。若自動排程正在執行，系統會阻止重複更新。</p>
+      <button class="tdu-primary-btn" id="tduManualBtn" type="button">手動更新資料</button>
+      <div class="tdu-action-message" id="tduActionMessage" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="tdu-card tdu-history-card" aria-labelledby="tduHistoryTitle">
+      <div class="tdu-section-head">
+        <div>
+          <h2 id="tduHistoryTitle">更新紀錄</h2>
+          <p class="tdu-history-sub">包含手動更新與每日自動排程；點選任一筆查看詳細資料</p>
+        </div>
+      </div>
+      <div class="tdu-history-list" id="tduHistoryList">
+        <div class="tdu-empty">讀取更新紀錄中…</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="tdu-modal" id="tduDetailModal" hidden>
+    <div class="tdu-modal-backdrop" data-tdu-close="true"></div>
+    <section class="tdu-detail-panel" role="dialog" aria-modal="true" aria-labelledby="tduDetailTitle">
+      <div class="tdu-detail-head">
+        <div>
+          <h2 id="tduDetailTitle">更新詳細資料</h2>
+          <div class="tdu-detail-sub" id="tduDetailSub"></div>
+        </div>
+        <button class="tdu-close-btn" id="tduDetailCloseBtn" type="button" aria-label="關閉">×</button>
+      </div>
+      <div class="tdu-detail-body" id="tduDetailBody">
+        <div class="tdu-empty">讀取中…</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/config.js?v=20260619-2"></script>
+  <script src="./js/api.js?v=20260808-tao-mobile-timeout-030r2f2"></script>
+  <script src="./js/common.js?v=20260623-04"></script>
+  <script src="./js/daily-data-update.js?v=20260810-daily-data-update-100r1"></script>
+  <script src="./js/pwa.js?v=20260623-04"></script>
+</body>
+</html>
