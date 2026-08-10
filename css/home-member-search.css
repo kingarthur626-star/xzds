@@ -1,0 +1,34 @@
+/* 首頁：資料搜尋入口 + 右上登出 | v1.0.0R1 */
+.home-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 0 0 6px;
+}
+
+.home-top-action-btn {
+  min-width: 76px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #ccd7e5;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #164a70;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 7px rgba(28, 68, 102, 0.06);
+}
+
+.home-top-action-btn.logout { color: #43566a; }
+.home-top-action-btn:active { transform: scale(.98); }
+.home-menu-btn.member-search { background: #1976c9; }
+
+@media (max-width: 360px) {
+  .home-top-action-btn {
+    min-width: 68px;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
