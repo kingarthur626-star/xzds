@@ -5,7 +5,8 @@
 2. 頂部導覽固定為「登出／三大組累計達成／首頁」，符合 iPhone 版面。
 3. 月份、目標百分比與報表選單維持同一行。
 4. 摘要與明細表完整置中，達成率使用 10 格進度條。
-版本：v1.0.0R12
+5. 佛堂列可點擊展開逐月求道／法會數字。
+版本：v1.0.0R11
 */
 
 :root {
@@ -44,7 +45,7 @@ body {
   min-height: 100vh;
   margin: 0 auto;
   padding:
-    calc(var(--ms-safe-top) + 82px)
+    calc(var(--ms-safe-top) + 68px)
     12px
     max(24px, env(safe-area-inset-bottom));
 }
@@ -52,20 +53,20 @@ body {
 .mobile-share-fixed-nav {
   position: fixed;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   z-index: 50;
   display: grid;
-  grid-template-columns: minmax(78px, 96px) minmax(160px, 236px) minmax(78px, 96px);
+  grid-template-columns: minmax(62px, 76px) minmax(132px, 184px) minmax(62px, 76px);
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  width: min(100%, 620px);
+  gap: 7px;
+  width: 100%;
   margin: 0;
   padding:
-    calc(var(--ms-safe-top) + 8px)
-    12px
-    8px;
+    calc(var(--ms-safe-top) + 5px)
+    7px
+    7px;
   box-sizing: border-box;
   border-bottom: 1px solid rgba(203, 213, 225, .72);
   background: rgba(245, 247, 251, .97);
@@ -77,14 +78,14 @@ body {
 .mobile-share-fixed-nav .action-pill {
   width: 100%;
   min-width: 0;
-  min-height: 36px;
+  min-height: 38px;
   margin: 0 !important;
-  padding: 6px 10px;
+  padding: 6px 6px;
   border: 1px solid #d1dbe8;
   border-radius: 999px;
   background: #fff;
   color: #17476c;
-  font-size: clamp(11.5px, 3vw, 13px);
+  font-size: 12.5px;
   font-weight: 900;
   line-height: 1.15;
   text-align: center;
@@ -97,8 +98,8 @@ body {
 }
 
 .mobile-share-fixed-nav .mobile-share-nav-center {
-  font-size: clamp(10.5px, 2.7vw, 12.5px);
-  letter-spacing: -.25px;
+  font-size: 11.5px;
+  letter-spacing: -.35px;
 }
 
 .mobile-share-header {
@@ -325,6 +326,122 @@ body {
   white-space: nowrap;
 }
 
+.mobile-share-detail-row-expandable {
+  cursor: pointer;
+  transition: background .16s ease, box-shadow .16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-share-detail-row-expandable:active,
+.mobile-share-detail-row-expandable.is-expanded {
+  background: #f6f3ff;
+}
+
+.mobile-share-detail-row-expandable:focus-visible {
+  outline: 3px solid rgba(123, 47, 196, .22);
+  outline-offset: -3px;
+}
+
+.mobile-share-temple-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.mobile-share-temple-name {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-share-expand-chevron {
+  flex: 0 0 auto;
+  color: #7b2fc4;
+  font-size: 17px;
+  line-height: 1;
+  transition: transform .16s ease;
+}
+
+.mobile-share-detail-row-expandable.is-expanded .mobile-share-expand-chevron {
+  transform: rotate(180deg);
+}
+
+.mobile-share-monthly-panel {
+  padding: 12px 12px 14px;
+  border-top: 1px solid #ded7f3;
+  background: #faf9ff;
+}
+
+.mobile-share-monthly-panel[hidden] {
+  display: none !important;
+}
+
+.mobile-share-monthly-title {
+  margin-bottom: 10px;
+  color: #4f3c78;
+  text-align: center;
+  font-size: clamp(12px, 3.35vw, 14.5px);
+  font-weight: 900;
+}
+
+.mobile-share-monthly-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mobile-share-monthly-cell {
+  min-width: 0;
+  padding: 8px 4px 9px;
+  border: 1px solid #d9dfea;
+  border-radius: 11px;
+  background: #fff;
+  text-align: center;
+}
+
+.mobile-share-monthly-cell span {
+  display: block;
+  color: #718096;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mobile-share-monthly-cell strong {
+  display: block;
+  margin-top: 4px;
+  color: #173f63;
+  font-size: clamp(18px, 5vw, 23px);
+  line-height: 1;
+}
+
+.mobile-share-monthly-cell.is-selected {
+  border-color: #7b2fc4;
+  background: #f3ecff;
+  box-shadow: inset 0 0 0 1px rgba(123, 47, 196, .08);
+}
+
+.mobile-share-monthly-cell.is-selected span,
+.mobile-share-monthly-cell.is-selected strong {
+  color: #6b2ab0;
+}
+
+.mobile-share-monthly-total {
+  margin-top: 10px;
+  color: #41566f;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.mobile-share-monthly-empty {
+  color: #718096;
+  text-align: center;
+  font-size: 13px;
+}
+
 .mobile-share-rate-cell {
   display: grid;
   grid-template-columns: minmax(38px, .58fr) minmax(78px, 1.42fr);
@@ -511,5 +628,12 @@ body {
 
   .mobile-share-mini-track b {
     height: 9px;
+  }
+}
+
+
+@media (max-width: 360px) {
+  .mobile-share-monthly-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
