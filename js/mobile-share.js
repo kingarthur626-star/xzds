@@ -5,9 +5,10 @@
  * 2. 月份切換時，重新向後端讀取該月達成與 1～該月累計。
  * 3. 動態顯示「月份成果＋壇數」，並在明細中段重複表頭。
  * 4. 達成率顯示 10 格進度條，並產生完整 PNG 分享。
+ * 5. 點選任一佛堂列，可展開該佛堂 1～目前選定月份的逐月求道／法會數字。
  *
- * 版本：v1.0.0R12
- * 最後更新：2026/08/07 R12
+ * 版本：v1.0.0R11
+ * 最後更新：2026/08/10
  */
 
 const MOBILE_SHARE_STORAGE_KEY = 'XZDS_MOBILE_SHARE_REPORT_KEY';
@@ -17,6 +18,7 @@ const MOBILE_SHARE_REPORT_KEYS = ['qiu1', 'qiu2', 'qiu3', 'fa1', 'fa2', 'fa3'];
 let mobileShareCurrentReport_ = null;
 let mobileShareCurrentUser_ = null;
 let mobileShareRequestSerial_ = 0;
+let mobileShareExpandedDetailIndex_ = -1;
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -70,6 +72,7 @@ function bindMobileShareEvents_() {
   const monthSelect = document.getElementById('mobileShareTargetMonthSelect');
   const reloadBtn = document.getElementById('mobileShareReloadBtn');
   const shareBtn = document.getElementById('mobileShareLineBtn');
+  const detailRows = document.getElementById('mobileShareDetailRows');
 
   if (homeBtn) {
     homeBtn.addEventListener('click', function () {
@@ -114,6 +117,22 @@ function bindMobileShareEvents_() {
 
   if (shareBtn) {
     shareBtn.addEventListener('click', shareMobileReportImage_);
+  }
+
+  if (detailRows) {
+    detailRows.addEventListener('click', function (event) {
+      const row = event.target.closest('.mobile-share-detail-row-expandable');
+      if (!row || !detailRows.contains(row)) return;
+      toggleMobileShareMonthlyDetail_(Number(row.dataset.detailIndex));
+    });
+
+    detailRows.addEventListener('keydown', function (event) {
+      const row = event.target.closest('.mobile-share-detail-row-expandable');
+      if (!row || !detailRows.contains(row)) return;
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      toggleMobileShareMonthlyDetail_(Number(row.dataset.detailIndex));
+    });
   }
 }
 
@@ -161,6 +180,7 @@ async function loadMobileShareReport_(reportKey, selectedMonth, preserveReport) 
     }
 
     mobileShareCurrentReport_ = result.report;
+    mobileShareExpandedDetailIndex_ = -1;
     syncMobileShareMonthOptions_(result.report);
     renderMobileShareReport_(result.report);
 
@@ -223,12 +243,12 @@ function renderMobileShareReport_(report) {
   setText_('mobileShareMonthCardLabel', report.monthColumnLabel + '達成');
   setText_('mobileShareCumulativeCardLabel', report.cumulativeLabel);
   setText_('mobileShareDetailMonthLabel', report.monthColumnLabel);
-  setText_('mobileShareSummaryTarget', formatMobileShareDisplay_(report.summary.target, { blankZero: true }));
-  setText_('mobileShareSummaryMonth', formatMobileShareDisplay_(report.summary.monthValue, { blankZero: true }));
-  setText_('mobileShareSummaryCumulative', formatMobileShareDisplay_(report.summary.cumulative, { blankZero: true }));
-  setText_('mobileShareSummaryRate', formatMobileShareDisplay_(report.summary.ratePercent, { blankZero: true, suffix: '%' }));
+  setText_('mobileShareSummaryTarget', formatMobileShareNumber_(report.summary.target));
+  setText_('mobileShareSummaryMonth', formatMobileShareNumber_(report.summary.monthValue));
+  setText_('mobileShareSummaryCumulative', formatMobileShareNumber_(report.summary.cumulative));
+  setText_('mobileShareSummaryRate', formatMobileShareNumber_(report.summary.ratePercent) + '%');
   setText_('mobileShareStatusLabel', report.summary.statusLabel);
-  setText_('mobileShareStatusValue', formatMobileShareStatusDisplay_(report.summary.statusValue));
+  setText_('mobileShareStatusValue', report.summary.statusValue);
 
   if (targetBadge) {
     targetBadge.textContent = '目標 ' + report.monthTargetPercent + '%';
@@ -245,7 +265,8 @@ function renderMobileShareReport_(report) {
 
   renderMobileShareDetailRows_(
     report.details || [],
-    report.monthColumnLabel
+    report.monthColumnLabel,
+    report
   );
 
   if (reportArea) {
@@ -275,7 +296,7 @@ function buildMobileShareDetailHeaderHtml_(monthLabel, repeat) {
 /**
  * 功能：顯示壇名明細與三色達成率；資料中段重複一次表頭。
  */
-function renderMobileShareDetailRows_(details, monthLabel) {
+function renderMobileShareDetailRows_(details, monthLabel, report) {
   const area = document.getElementById('mobileShareDetailRows');
   if (!area) return;
 
@@ -299,24 +320,124 @@ function renderMobileShareDetailRows_(details, monthLabel) {
       : 'red';
 
     parts.push(
-      '<div class="mobile-share-detail-row">' +
-        '<span title="' + escapeHtml(item.temple) + '">' +
-          escapeHtml(item.temple) +
+      '<div class="mobile-share-detail-row mobile-share-detail-row-expandable"' +
+        ' role="button" tabindex="0" aria-expanded="false"' +
+        ' aria-label="展開 ' + escapeHtml(item.temple) + ' 各月明細"' +
+        ' data-detail-index="' + index + '">' +
+        '<span class="mobile-share-temple-cell" title="' + escapeHtml(item.temple) + '">' +
+          '<span class="mobile-share-temple-name">' +
+            escapeHtml(item.temple) +
+          '</span>' +
+          '<b class="mobile-share-expand-chevron" aria-hidden="true">⌄</b>' +
         '</span>' +
-        '<span>' + formatMobileShareDisplay_(item.target, { blankZero: true }) + '</span>' +
-        '<span>' + formatMobileShareDisplay_(item.monthValue, { blankZero: true }) + '</span>' +
-        '<span>' + formatMobileShareDisplay_(item.cumulative, { blankZero: true }) + '</span>' +
+        '<span>' + formatMobileShareNumber_(item.target) + '</span>' +
+        '<span>' + formatMobileShareNumber_(item.monthValue) + '</span>' +
+        '<span>' + formatMobileShareNumber_(item.cumulative) + '</span>' +
         '<span class="mobile-share-rate-cell ' + tone + '">' +
           '<span class="rate-number">' +
-            formatMobileShareDisplay_(item.ratePercent, { blankZero: true, suffix: '%' }) +
+            formatMobileShareNumber_(item.ratePercent) + '%' +
           '</span>' +
           buildMobileShareSegmentTrackHtml_(item.ratePercent) +
         '</span>' +
-      '</div>'
+      '</div>' +
+      buildMobileShareMonthlyPanelHtml_(item, index, report)
     );
   });
 
   area.innerHTML = parts.join('');
+}
+
+
+/**
+ * 功能：建立單一佛堂逐月明細面板。
+ * 顯示範圍固定為 1 月到目前上方選定月份，避免把未來月份 0 誤認為實際成果。
+ */
+function buildMobileShareMonthlyPanelHtml_(item, index, report) {
+  const selectedMonth = Number(report && report.month ? report.month : 0);
+  const category = String(report && report.category ? report.category : '');
+  const monthlyValues = Array.isArray(item.monthlyValues)
+    ? item.monthlyValues.filter(function (entry) {
+        const month = Number(entry && entry.month);
+        return month >= 1 && month <= selectedMonth;
+      })
+    : [];
+
+  if (!monthlyValues.length) {
+    return (
+      '<div class="mobile-share-monthly-panel" data-monthly-index="' + index + '" hidden>' +
+        '<div class="mobile-share-monthly-empty">沒有逐月資料</div>' +
+      '</div>'
+    );
+  }
+
+  const cells = monthlyValues.map(function (entry) {
+    const month = Number(entry.month);
+    const selectedClass = month === selectedMonth ? ' is-selected' : '';
+    return (
+      '<div class="mobile-share-monthly-cell' + selectedClass + '">' +
+        '<span>' + month + '月</span>' +
+        '<strong>' + formatMobileShareNumber_(entry.value) + '</strong>' +
+      '</div>'
+    );
+  }).join('');
+
+  return (
+    '<div class="mobile-share-monthly-panel" data-monthly-index="' + index + '" hidden>' +
+      '<div class="mobile-share-monthly-title">' +
+        escapeHtml(item.temple) + '｜1–' + selectedMonth + '月 ' + escapeHtml(category) +
+      '</div>' +
+      '<div class="mobile-share-monthly-grid">' + cells + '</div>' +
+      '<div class="mobile-share-monthly-total">' +
+        '1–' + selectedMonth + '月累計 ' + formatMobileShareNumber_(item.cumulative) +
+      '</div>' +
+    '</div>'
+  );
+}
+
+
+/**
+ * 功能：一次只展開一間佛堂；再次點同一列即收合。
+ */
+function toggleMobileShareMonthlyDetail_(index) {
+  if (!Number.isInteger(index) || index < 0) return;
+
+  const area = document.getElementById('mobileShareDetailRows');
+  if (!area) return;
+
+  const rows = area.querySelectorAll('.mobile-share-detail-row-expandable');
+  const panels = area.querySelectorAll('.mobile-share-monthly-panel');
+  const shouldClose = mobileShareExpandedDetailIndex_ === index;
+
+  rows.forEach(function (row) {
+    row.classList.remove('is-expanded');
+    row.setAttribute('aria-expanded', 'false');
+  });
+
+  panels.forEach(function (panel) {
+    panel.hidden = true;
+  });
+
+  if (shouldClose) {
+    mobileShareExpandedDetailIndex_ = -1;
+    return;
+  }
+
+  const targetRow = area.querySelector(
+    '.mobile-share-detail-row-expandable[data-detail-index="' + index + '"]'
+  );
+  const targetPanel = area.querySelector(
+    '.mobile-share-monthly-panel[data-monthly-index="' + index + '"]'
+  );
+
+  if (!targetRow || !targetPanel) {
+    mobileShareExpandedDetailIndex_ = -1;
+    return;
+  }
+
+  targetRow.classList.add('is-expanded');
+  targetRow.setAttribute('aria-expanded', 'true');
+  targetPanel.hidden = false;
+  mobileShareExpandedDetailIndex_ = index;
 }
 
 
@@ -537,11 +658,11 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     (width - padding * 2 - cardGap * 4) / 5;
   const cardHeight = 154;
   const cards = [
-    { label: '目標', value: formatMobileShareCanvasDisplay_(summary.target, { blankZero: true }), tone: 'purple' },
-    { label: report.monthColumnLabel + '達成', value: formatMobileShareCanvasDisplay_(summary.monthValue, { blankZero: true }), tone: 'purple' },
-    { label: report.cumulativeLabel, value: formatMobileShareCanvasDisplay_(summary.cumulative, { blankZero: true }), tone: 'purple' },
-    { label: '實際達成率', value: formatMobileShareCanvasDisplay_(summary.ratePercent, { blankZero: true, suffix: '%' }), tone: 'purple' },
-    { label: summary.statusLabel, value: formatMobileShareStatusDisplay_(summary.statusValue), tone: summary.statusTone }
+    { label: '目標', value: summary.target, tone: 'purple' },
+    { label: report.monthColumnLabel + '達成', value: summary.monthValue, tone: 'purple' },
+    { label: report.cumulativeLabel, value: summary.cumulative, tone: 'purple' },
+    { label: '實際達成率', value: summary.ratePercent + '%', tone: 'purple' },
+    { label: summary.statusLabel, value: summary.statusValue, tone: summary.statusTone }
   ];
 
   cards.forEach(function (card, index) {
@@ -627,9 +748,9 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
     );
 
     ctx.font = '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(formatMobileShareCanvasDisplay_(item.target, { blankZero: true }), col.target, rowY + rowHeight / 2);
-    ctx.fillText(formatMobileShareCanvasDisplay_(item.monthValue, { blankZero: true }), col.month, rowY + rowHeight / 2);
-    ctx.fillText(formatMobileShareCanvasDisplay_(item.cumulative, { blankZero: true }), col.cumulative, rowY + rowHeight / 2);
+    ctx.fillText(String(item.target), col.target, rowY + rowHeight / 2);
+    ctx.fillText(String(item.monthValue), col.month, rowY + rowHeight / 2);
+    ctx.fillText(String(item.cumulative), col.cumulative, rowY + rowHeight / 2);
 
     const toneColor = item.tone === 'green'
       ? colors.green
@@ -639,7 +760,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
 
     ctx.fillStyle = toneColor;
     ctx.font = '900 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(formatMobileShareCanvasDisplay_(item.ratePercent, { blankZero: true, suffix: '%' }), col.rateText, rowY + rowHeight / 2);
+    ctx.fillText(item.ratePercent + '%', col.rateText, rowY + rowHeight / 2);
 
     drawCanvasProgress_(
       ctx,
@@ -947,42 +1068,6 @@ function setMobileShareButtonLoading_(button, loading) {
   button.innerHTML = loading
     ? '圖片產生中...'
     : '<span class="mobile-share-line-mark">LINE</span>分享成果圖片';
-}
-
-
-
-function formatMobileShareDisplay_(value, options) {
-  const opts = options || {};
-  const number = Number(value || 0);
-
-  if (!Number.isFinite(number)) {
-    return '';
-  }
-
-  if (opts.blankZero && number === 0) {
-    return '';
-  }
-
-  return formatMobileShareNumber_(number) + (opts.suffix || '');
-}
-
-
-function formatMobileShareCanvasDisplay_(value, options) {
-  return formatMobileShareDisplay_(value, options);
-}
-
-
-function formatMobileShareStatusDisplay_(value) {
-  if (value == null) return '';
-  const text = String(value).trim();
-  if (!text) return '';
-
-  const normalized = text.replace(/,/g, '');
-  if (/^[+\-]?0(?:\.0+)?$/.test(normalized)) {
-    return '';
-  }
-
-  return text;
 }
 
 
