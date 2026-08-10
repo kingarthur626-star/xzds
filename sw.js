@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-10 Daily Data Update v1.0.0R2 Simplified UI
+   Update: 2026-08-10 Mobile Share v1.0.0R12
    Purpose:
    1. Keep HTML, CSS and JavaScript fresh by using network first.
    2. Keep a local fallback for temporary offline use.
@@ -8,7 +8,7 @@
    4. Activate a new version immediately and remove old XZDS caches.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260810-daily-data-update-100r2';
+const CACHE_NAME = CACHE_PREFIX + '20260810-mobile-share-100r12';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -18,15 +18,12 @@ const STATIC_ASSETS = [
   './mobile-share.html',
   './mobile-share-summary.html',
   './tao-mobile-update.html',
-  './tao-mobile-update-oneclick.html',
-  './daily-data-update.html',
   './duty-activity-list.html',
   './duty-activity-admin.html',
   './manifest.json',
   './css/style.css',
   './css/mobile-share.css',
   './css/mobile-share-summary.css',
-  './css/daily-data-update.css',
   './js/config.js',
   './js/api.js',
   './js/common.js',
@@ -36,8 +33,6 @@ const STATIC_ASSETS = [
   './js/mobile-share.js',
   './js/mobile-share-summary.js',
   './js/tao-mobile-update.js',
-  './js/tao-mobile-update-oneclick.js',
-  './js/daily-data-update.js',
   './js/duty-activity-list.js',
   './js/duty-activity-admin.js',
   './js/duty-activity-admin-r19.js',
