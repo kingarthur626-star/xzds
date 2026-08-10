@@ -20,30 +20,18 @@ body.member-search-body {
   width: min(100%, 760px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: max(14px, env(safe-area-inset-top)) 14px calc(32px + env(safe-area-inset-bottom));
+  padding: calc(72px + env(safe-area-inset-top, 0px)) 14px calc(32px + env(safe-area-inset-bottom));
 }
 
-.member-search-topbar {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
-  align-items: center;
-  min-height: 42px;
+/*
+ * 頂端導覽完全比照 annual.html：
+ * 使用全站 page-action-bar / action-pill，固定於頂端。
+ * 左登出、右首頁。
+ */
+.member-search-fixed-actions {
+  width: calc(100% - 24px);
+  max-width: 430px;
 }
-
-.member-search-nav-btn {
-  min-width: 72px;
-  height: 40px;
-  padding: 0 14px;
-  border: 1px solid #cad5e3;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--msrch-blue);
-  font-size: 14px;
-  font-weight: 850;
-}
-
-.member-search-nav-btn.logout { color: #4c5e70; }
 
 .member-search-header {
   margin: 20px 0 14px;
@@ -284,7 +272,7 @@ body.member-search-body {
 
 .member-search-field {
   display: grid;
-  grid-template-columns: minmax(64px, .85fr) minmax(0, 1.15fr);
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 6px;
   align-items: baseline;
   min-height: 34px;
@@ -297,9 +285,11 @@ body.member-search-body {
 
 .member-search-field label {
   color: #748397;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 750;
-  line-height: 1.25;
+  line-height: 1.2;
+  letter-spacing: -.25px;
+  white-space: nowrap;
 }
 
 .member-search-field strong {
@@ -403,7 +393,7 @@ body.member-search-body {
 @media (max-width: 430px) {
   .member-search-page { padding-left: 10px; padding-right: 10px; }
   .member-search-field-grid { grid-template-columns: 1fr 1fr; }
-  .member-search-field { grid-template-columns: minmax(56px, .8fr) minmax(0, 1.2fr); padding: 6px 7px; }
+  .member-search-field { grid-template-columns: max-content minmax(0, 1fr); padding: 6px 7px; }
 }
 
 @media (max-width: 340px) {
