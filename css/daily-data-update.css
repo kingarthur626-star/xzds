@@ -1,4 +1,4 @@
-/* 新莊區道務檢視｜每日資料更新 v1.0.0R1 */
+/* 新莊區道務檢視｜每日資料更新 v1.0.0R2｜簡潔管理版 */
 .tdu-page {
   margin: 0;
   background: #f5f7fb;
@@ -460,5 +460,160 @@ body.tdu-modal-open {
 
   .tdu-header h1 {
     font-size: 25px;
+  }
+}
+
+
+/* v1.0.0R2 簡潔管理版 */
+.tdu-history-item.has-review {
+  border-color: #ecdcae;
+  background: #fffdf7;
+}
+
+.tdu-history-item.has-problem {
+  border-color: #efc3c3;
+  background: #fffafa;
+}
+
+.tdu-simple-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tdu-summary-stat {
+  padding: 12px 6px;
+  border-radius: 13px;
+  background: #f5f8fb;
+  text-align: center;
+}
+
+.tdu-summary-stat strong {
+  display: block;
+  color: #1f4769;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.tdu-summary-stat span {
+  display: block;
+  margin-top: 5px;
+  color: #7a8b9b;
+  font-size: 11px;
+}
+
+.tdu-summary-stat.is-review {
+  background: #fff6df;
+}
+
+.tdu-summary-stat.is-review strong {
+  color: #8b6512;
+}
+
+.tdu-summary-stat.is-failed {
+  background: #fdecec;
+}
+
+.tdu-summary-stat.is-failed strong {
+  color: #a63c3c;
+}
+
+.tdu-action-summary {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.tdu-action-summary.is-ok {
+  background: #eaf7ef;
+  color: #266c46;
+}
+
+.tdu-action-summary.is-review {
+  background: #fff7e2;
+  color: #7a5d17;
+}
+
+.tdu-action-summary.is-failed {
+  background: #fdecec;
+  color: #9e3c3c;
+}
+
+.tdu-issue-item {
+  padding: 13px;
+  border: 1px solid #eadfbd;
+  border-radius: 14px;
+  background: #fffdf7;
+}
+
+.tdu-issue-item + .tdu-issue-item {
+  margin-top: 8px;
+}
+
+.tdu-issue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tdu-issue-badge {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.tdu-issue-badge.is-review {
+  background: #fff0c8;
+  color: #7e5d0c;
+}
+
+.tdu-issue-badge.is-failed {
+  background: #fde4e4;
+  color: #a23939;
+}
+
+.tdu-help-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #edf4fb;
+  color: #48677f;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.tdu-tech-details {
+  margin-top: 18px;
+  color: #768899;
+  font-size: 12px;
+}
+
+.tdu-tech-details summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #6a7f92;
+}
+
+.tdu-tech-kv {
+  margin-top: 10px;
+}
+
+@media (max-width: 390px) {
+  .tdu-simple-summary {
+    gap: 6px;
+  }
+
+  .tdu-summary-stat {
+    padding: 10px 4px;
+  }
+
+  .tdu-summary-stat strong {
+    font-size: 20px;
   }
 }
