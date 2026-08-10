@@ -1,6 +1,6 @@
 /*
  * 程式名稱：member-search.js
- * 版本：v1.0.0R1
+ * 版本：v1.0.0R1F4
  * 功能：姓名／道親編號搜尋、完整資料顯示、道親編號 QR Code 與 LINE 分享。
  */
 
@@ -302,8 +302,10 @@ async function shareMemberQr_() {
 function buildMemberQrShareCanvas_(member) {
   if (!window.XZDSLocalQR) throw new Error('QR 模組尚未載入。');
 
+  // 分享圖片只保留：姓名、道親編號、QR Code。
+  // 不顯示「道親 QR Code」與「掃描內容：...」，讓版面更乾淨。
   const width = 900;
-  const height = 1060;
+  const height = 930;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -317,25 +319,18 @@ function buildMemberQrShareCanvas_(member) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#173f63';
-  ctx.font = '900 54px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('道親 QR Code', width / 2, 125);
-
-  ctx.font = '900 42px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(member.name || '', width / 2, 200);
+  ctx.font = '900 44px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(member.name || '', width / 2, 120);
 
   ctx.fillStyle = '#1769aa';
-  ctx.font = '900 32px Arial, sans-serif';
-  ctx.fillText(member.memberId, width / 2, 250);
+  ctx.font = '900 34px Arial, sans-serif';
+  ctx.fillText(member.memberId, width / 2, 178);
 
   const qrCanvas = document.createElement('canvas');
   const matrix = window.XZDSLocalQR.createMatrix(member.memberId);
   window.XZDSLocalQR.drawMatrix(qrCanvas, matrix, { size: 600, quiet: 4 });
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(qrCanvas, 150, 310, 600, 600);
-
-  ctx.fillStyle = '#6b7b8f';
-  ctx.font = '700 22px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('掃描內容：' + member.memberId, width / 2, 955);
+  ctx.drawImage(qrCanvas, 150, 235, 600, 600);
 
   return canvas;
 }
