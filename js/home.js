@@ -7,7 +7,7 @@
 檢查登入狀態
 顯示登入者壇名
 綁定首頁功能按鈕
-依照權限顯示「三大組月報」、「每日資料更新」、「道親資料更新－資料同步」、「道親資料更新－一鍵更新」、「更新報表」與「系統後台」
+依照權限顯示「三大組月報」、「每日資料更新」、「資料搜尋」、「更新報表」與「系統後台」
 只有 admin 顯示「最後更新時間」
 user 不顯示「最後更新時間」
 ========================= */
@@ -94,8 +94,7 @@ const btnHistory = document.getElementById('btnHistory');
 const btnDutyActivityList = document.getElementById('btnDutyActivityList');
 const btnMobileShare = document.getElementById('btnMobileShare');
 const btnDailyDataUpdate = document.getElementById('btnDailyDataUpdate');
-const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
-const btnTaoMobileOneClick = document.getElementById('btnTaoMobileOneClick');
+const btnMemberSearch = document.getElementById('btnMemberSearch');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnLogout = document.getElementById('btnLogout');
 
@@ -129,15 +128,9 @@ if (btnDailyDataUpdate) {
   });
 }
 
-if (btnTaoMobileUpdate) {
-  btnTaoMobileUpdate.addEventListener('click', function () {
-    location.href = 'tao-mobile-update.html';
-  });
-}
-
-if (btnTaoMobileOneClick) {
-  btnTaoMobileOneClick.addEventListener('click', function () {
-    location.href = 'tao-mobile-update-oneclick.html';
+if (btnMemberSearch) {
+  btnMemberSearch.addEventListener('click', function () {
+    location.href = 'member-search.html';
   });
 }
 
@@ -160,7 +153,7 @@ const HOME_PERMISSION_CACHE_SECONDS = 600; // 10分鐘
 函式名稱：loadHomePermissions
 功能說明：
 讀取首頁權限。
-用來控制「三大組月報」、「道親資料更新」、「更新報表」與「系統後台」是否顯示。
+用來控制「三大組月報」、「每日資料更新」、「資料搜尋」、「更新報表」與「系統後台」是否顯示。
 ========================= */
 async function loadHomePermissions(user) {
 const btnUpdate = document.getElementById('btnUpdate');
@@ -217,8 +210,7 @@ adminPanel: false
 ========================= */
 function applyHomePermissions_(permissions) {
 const btnDailyDataUpdate = document.getElementById('btnDailyDataUpdate');
-const btnTaoMobileUpdate = document.getElementById('btnTaoMobileUpdate');
-const btnTaoMobileOneClick = document.getElementById('btnTaoMobileOneClick');
+const btnMemberSearch = document.getElementById('btnMemberSearch');
 const btnMobileShare = document.getElementById('btnMobileShare');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnMore = document.getElementById('btnMore');
@@ -227,12 +219,8 @@ if (btnDailyDataUpdate) {
 btnDailyDataUpdate.style.display = permissions.updateTaoReport ? 'flex' : 'none';
 }
 
-if (btnTaoMobileUpdate) {
-btnTaoMobileUpdate.style.display = permissions.updateTaoReport ? 'flex' : 'none';
-}
-
-if (btnTaoMobileOneClick) {
-btnTaoMobileOneClick.style.display = permissions.updateTaoReport ? 'flex' : 'none';
+if (btnMemberSearch) {
+btnMemberSearch.style.display = (permissions.updateTaoReport || permissions.adminPanel) ? 'flex' : 'none';
 }
 
 if (btnMobileShare) {
