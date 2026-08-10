@@ -1,14 +1,13 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-10 Mobile Share v1.0.0R13
-   Purpose:
-   1. Keep HTML, CSS and JavaScript fresh by using network first.
-   2. Keep a local fallback for temporary offline use.
-   3. Never cache external Apps Script API requests.
-   4. Activate a new version immediately and remove old XZDS caches.
+   Update: 2026-08-10 Member Search v1.0.0R1
+   Merge baseline:
+   - Daily Data Update Simplified UI R2
+   - Mobile Share R13
+   - Member Search + Local QR R1
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260810-mobile-share-100r13';
+const CACHE_NAME = CACHE_PREFIX + '20260810-member-search-100r1';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -17,13 +16,17 @@ const STATIC_ASSETS = [
   './history.html',
   './mobile-share.html',
   './mobile-share-summary.html',
-  './tao-mobile-update.html',
+  './daily-data-update.html',
+  './member-search.html',
   './duty-activity-list.html',
   './duty-activity-admin.html',
   './manifest.json',
   './css/style.css',
+  './css/home-member-search.css',
   './css/mobile-share.css',
   './css/mobile-share-summary.css',
+  './css/daily-data-update.css',
+  './css/member-search.css',
   './js/config.js',
   './js/api.js',
   './js/common.js',
@@ -32,12 +35,15 @@ const STATIC_ASSETS = [
   './js/history.js',
   './js/mobile-share.js',
   './js/mobile-share-summary.js',
-  './js/tao-mobile-update.js',
+  './js/daily-data-update.js',
+  './js/member-search.js',
+  './js/qr-local.js',
   './js/duty-activity-list.js',
   './js/duty-activity-admin.js',
   './js/duty-activity-admin-r19.js',
   './js/pwa.js'
 ];
+
 self.addEventListener('install', function(event) {
   event.waitUntil(
     precacheAvailableAssets_().then(function() {
@@ -45,15 +51,13 @@ self.addEventListener('install', function(event) {
     })
   );
 });
+
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
       return Promise.all(
         cacheNames.map(function(cacheName) {
-          if (
-            cacheName.indexOf(CACHE_PREFIX) === 0 &&
-            cacheName !== CACHE_NAME
-          ) {
+          if (cacheName.indexOf(CACHE_PREFIX) === 0 && cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
           return Promise.resolve(false);
@@ -64,6 +68,7 @@ self.addEventListener('activate', function(event) {
     })
   );
 });
+
 self.addEventListener('fetch', function(event) {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -77,11 +82,11 @@ self.addEventListener('fetch', function(event) {
 
   event.respondWith(cacheFirst_(request));
 });
+
 self.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
+
 function isFreshnessCriticalRequest_(request, requestUrl) {
   if (request.mode === 'navigate') return true;
   const path = requestUrl.pathname.toLowerCase();
@@ -92,48 +97,43 @@ function isFreshnessCriticalRequest_(request, requestUrl) {
     path.endsWith('.json')
   );
 }
+
 function networkFirst_(request) {
   return caches.open(CACHE_NAME).then(function(cache) {
     return fetch(request, { cache: 'no-store' }).then(function(response) {
-      if (response && response.ok) {
-        cache.put(request, response.clone());
-      }
+      if (response && response.ok) cache.put(request, response.clone());
       return response;
     }).catch(function() {
       return cache.match(request, { ignoreSearch: true }).then(function(cached) {
         if (cached) return cached;
-        if (request.mode === 'navigate') {
-          return cache.match('./index.html', { ignoreSearch: true });
-        }
+        if (request.mode === 'navigate') return cache.match('./index.html', { ignoreSearch: true });
         return Response.error();
       });
     });
   });
 }
+
 function cacheFirst_(request) {
   return caches.open(CACHE_NAME).then(function(cache) {
     return cache.match(request, { ignoreSearch: true }).then(function(cached) {
       if (cached) return cached;
       return fetch(request).then(function(response) {
-        if (response && response.ok) {
-          cache.put(request, response.clone());
-        }
+        if (response && response.ok) cache.put(request, response.clone());
         return response;
       });
     });
   });
 }
+
 async function precacheAvailableAssets_() {
   const cache = await caches.open(CACHE_NAME);
   await Promise.all(
     STATIC_ASSETS.map(async function(asset) {
       try {
         const response = await fetch(asset, { cache: 'no-store' });
-        if (response && response.ok) {
-          await cache.put(asset, response.clone());
-        }
+        if (response && response.ok) await cache.put(asset, response.clone());
       } catch (error) {
-        // A single missing asset must not block Service Worker installation.
+        // 單一資源不存在時不阻擋新 Service Worker 啟用。
       }
     })
   );

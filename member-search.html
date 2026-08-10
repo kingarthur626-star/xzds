@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="xzds-ui-version" content="20260810-member-search-100r1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>資料搜尋｜新莊區道務檢視</title>
+  <meta name="theme-color" content="#f5f7fb">
+  <link rel="manifest" href="./manifest.json?v=20260623-001">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css?v=20260807-tao-mobile-dual-030r2">
+  <link rel="stylesheet" href="./css/member-search.css?v=20260810-member-search-100r1">
+</head>
+<body class="member-search-body">
+  <main class="member-search-page">
+    <nav class="member-search-topbar" aria-label="頁面導覽">
+      <div class="member-search-topbar-spacer"></div>
+      <button id="memberSearchHomeBtn" class="member-search-nav-btn" type="button">首頁</button>
+      <button id="memberSearchLogoutBtn" class="member-search-nav-btn logout" type="button">登出</button>
+    </nav>
+
+    <header class="member-search-header">
+      <h1>資料搜尋</h1>
+      <p>輸入姓名或道親編號</p>
+    </header>
+
+    <section class="member-search-form-card" aria-label="道親搜尋">
+      <div class="member-search-form-row">
+        <input id="memberSearchInput" type="search" inputmode="search" autocomplete="off" maxlength="80" placeholder="姓名／道親編號" aria-label="姓名或道親編號">
+        <button id="memberSearchSubmitBtn" type="button">搜尋</button>
+      </div>
+      <div id="memberSearchHint" class="member-search-hint">可輸入完整姓名、部分姓名或道親編號。</div>
+    </section>
+
+    <section id="memberSearchLoading" class="member-search-message" hidden>搜尋中...</section>
+    <section id="memberSearchError" class="member-search-message error" hidden></section>
+
+    <section id="memberSearchResults" class="member-search-results" hidden>
+      <div class="member-search-results-head">
+        <strong id="memberSearchResultsTitle">搜尋結果</strong>
+        <span id="memberSearchResultsCount"></span>
+      </div>
+      <div id="memberSearchResultList" class="member-search-result-list"></div>
+    </section>
+
+    <section id="memberSearchDetail" class="member-search-detail" hidden>
+      <article class="member-search-person-card">
+        <div class="member-search-person-main">
+          <div>
+            <h2 id="memberSearchPersonName">--</h2>
+            <div id="memberSearchPersonMeta" class="member-search-person-meta"></div>
+          </div>
+          <button id="memberSearchMemberIdBtn" class="member-search-id-btn" type="button" aria-label="產生道親編號 QR Code">
+            <span>道親編號</span>
+            <strong id="memberSearchPersonId">--</strong>
+            <small>點此產生 QR</small>
+          </button>
+        </div>
+      </article>
+      <div id="memberSearchDetailGroups" class="member-search-detail-groups"></div>
+    </section>
+  </main>
+
+  <div id="memberSearchQrModal" class="member-search-modal" hidden>
+    <div class="member-search-modal-backdrop" data-close-qr="1"></div>
+    <section class="member-search-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="memberSearchQrTitle">
+      <div class="member-search-qr-head">
+        <h2 id="memberSearchQrTitle">道親 QR Code</h2>
+        <button id="memberSearchQrCloseBtn" class="member-search-qr-close" type="button" aria-label="關閉">×</button>
+      </div>
+      <div class="member-search-qr-person">
+        <strong id="memberSearchQrName">--</strong>
+        <span id="memberSearchQrId">--</span>
+      </div>
+      <canvas id="memberSearchQrCanvas" class="member-search-qr-canvas" width="480" height="480"></canvas>
+      <p class="member-search-qr-note">QR Code 內容只有道親編號</p>
+      <button id="memberSearchQrShareBtn" class="member-search-share-btn" type="button">LINE 分享 QR 圖片</button>
+    </section>
+  </div>
+
+  <script src="./js/config.js?v=20260619-2"></script>
+  <script src="./js/api.js?v=20260619-2"></script>
+  <script src="./js/common.js?v=20260623-04"></script>
+  <script src="./js/qr-local.js?v=20260810-member-search-100r1"></script>
+  <script src="./js/member-search.js?v=20260810-member-search-100r1"></script>
+  <script src="./js/pwa.js?v=20260623-04"></script>
+</body>
+</html>
