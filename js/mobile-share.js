@@ -6,8 +6,9 @@
  * 3. 動態顯示「月份成果＋壇數」，並在明細中段重複表頭。
  * 4. 達成率顯示 10 格進度條，並產生完整 PNG 分享。
  * 5. 點選任一佛堂列，可展開該佛堂 1～目前選定月份的逐月求道／法會數字。
+ * 6. 月份數字為 0 時不顯示；壇名順序由後端依「即時道務統計」C欄排列。
  *
- * 版本：v1.0.0R11
+ * 版本：v1.0.0R12
  * 最後更新：2026/08/10
  */
 
@@ -331,7 +332,7 @@ function renderMobileShareDetailRows_(details, monthLabel, report) {
           '<b class="mobile-share-expand-chevron" aria-hidden="true">⌄</b>' +
         '</span>' +
         '<span>' + formatMobileShareNumber_(item.target) + '</span>' +
-        '<span>' + formatMobileShareNumber_(item.monthValue) + '</span>' +
+        '<span>' + formatMobileShareMonthValue_(item.monthValue) + '</span>' +
         '<span>' + formatMobileShareNumber_(item.cumulative) + '</span>' +
         '<span class="mobile-share-rate-cell ' + tone + '">' +
           '<span class="rate-number">' +
@@ -358,14 +359,15 @@ function buildMobileShareMonthlyPanelHtml_(item, index, report) {
   const monthlyValues = Array.isArray(item.monthlyValues)
     ? item.monthlyValues.filter(function (entry) {
         const month = Number(entry && entry.month);
-        return month >= 1 && month <= selectedMonth;
+        const value = Number(entry && entry.value ? entry.value : 0);
+        return month >= 1 && month <= selectedMonth && value !== 0;
       })
     : [];
 
   if (!monthlyValues.length) {
     return (
       '<div class="mobile-share-monthly-panel" data-monthly-index="' + index + '" hidden>' +
-        '<div class="mobile-share-monthly-empty">沒有逐月資料</div>' +
+        '<div class="mobile-share-monthly-empty">1–' + selectedMonth + '月沒有' + escapeHtml(category) + '紀錄</div>' +
       '</div>'
     );
   }
@@ -749,7 +751,7 @@ function drawMobileShareCanvas_(ctx, canvas, report, padding, rowHeight) {
 
     ctx.font = '700 26px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.fillText(String(item.target), col.target, rowY + rowHeight / 2);
-    ctx.fillText(String(item.monthValue), col.month, rowY + rowHeight / 2);
+    ctx.fillText(formatMobileShareMonthValue_(item.monthValue), col.month, rowY + rowHeight / 2);
     ctx.fillText(String(item.cumulative), col.cumulative, rowY + rowHeight / 2);
 
     const toneColor = item.tone === 'green'
@@ -1086,6 +1088,17 @@ function setText_(id, value) {
 /**
  * 功能：數字顯示，整數不顯示小數點。
  */
+function formatMobileShareMonthValue_(value) {
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number) || number === 0) {
+    return '';
+  }
+
+  return formatMobileShareNumber_(number);
+}
+
+
 function formatMobileShareNumber_(value) {
   const number = Number(value || 0);
 
