@@ -1,7 +1,7 @@
 /**
  * 程式名稱：mobile-share-summary.js
  * 功能：讀取六張各壇月報，彙整成求道／法會三大組累計達成，並產生 LINE 分享圖片。
- * 版本：v1.0.0R12
+ * 版本：v1.0.0R13
  */
 
 const MOBILE_CUMULATIVE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
@@ -10,6 +10,7 @@ const MOBILE_CUMULATIVE_REPORT_KEYS = [
   'fa1', 'fa2', 'fa3'
 ];
 const MOBILE_CUMULATIVE_MAX_CONCURRENCY = 2;
+const MOBILE_CUMULATIVE_CACHE_PREFIX = 'XZDS_MOBILE_CUMULATIVE_CACHE_v2:';
 const MOBILE_CUMULATIVE_GROUP_LABELS = {
   1: '一組',
   2: '二組',
@@ -86,67 +87,110 @@ function bindMobileCumulativeEvents_() {
 
 async function loadMobileCumulativeReport_(selectedMonth) {
   const serial = ++mobileCumulativeRequestSerial_;
-  setMobileCumulativeLoading_(true);
-  showMobileCumulativeError_('');
-
   const month = Number(selectedMonth);
+  const normalizedMonth = Number.isInteger(month) && month >= 1 && month <= 12
+    ? month
+    : 0;
+
+  setMobileCumulativeLoading_(true);
+  showMobileCumulativeError_('', '');
+
+  const cachedSet = readMobileCumulativeCachedSet_(normalizedMonth);
+  if (cachedSet.complete) {
+    try {
+      renderMobileCumulativeReports_(cachedSet.reports);
+      showMobileCumulativeError_('正在重新確認最新資料…', 'warning');
+    } catch (ignore) {}
+  }
 
   try {
-    const responses = await loadMobileCumulativeReportsLimited_(month);
+    let loadResult = await loadMobileCumulativeReportsLimited_(normalizedMonth);
 
     if (serial !== mobileCumulativeRequestSerial_) return;
 
-    const reports = responses.map(function (result, index) {
-      if (!result || !result.success || !result.report) {
-        throw new Error(
-          result && result.message
-            ? result.message
-            : MOBILE_CUMULATIVE_REPORT_KEYS[index] + ' 讀取失敗'
-        );
+    /*
+     * 第一次完整輪次後，只針對仍失敗的 reportKey 再做一次低併發恢復。
+     * 每一個 callApi 內部本身已有 3 次傳輸嘗試；這裡只是把最後少數失敗
+     * 再隔開重讀一次，避免六張中任一張瞬斷就整頁失敗。
+     */
+    const missingIndexes = [];
+    loadResult.responses.forEach(function(item, index) {
+      if (!item || !item.success || !item.report) {
+        missingIndexes.push(index);
       }
-      return result.report;
     });
 
-    const sourceMonths = reports
-      .map(function (report) {
-        return Number(report.sourceMonth || report.month || 0);
-      })
-      .filter(function (value) {
-        return Number.isInteger(value) && value >= 1 && value <= 12;
-      });
+    for (let i = 0; i < missingIndexes.length; i++) {
+      if (serial !== mobileCumulativeRequestSerial_) return;
 
-    mobileCumulativeSourceMonth_ = sourceMonths.length
-      ? Math.min.apply(null, sourceMonths)
-      : Number(reports[0].month || 1);
+      const index = missingIndexes[i];
+      const reportKey = MOBILE_CUMULATIVE_REPORT_KEYS[index];
 
-    const reportMonth = Number(reports[0].month || mobileCumulativeSourceMonth_);
-    const targetPercent = Number(reports[0].monthTargetPercent || 0);
-    syncMobileCumulativeMonthOptions_(reportMonth, mobileCumulativeSourceMonth_);
+      try {
+        await delayMobileCumulative_(500);
+        const recovered = await callApi(buildMobileCumulativePayload_(reportKey, normalizedMonth), {
+          timeoutMs: 12000,
+          retryTimeoutMs: 15000,
+          maxAttempts: 2,
+          onRetry: function() {
+            if (serial !== mobileCumulativeRequestSerial_) return;
+            showMobileCumulativeError_('部分資料正在重新確認…', 'warning');
+          }
+        });
 
-    const receive = buildMobileCumulativeCategory_(reports, '求道');
-    const seminar = buildMobileCumulativeCategory_(reports, '法會');
+        if (recovered && recovered.success && recovered.report) {
+          loadResult.responses[index] = recovered;
+          writeMobileCumulativeCache_(reportKey, normalizedMonth, recovered.report);
+        }
+      } catch (ignore) {}
+    }
 
-    mobileCumulativeCurrentReport_ = {
-      month: reportMonth,
-      targetPercent: targetPercent,
-      receive: receive,
-      seminar: seminar
-    };
+    if (serial !== mobileCumulativeRequestSerial_) return;
 
-    renderMobileCumulativeReport_(
-      reportMonth,
-      targetPercent,
-      receive,
-      seminar
-    );
+    let usedCacheCount = 0;
+    const reports = loadResult.responses.map(function (result, index) {
+      if (result && result.success && result.report) {
+        return result.report;
+      }
+
+      const reportKey = MOBILE_CUMULATIVE_REPORT_KEYS[index];
+      const cached = readMobileCumulativeCache_(reportKey, normalizedMonth);
+      if (cached && cached.report) {
+        usedCacheCount += 1;
+        return cached.report;
+      }
+
+      throw new Error(reportKey + ' 仍無法取得資料');
+    });
+
+    renderMobileCumulativeReports_(reports);
+
+    if (usedCacheCount > 0) {
+      showMobileCumulativeError_(
+        '連線暫時不穩，部分資料使用上次成功結果；稍後可再重新整理。',
+        'warning'
+      );
+    } else {
+      showMobileCumulativeError_('', '');
+    }
 
   } catch (error) {
     if (serial !== mobileCumulativeRequestSerial_) return;
 
-    mobileCumulativeCurrentReport_ = null;
-    showMobileCumulativeError_(
-      String(error && error.message ? error.message : '累計報表讀取失敗')
-    );
+    const fallback = readMobileCumulativeCachedSet_(normalizedMonth);
+    if (fallback.complete) {
+      renderMobileCumulativeReports_(fallback.reports);
+      showMobileCumulativeError_(
+        '連線暫時不穩，目前顯示上次成功的三大組資料。',
+        'warning'
+      );
+    } else {
+      mobileCumulativeCurrentReport_ = null;
+      showMobileCumulativeError_(
+        String(error && error.message ? error.message : '累計報表讀取失敗'),
+        'error'
+      );
+    }
 
   } finally {
     if (serial === mobileCumulativeRequestSerial_) {
@@ -156,11 +200,6 @@ async function loadMobileCumulativeReport_(selectedMonth) {
 }
 
 
-/**
- * 六張月報改成最多同時 2 支 API。
- * 原本 Promise.all 一次打 6 支，只要其中 1 支傳輸暫時失敗，整頁就直接失敗；
- * 本版配合 api.js 的唯讀自動重試，降低 Apps Script / JSONP 同時間尖峰。
- */
 async function loadMobileCumulativeReportsLimited_(month) {
   const responses = new Array(MOBILE_CUMULATIVE_REPORT_KEYS.length);
   let nextIndex = 0;
@@ -175,16 +214,29 @@ async function loadMobileCumulativeReportsLimited_(month) {
       }
 
       const reportKey = MOBILE_CUMULATIVE_REPORT_KEYS[index];
-      const payload = {
-        action: 'getMobileShareReport',
-        reportKey: reportKey
-      };
 
-      if (Number.isInteger(month) && month >= 1 && month <= 12) {
-        payload.month = month;
+      try {
+        const result = await callApi(buildMobileCumulativePayload_(reportKey, month), {
+          timeoutMs: 12000,
+          retryTimeoutMs: 15000,
+          maxAttempts: 3,
+          onRetry: function() {
+            showMobileCumulativeError_('資料連線正在自動重新確認…', 'warning');
+          }
+        });
+
+        responses[index] = result;
+
+        if (result && result.success && result.report) {
+          writeMobileCumulativeCache_(reportKey, month, result.report);
+        }
+      } catch (error) {
+        responses[index] = {
+          success: false,
+          message: error && error.message ? error.message : '讀取失敗',
+          errorCode: error && error.code ? error.code : ''
+        };
       }
-
-      responses[index] = await callApi(payload);
     }
   }
 
@@ -199,7 +251,122 @@ async function loadMobileCumulativeReportsLimited_(month) {
   }
 
   await Promise.all(workers);
-  return responses;
+  return { responses: responses };
+}
+
+
+function buildMobileCumulativePayload_(reportKey, month) {
+  const payload = {
+    action: 'getMobileShareReport',
+    reportKey: reportKey
+  };
+
+  if (Number.isInteger(month) && month >= 1 && month <= 12) {
+    payload.month = month;
+  }
+
+  return payload;
+}
+
+
+function renderMobileCumulativeReports_(reports) {
+  const sourceMonths = reports
+    .map(function (report) {
+      return Number(report.sourceMonth || report.month || 0);
+    })
+    .filter(function (value) {
+      return Number.isInteger(value) && value >= 1 && value <= 12;
+    });
+
+  mobileCumulativeSourceMonth_ = sourceMonths.length
+    ? Math.min.apply(null, sourceMonths)
+    : Number(reports[0].month || 1);
+
+  const reportMonth = Number(reports[0].month || mobileCumulativeSourceMonth_);
+  const targetPercent = Number(reports[0].monthTargetPercent || 0);
+  syncMobileCumulativeMonthOptions_(reportMonth, mobileCumulativeSourceMonth_);
+
+  const receive = buildMobileCumulativeCategory_(reports, '求道');
+  const seminar = buildMobileCumulativeCategory_(reports, '法會');
+
+  mobileCumulativeCurrentReport_ = {
+    month: reportMonth,
+    targetPercent: targetPercent,
+    receive: receive,
+    seminar: seminar
+  };
+
+  renderMobileCumulativeReport_(
+    reportMonth,
+    targetPercent,
+    receive,
+    seminar
+  );
+}
+
+
+function mobileCumulativeCacheKey_(reportKey, month) {
+  return MOBILE_CUMULATIVE_CACHE_PREFIX + String(reportKey || '') + ':' + String(month || 'auto');
+}
+
+
+function writeMobileCumulativeCache_(reportKey, requestedMonth, report) {
+  try {
+    const payload = JSON.stringify({
+      savedAt: Date.now(),
+      report: report
+    });
+
+    localStorage.setItem(
+      mobileCumulativeCacheKey_(reportKey, requestedMonth),
+      payload
+    );
+
+    const actualMonth = Number(report && report.month || 0);
+    if (actualMonth >= 1 && actualMonth <= 12) {
+      localStorage.setItem(
+        mobileCumulativeCacheKey_(reportKey, actualMonth),
+        payload
+      );
+    }
+
+    localStorage.setItem(
+      mobileCumulativeCacheKey_(reportKey, 0),
+      payload
+    );
+  } catch (ignore) {}
+}
+
+
+function readMobileCumulativeCache_(reportKey, month) {
+  try {
+    const raw = localStorage.getItem(mobileCumulativeCacheKey_(reportKey, month));
+    const data = raw ? JSON.parse(raw) : null;
+    return data && data.report ? data : null;
+  } catch (ignore) {
+    return null;
+  }
+}
+
+
+function readMobileCumulativeCachedSet_(month) {
+  const reports = [];
+  for (let i = 0; i < MOBILE_CUMULATIVE_REPORT_KEYS.length; i++) {
+    const cached = readMobileCumulativeCache_(MOBILE_CUMULATIVE_REPORT_KEYS[i], month);
+    if (!cached || !cached.report) {
+      return { complete: false, reports: [] };
+    }
+    reports.push(cached.report);
+  }
+
+  return { complete: true, reports: reports };
+}
+
+
+function delayMobileCumulative_(ms) {
+  return new Promise(function(resolve) {
+    setTimeout(resolve, Math.max(0, Number(ms || 0)));
+  });
 }
 
 
@@ -622,12 +789,17 @@ function setMobileCumulativeLoading_(loading) {
 }
 
 
-function showMobileCumulativeError_(message) {
+function showMobileCumulativeError_(message, tone) {
   const area = document.getElementById('mobileCumulativeError');
   if (!area) return;
 
   area.textContent = message || '';
   area.hidden = !message;
+  area.classList.remove('error', 'warning');
+
+  if (message) {
+    area.classList.add(tone === 'warning' ? 'warning' : 'error');
+  }
 }
 
 

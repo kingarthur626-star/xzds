@@ -1,6 +1,6 @@
 /* =========================
 程式名稱：api.js
-版本：v0.3.1R1
+版本：v0.3.2R2
 功能說明：
 1. 以 JSONP 呼叫 Google Apps Script Web App。
 2. 保留既有 callApi(payload, options) 相容性。
@@ -11,10 +11,10 @@
 7. 每次 JSONP 都使用全新 callback 與 cache-buster，避免舊 callback / 中介快取干擾。
 ========================= */
 
-const XZDS_API_BUILD = 'v0.3.1R1';
-const XZDS_API_DEFAULT_TIMEOUT_MS = 15000;
-const XZDS_API_DEFAULT_RETRY_TIMEOUT_MS = 20000;
-const XZDS_API_RETRY_DELAY_MS = 350;
+const XZDS_API_BUILD = 'v0.3.2R2';
+const XZDS_API_DEFAULT_TIMEOUT_MS = 12000;
+const XZDS_API_DEFAULT_RETRY_TIMEOUT_MS = 15000;
+const XZDS_API_RETRY_DELAY_MS = 250;
 const XZDS_API_TRANSPORT_OK_KEY = 'XZDS_API_TRANSPORT_OK_AT';
 const XZDS_API_TRANSPORT_OK_TTL_MS = 120000;
 
@@ -37,6 +37,33 @@ const XZDS_API_RETRYABLE_ACTIONS = [
   'test',
   'getCaptcha',
   'login',
+  'getTemples',
+  'getAllTemples',
+  'getMyPermissions',
+  'getTaoReportLastUpdate',
+  'getAnnualStats',
+  'getRecentDutyStats',
+  'getDutyActivityList',
+  'getDutyActivityAdminData',
+  'getMobileShareReport',
+  'taoMemberSearch',
+  'taoMemberGetDetail',
+  'taoDailyUpdateGetStatus',
+  'taoDailyUpdateGetHistory',
+  'taoDailyUpdateGetDetail',
+  'taoMobileGetStatus',
+  'adminGetAccounts'
+];
+
+/*
+ * 純讀取型 API 預設允許最多 3 次傳輸嘗試。
+ * 依 2026/08/12 實機診斷：最輕量 test API 在桌機與 iPhone 都會偶發
+ * JSONP/ContentService 回傳遺失；單次重試仍不足以支撐一次需要多筆讀取的頁面。
+ * login 仍維持最多 2 次，避免產生過多未使用 Session。
+ */
+const XZDS_API_THREE_ATTEMPT_ACTIONS = [
+  'test',
+  'getCaptcha',
   'getTemples',
   'getAllTemples',
   'getMyPermissions',
@@ -266,9 +293,11 @@ function normalizeApiOptions_(payload, options) {
 
   let maxAttempts;
   if (Number.isFinite(Number(options.maxAttempts))) {
-    maxAttempts = Math.max(1, Math.min(3, Number(options.maxAttempts)));
+    maxAttempts = Math.max(1, Math.min(4, Number(options.maxAttempts)));
+  } else if (retryEnabled) {
+    maxAttempts = XZDS_API_THREE_ATTEMPT_ACTIONS.indexOf(action) !== -1 ? 3 : 2;
   } else {
-    maxAttempts = retryEnabled ? 2 : 1;
+    maxAttempts = 1;
   }
 
   // 不在安全重試白名單的 action，即使誤傳 maxAttempts，也強制只送 1 次。
@@ -390,8 +419,8 @@ function warmUpApiTransport(options) {
   xzdsApiWarmupPromise_ = callApi({
     action: 'test'
   }, {
-    timeoutMs: Number(options.timeoutMs || 9000),
-    retryTimeoutMs: Number(options.retryTimeoutMs || 18000),
+    timeoutMs: Number(options.timeoutMs || 7000),
+    retryTimeoutMs: Number(options.retryTimeoutMs || 10000),
     maxAttempts: 2,
     retryOnTransport: true,
     noAuthRedirect: true

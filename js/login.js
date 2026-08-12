@@ -59,8 +59,8 @@ hideCaptchaArea();
 // 背景先用公開 test API 暖機。使用者可先輸入帳密，不阻塞畫面。
 if (typeof warmUpApiTransport === 'function') {
   warmUpApiTransport({
-    timeoutMs: 9000,
-    retryTimeoutMs: 18000
+    timeoutMs: 7000,
+    retryTimeoutMs: 10000
   }).catch(function () {
     // 暖機失敗不直接顯示紅字；真正按登入時再重新確認。
   });
@@ -110,13 +110,24 @@ isLoginSubmitting = true;
 setLoginSubmitting_(loginBtn, true);
 
 try {
-  // 先確認公開 test 傳輸層。這一步不讀 Sheet、不需要 token。
+  // 公開 test 只做短暫暖機，不再把登入綁死在暖機結果上。
+  // 實機已確認公開 test 本身也會偶發 JSONP 回傳遺失；若暖機失敗，
+  // 真正 login 仍應繼續嘗試，避免使用者明明帳密正確卻被 test 擋住。
   if (typeof warmUpApiTransport === 'function') {
     showMessage('loginMessage', 'warning', '正在確認系統連線…');
-    await warmUpApiTransport({
-      timeoutMs: 9000,
-      retryTimeoutMs: 18000
-    });
+    try {
+      await Promise.race([
+        warmUpApiTransport({
+          timeoutMs: 7000,
+          retryTimeoutMs: 10000
+        }),
+        new Promise(function(resolve) {
+          setTimeout(resolve, 5000);
+        })
+      ]);
+    } catch (ignore) {
+      // 暖機失敗不阻擋真正登入。
+    }
   }
 
   clearMessage('loginMessage');
@@ -128,8 +139,8 @@ try {
     captchaId: currentCaptchaId,
     captchaInput: captchaInput
   }, {
-    timeoutMs: 15000,
-    retryTimeoutMs: 20000,
+    timeoutMs: 12000,
+    retryTimeoutMs: 15000,
     maxAttempts: isCaptchaRequired ? 1 : 2,
     onRetry: function () {
       showMessage('loginMessage', 'warning', '第一次連線未完成，正在自動重新確認…');

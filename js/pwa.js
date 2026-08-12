@@ -1,6 +1,6 @@
 /* =========================
    Program: pwa.js
-   Update: 2026-08-12 API Transport Stability R1
+   Update: 2026-08-12 API Transport Stability R2
    Purpose:
    1. Register Service Worker without HTTP cache.
    2. Check for updates immediately.
@@ -8,7 +8,7 @@
    4. Reload once after the new worker takes control.
 ========================= */
 
-const XZDS_PWA_VERSION = '20260812-api-transport-stability-r1';
+const XZDS_PWA_VERSION = '20260812-api-transport-stability-r2';
 
 window.addEventListener('load', function() {
   registerServiceWorker();

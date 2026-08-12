@@ -1,4 +1,10 @@
 const XINZHUANG_DISTRICT_TOKEN = '__XINZHUANG_DISTRICT__';
+const XZDS_HISTORY_TEMPLE_CACHE_KEY = 'XZDS_HISTORY_TEMPLE_CACHE_v2';
+const XZDS_HISTORY_STATS_CACHE_PREFIX = 'XZDS_HISTORY_STATS_CACHE_v2:';
+
+let historyStatsSerial_ = 0;
+let historyDefaultStatsStarted_ = false;
+
 
 document.addEventListener('DOMContentLoaded', function() {
   const user = requireLogin();
@@ -31,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const temple = templeSelect.value;
 
       if (temple) {
+        setHistoryDistrictMode_(false);
         loadRecentDutyStats(temple);
       }
     });
@@ -47,92 +54,236 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  if (templeSelect) {
-    templeSelect.addEventListener('change', function() {
-      if (templeSelect.value) {
-        setHistoryDistrictMode_(false);
-      }
-    });
+  /*
+   * 重要修正：近五年不再先等 getAllTemples 成功才開始讀統計。
+   * 使用者登入資料本身已有壇名，先直接讀該壇近五年；壇名下拉改成背景補齊。
+   * 這樣原本 2 個串聯 JSONP 的單點失敗，縮成主要資料只需 1 個 request。
+   */
+  const defaultTemple = String(user.temple || '').trim();
+  if (defaultTemple) {
+    historyDefaultStatsStarted_ = true;
+    if (templeSelect) {
+      templeSelect.innerHTML = '';
+      const option = document.createElement('option');
+      option.value = defaultTemple;
+      option.textContent = defaultTemple;
+      option.selected = true;
+      templeSelect.appendChild(option);
+      templeSelect.disabled = false;
+    }
+    loadRecentDutyStats(defaultTemple);
   }
+
   loadTempleOptions(user);
   loadHistorySharedLastUpdate_();
 });
 
+
 async function loadTempleOptions(user) {
-  clearMessage('historyMessage');
-
   const templeSelect = document.getElementById('historyTempleSelect');
-  const area = document.getElementById('historyStatsArea');
+  if (!templeSelect) return;
 
-  if (!templeSelect || !area) return;
-
-  templeSelect.innerHTML = '<option value="">讀取中...</option>';
-  templeSelect.disabled = true;
-  area.innerHTML = '<div class="small-text">讀取中...</div>';
+  const cachedTemples = readHistoryTempleCache_();
+  if (cachedTemples.length) {
+    renderHistoryTempleOptions_(cachedTemples, user, false);
+  } else if (!historyDefaultStatsStarted_) {
+    templeSelect.innerHTML = '<option value="">讀取中...</option>';
+    templeSelect.disabled = true;
+  }
 
   try {
     const result = await callApi({
       action: 'getAllTemples'
+    }, {
+      timeoutMs: 12000,
+      retryTimeoutMs: 15000,
+      maxAttempts: 3,
+      onRetry: function() {
+        if (!historyDefaultStatsStarted_ && !cachedTemples.length) {
+          showMessage('historyMessage', 'warning', '壇名清單正在重新確認…');
+        }
+      }
     });
 
-    if (!result.success) {
-      showMessage('historyMessage', 'error', result.message || '壇名讀取失敗');
-      area.innerHTML = '';
-      return;
+    if (!result || !result.success) {
+      throw new Error(result && result.message ? result.message : '壇名讀取失敗');
     }
 
-    templeSelect.innerHTML = '<option value="">請選擇壇名</option>';
+    const temples = Array.isArray(result.temples) ? result.temples : [];
+    writeHistoryTempleCache_(temples);
+    renderHistoryTempleOptions_(temples, user, true);
 
-    result.temples.forEach(function(temple) {
-      const option = document.createElement('option');
-      option.value = temple;
-      option.textContent = temple;
-      templeSelect.appendChild(option);
-    });
-
-    templeSelect.disabled = false;
-
-    const defaultTemple = findMatchedTemple(result.temples, user.temple) || user.temple;
-
-    if (defaultTemple) {
-      templeSelect.value = defaultTemple;
-      loadRecentDutyStats(defaultTemple);
+    if (!historyDefaultStatsStarted_) {
+      const matched = findMatchedTemple(temples, user.temple) || user.temple;
+      if (matched) {
+        historyDefaultStatsStarted_ = true;
+        loadRecentDutyStats(matched);
+      }
     }
 
   } catch (err) {
-    showMessage('historyMessage', 'error', err.message || '壇名讀取失敗，請稍後再試');
-    area.innerHTML = '';
+    if (cachedTemples.length) {
+      renderHistoryTempleOptions_(cachedTemples, user, false);
+    }
+
+    if (historyDefaultStatsStarted_) {
+      // 統計資料已另外讀取，不因壇名清單失敗把整頁判成失敗。
+      return;
+    }
+
+    showMessage(
+      'historyMessage',
+      'error',
+      err && err.message ? err.message : '壇名讀取失敗，請稍後再試'
+    );
   }
 }
 
+
+function renderHistoryTempleOptions_(temples, user, fresh) {
+  const templeSelect = document.getElementById('historyTempleSelect');
+  if (!templeSelect) return;
+
+  const current = String(templeSelect.value || '').trim();
+  const userTemple = String(user && user.temple ? user.temple : '').trim();
+  const preferred = current || findMatchedTemple(temples, userTemple) || userTemple;
+
+  templeSelect.innerHTML = '<option value="">請選擇壇名</option>';
+
+  temples.forEach(function(temple) {
+    const option = document.createElement('option');
+    option.value = temple;
+    option.textContent = temple;
+    templeSelect.appendChild(option);
+  });
+
+  if (preferred) {
+    const matched = findMatchedTemple(temples, preferred) || preferred;
+    templeSelect.value = matched;
+  }
+
+  templeSelect.disabled = false;
+
+  if (fresh && document.getElementById('historyMessage')?.classList.contains('warning')) {
+    clearMessage('historyMessage');
+  }
+}
+
+
 async function loadRecentDutyStats(temple) {
-  clearMessage('historyMessage');
-
+  const serial = ++historyStatsSerial_;
   const area = document.getElementById('historyStatsArea');
-
   if (!area) return;
 
-  area.innerHTML = '<div class="small-text">讀取中...</div>';
+  const cached = readHistoryStatsCache_(temple);
+  if (cached && cached.result) {
+    renderRecentDutyStats(cached.result);
+    showMessage('historyMessage', 'warning', '正在重新確認最新資料…');
+  } else {
+    clearMessage('historyMessage');
+    area.innerHTML = '<div class="small-text">讀取中...</div>';
+  }
 
   try {
     const result = await callApi({
       action: 'getRecentDutyStats',
       temple: temple
+    }, {
+      timeoutMs: 12000,
+      retryTimeoutMs: 15000,
+      maxAttempts: 3,
+      onRetry: function() {
+        if (serial !== historyStatsSerial_) return;
+        showMessage('historyMessage', 'warning', '第一次連線未完成，正在自動重新確認…');
+      }
     });
 
-    if (!result.success) {
-      showMessage('historyMessage', 'error', result.message || '讀取失敗');
-      area.innerHTML = '';
-      return;
+    if (serial !== historyStatsSerial_) return;
+
+    if (!result || !result.success) {
+      throw new Error(result && result.message ? result.message : '讀取失敗');
     }
 
+    writeHistoryStatsCache_(temple, result);
+    clearMessage('historyMessage');
     renderRecentDutyStats(result);
 
   } catch (err) {
-    showMessage('historyMessage', 'error', err.message || '系統連線失敗，請稍後再試');
+    if (serial !== historyStatsSerial_) return;
+
+    const fallback = cached || readHistoryStatsCache_(temple);
+    if (fallback && fallback.result) {
+      renderRecentDutyStats(fallback.result);
+      showMessage(
+        'historyMessage',
+        'warning',
+        '連線暫時不穩，目前顯示上次成功讀取資料。可稍後再重新整理。'
+      );
+      return;
+    }
+
+    showMessage(
+      'historyMessage',
+      'error',
+      err && err.message ? err.message : '系統連線失敗，請稍後再試'
+    );
     area.innerHTML = '';
   }
 }
+
+
+function readHistoryTempleCache_() {
+  try {
+    const raw = localStorage.getItem(XZDS_HISTORY_TEMPLE_CACHE_KEY);
+    const data = raw ? JSON.parse(raw) : null;
+    return data && Array.isArray(data.temples) ? data.temples : [];
+  } catch (ignore) {
+    return [];
+  }
+}
+
+
+function writeHistoryTempleCache_(temples) {
+  try {
+    localStorage.setItem(
+      XZDS_HISTORY_TEMPLE_CACHE_KEY,
+      JSON.stringify({
+        savedAt: Date.now(),
+        temples: Array.isArray(temples) ? temples : []
+      })
+    );
+  } catch (ignore) {}
+}
+
+
+function historyStatsCacheKey_(temple) {
+  return XZDS_HISTORY_STATS_CACHE_PREFIX + encodeURIComponent(String(temple || ''));
+}
+
+
+function readHistoryStatsCache_(temple) {
+  try {
+    const raw = localStorage.getItem(historyStatsCacheKey_(temple));
+    const data = raw ? JSON.parse(raw) : null;
+    return data && data.result ? data : null;
+  } catch (ignore) {
+    return null;
+  }
+}
+
+
+function writeHistoryStatsCache_(temple, result) {
+  try {
+    localStorage.setItem(
+      historyStatsCacheKey_(temple),
+      JSON.stringify({
+        savedAt: Date.now(),
+        result: result
+      })
+    );
+  } catch (ignore) {}
+}
+
 
 function renderRecentDutyStats(result) {
   const area = document.getElementById('historyStatsArea');

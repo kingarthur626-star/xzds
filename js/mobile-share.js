@@ -8,13 +8,14 @@
  * 5. 點選任一佛堂列，可展開該佛堂 1～目前選定月份的逐月求道／法會數字。
  * 6. 月份數字為 0 時不顯示；壇名順序由後端依「即時道務統計」C欄排列。
  *
- * 版本：v1.0.0R12
+ * 版本：v1.0.0R13
  * 最後更新：2026/08/10
  */
 
 const MOBILE_SHARE_STORAGE_KEY = 'XZDS_MOBILE_SHARE_REPORT_KEY';
 const MOBILE_SHARE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
 const MOBILE_SHARE_REPORT_KEYS = ['qiu1', 'qiu2', 'qiu3', 'fa1', 'fa2', 'fa3'];
+const MOBILE_SHARE_CACHE_PREFIX = 'XZDS_MOBILE_SHARE_CACHE_v2:';
 
 let mobileShareCurrentReport_ = null;
 let mobileShareCurrentUser_ = null;
@@ -158,21 +159,45 @@ function inferMobileShareDefaultKey_(user) {
  */
 async function loadMobileShareReport_(reportKey, selectedMonth, preserveReport) {
   const serial = ++mobileShareRequestSerial_;
-  setMobileShareLoading_(true, preserveReport);
-  showMobileShareError_('');
+  const month = Number(selectedMonth);
+  const normalizedMonth = Number.isInteger(month) && month >= 1 && month <= 12
+    ? month
+    : 0;
+
+  const currentMatches = mobileShareCurrentReport_ &&
+    mobileShareReportMatchesRequest_(mobileShareCurrentReport_, reportKey, normalizedMonth);
+  const cached = readMobileShareCache_(reportKey, normalizedMonth);
+
+  if (!currentMatches && cached && cached.report) {
+    mobileShareCurrentReport_ = cached.report;
+    mobileShareExpandedDetailIndex_ = -1;
+    syncMobileShareMonthOptions_(cached.report);
+    renderMobileShareReport_(cached.report);
+    showMobileShareError_('正在重新確認最新資料…', 'warning');
+  } else {
+    setMobileShareLoading_(true, Boolean(currentMatches));
+    showMobileShareError_('', '');
+  }
 
   const payload = {
     action: 'getMobileShareReport',
     reportKey: reportKey
   };
 
-  const month = Number(selectedMonth);
-  if (Number.isInteger(month) && month >= 1 && month <= 12) {
-    payload.month = month;
+  if (normalizedMonth) {
+    payload.month = normalizedMonth;
   }
 
   try {
-    const result = await callApi(payload);
+    const result = await callApi(payload, {
+      timeoutMs: 12000,
+      retryTimeoutMs: 15000,
+      maxAttempts: 3,
+      onRetry: function () {
+        if (serial !== mobileShareRequestSerial_) return;
+        showMobileShareError_('第一次連線未完成，正在自動重新確認…', 'warning');
+      }
+    });
 
     if (serial !== mobileShareRequestSerial_) return;
 
@@ -182,30 +207,110 @@ async function loadMobileShareReport_(reportKey, selectedMonth, preserveReport) 
 
     mobileShareCurrentReport_ = result.report;
     mobileShareExpandedDetailIndex_ = -1;
+    writeMobileShareCache_(reportKey, normalizedMonth, result.report);
     syncMobileShareMonthOptions_(result.report);
     renderMobileShareReport_(result.report);
+    showMobileShareError_('', '');
 
   } catch (error) {
     if (serial !== mobileShareRequestSerial_) return;
 
-    mobileShareCurrentReport_ = null;
-    const message = String(
-      error && error.message
-        ? error.message
-        : '系統連線失敗，請稍後再試'
-    );
+    const fallback = (
+      mobileShareCurrentReport_ &&
+      mobileShareReportMatchesRequest_(mobileShareCurrentReport_, reportKey, normalizedMonth)
+    )
+      ? { report: mobileShareCurrentReport_ }
+      : (cached || readMobileShareCache_(reportKey, normalizedMonth));
 
-    showMobileShareError_(
-      message === '未知的操作'
-        ? '後端尚未啟用三大組月報 API，請更新 Apps Script 正式部署。'
-        : message
-    );
+    if (fallback && fallback.report) {
+      mobileShareCurrentReport_ = fallback.report;
+      mobileShareExpandedDetailIndex_ = -1;
+      syncMobileShareMonthOptions_(fallback.report);
+      renderMobileShareReport_(fallback.report);
+      showMobileShareError_(
+        '連線暫時不穩，目前顯示上次成功資料；稍後可再重新整理。',
+        'warning'
+      );
+    } else {
+      mobileShareCurrentReport_ = null;
+      const message = String(
+        error && error.message
+          ? error.message
+          : '系統連線失敗，請稍後再試'
+      );
+
+      showMobileShareError_(
+        message === '未知的操作'
+          ? '後端尚未啟用三大組月報 API，請更新 Apps Script 正式部署。'
+          : message,
+        'error'
+      );
+    }
 
   } finally {
     if (serial === mobileShareRequestSerial_) {
-      setMobileShareLoading_(false, preserveReport);
+      setMobileShareLoading_(false, true);
     }
   }
+}
+
+
+function mobileShareReportMatchesRequest_(report, reportKey, month) {
+  if (!report) return false;
+
+  const expectedCategory = String(reportKey || '').indexOf('fa') === 0 ? '法會' : '求道';
+  const expectedGroup = Number(String(reportKey || '').replace(/\D/g, '') || 0);
+  const reportMonth = Number(report.month || report.sourceMonth || 0);
+
+  if (String(report.category || '') !== expectedCategory) return false;
+  if (Number(report.groupNo || 0) !== expectedGroup) return false;
+  if (month && reportMonth !== month) return false;
+
+  return true;
+}
+
+
+function mobileShareCacheKey_(reportKey, month) {
+  return MOBILE_SHARE_CACHE_PREFIX + String(reportKey || '') + ':' + String(month || 'auto');
+}
+
+
+function readMobileShareCache_(reportKey, month) {
+  try {
+    const raw = localStorage.getItem(mobileShareCacheKey_(reportKey, month));
+    const data = raw ? JSON.parse(raw) : null;
+    return data && data.report ? data : null;
+  } catch (ignore) {
+    return null;
+  }
+}
+
+
+function writeMobileShareCache_(reportKey, requestedMonth, report) {
+  try {
+    const payload = JSON.stringify({
+      savedAt: Date.now(),
+      report: report
+    });
+
+    localStorage.setItem(
+      mobileShareCacheKey_(reportKey, requestedMonth),
+      payload
+    );
+
+    const actualMonth = Number(report && report.month || 0);
+    if (actualMonth >= 1 && actualMonth <= 12) {
+      localStorage.setItem(
+        mobileShareCacheKey_(reportKey, actualMonth),
+        payload
+      );
+    }
+
+    localStorage.setItem(
+      mobileShareCacheKey_(reportKey, 0),
+      payload
+    );
+  } catch (ignore) {}
 }
 
 
@@ -1049,7 +1154,7 @@ function setMobileShareLoading_(loading, preserveReport) {
 /**
  * 功能：顯示或清除錯誤訊息。
  */
-function showMobileShareError_(message) {
+function showMobileShareError_(message, tone) {
   const area =
     document.getElementById('mobileShareError');
 
@@ -1057,6 +1162,11 @@ function showMobileShareError_(message) {
 
   area.textContent = message || '';
   area.hidden = !message;
+  area.classList.remove('error', 'warning');
+
+  if (message) {
+    area.classList.add(tone === 'warning' ? 'warning' : 'error');
+  }
 }
 
 
