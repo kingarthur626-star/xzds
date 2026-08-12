@@ -37,7 +37,8 @@
   <div class="card">
     <div id="loginState" class="muted">檢查登入狀態中…</div>
     <div class="controls" style="margin-top:12px">
-      <button id="authBtn">檢查登入狀態</button>
+      <button id="transportBtn" class="primary">先測公開 API</button>
+      <button id="authBtn">再測登入狀態</button>
       <label>壇名
         <select id="templeSelect"><option value="">尚未讀取</option></select>
       </label>
@@ -79,12 +80,12 @@
  * 3. 以 15 秒正式 timeout 重現手機行為；若逾時則用 35 秒再唯讀確認一次。
  * 4. 六張成果報表另以 Promise.allSettled 並行測試，找出實際慢掉或失敗的 reportKey。
  * 5. 絕不輸出 token、密碼或其他登入憑證。
- * 版本：v1.0.0R3
+ * 版本：v1.0.0R3F1
  */
 (function(){
   'use strict';
 
-  const BUILD = 'v1.0.0R3';
+  const BUILD = 'v1.0.0R3F1';
   const DISTRICT_TOKEN = '__XINZHUANG_DISTRICT__';
   const REPORT_KEYS = ['qiu1','qiu2','qiu3','fa1','fa2','fa3'];
   let authReady = false;
@@ -206,7 +207,7 @@
     monthSelect.disabled = true;
     summary.textContent = '診斷執行中，請不要離開此頁…';
 
-    if (!authReady) { summary.textContent='請先按「檢查登入狀態」。'; runBtn.disabled=false; monthSelect.disabled=false; return; }
+    if (!authReady) { summary.textContent='請先按「再測登入狀態」。'; runBtn.disabled=false; monthSelect.disabled=false; return; }
     const month = Number(monthSelect.value || 1);
     const temple = String(selectedTemple || '').trim();
 
