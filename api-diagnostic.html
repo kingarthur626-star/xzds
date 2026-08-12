@@ -31,7 +31,7 @@
 <div class="wrap">
   <h1>道務系統 API 唯讀診斷</h1>
   <div class="card warn">
-    此頁只讀取既有 API，不修改 Google Sheet、不建立 Trigger、不部署 Apps Script。R2 不呼叫 requireLogin()、不會自動跳到 index.html；它只會檢查目前分頁是否有可用登入 Session，診斷結果不輸出 token。
+    此頁只讀取既有 API，不修改 Google Sheet、不建立 Trigger、不部署 Apps Script。R3 先測不需要登入的公開 API，再測登入 API，用來分辨 JSONP/網路傳輸層與 Session/權限層。R3 不會自動跳到 index.html，診斷結果不輸出 token。
   </div>
 
   <div class="card">
@@ -48,7 +48,7 @@
       <button id="copyBtn" disabled>複製診斷結果</button>
       <button id="homeBtn">回首頁</button>
     </div>
-    <p class="small muted">流程：先連續 3 次檢查登入 Session 穩定度 → 正常基準 → 近五年 → 六張月報逐張 → 六張月報並行。一般請求先用正式 15 秒；若逾時，唯讀重試一次 35 秒。R2 不會因未登入而自動跳頁。</p>
+    <p class="small muted">流程：先測 3 次公開 test API（不需要登入）→ 再測 3 次登入 Session → 正常基準 → 近五年 → 六張月報逐張 → 六張月報並行。公開 test 若失敗，就先停止，表示問題在 JSONP / Web App 回傳 / 網路層，不是 token。</p>
   </div>
 
   <div class="card">
@@ -79,12 +79,12 @@
  * 3. 以 15 秒正式 timeout 重現手機行為；若逾時則用 35 秒再唯讀確認一次。
  * 4. 六張成果報表另以 Promise.allSettled 並行測試，找出實際慢掉或失敗的 reportKey。
  * 5. 絕不輸出 token、密碼或其他登入憑證。
- * 版本：v1.0.0R2
+ * 版本：v1.0.0R3
  */
 (function(){
   'use strict';
 
-  const BUILD = 'v1.0.0R2';
+  const BUILD = 'v1.0.0R3';
   const DISTRICT_TOKEN = '__XINZHUANG_DISTRICT__';
   const REPORT_KEYS = ['qiu1','qiu2','qiu3','fa1','fa2','fa3'];
   let authReady = false;
@@ -93,6 +93,7 @@
   const results = [];
 
   const runBtn = document.getElementById('runBtn');
+  const transportBtn = document.getElementById('transportBtn');
   const authBtn = document.getElementById('authBtn');
   const templeSelect = document.getElementById('templeSelect');
   const copyBtn = document.getElementById('copyBtn');
@@ -112,12 +113,39 @@
   document.addEventListener('DOMContentLoaded', init);
 
   function init(){
-    loginState.innerHTML = '<span class="muted">R2 不自動導向登入頁。</span> 請先按「檢查登入狀態」。｜診斷版：' + BUILD;
+    loginState.innerHTML = '<span class="muted">R3 不自動導向登入頁。</span> 請先按「先測公開 API」。｜診斷版：' + BUILD;
+    transportBtn.addEventListener('click', checkPublicTransport);
     authBtn.addEventListener('click', checkAuthState);
     templeSelect.addEventListener('change', function(){ selectedTemple = templeSelect.value || ''; });
     runBtn.addEventListener('click', runAll);
     copyBtn.addEventListener('click', copyResult);
     homeBtn.addEventListener('click', function(){ location.href='home.html'; });
+  }
+
+  async function checkPublicTransport(){
+    transportBtn.disabled = true;
+    authBtn.disabled = true;
+    runBtn.disabled = true;
+    authReady = false;
+    loginState.textContent = '正在連續檢查 3 次公開 test API（不需要 token、幾乎不讀 Sheet）…';
+    const checks=[];
+    for(let i=1;i<=3;i++){
+      const rec = await measureCall('test / public-'+i,{action:'test'},'公開傳輸層',20000,false);
+      checks.push(rec);
+      pushResult(rec);
+    }
+    const passed = checks.filter(function(r){ return r.ok && r.success !== false; }).length;
+    if(passed !== 3){
+      loginState.innerHTML = '<span class="bad">公開 API 3 次成功 '+passed+' 次。</span> 這表示問題已在登入之前：JSONP / Apps Script Web App 回傳 / 手機到 Google 的傳輸層。請先把結果貼回 ChatGPT。';
+      transportBtn.disabled = false;
+      authBtn.disabled = false;
+      finalize();
+      return;
+    }
+    loginState.innerHTML = '<span class="ok">公開 API 3/3 正常。</span> 下一步請按「再測登入狀態」。';
+    transportBtn.disabled = false;
+    authBtn.disabled = false;
+    finalize();
   }
 
   async function checkAuthState(){
