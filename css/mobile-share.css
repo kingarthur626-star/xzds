@@ -194,6 +194,12 @@ body {
   color: #b00020;
 }
 
+.mobile-share-message.warning {
+  border: 1px solid #f0cf76;
+  background: #fff8e8;
+  color: #8a5a00;
+}
+
 
 .mobile-share-summary {
   display: grid;
