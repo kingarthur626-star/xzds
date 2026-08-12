@@ -1,7 +1,7 @@
 /**
  * 程式名稱：mobile-share-summary.js
  * 功能：讀取六張各壇月報，彙整成求道／法會三大組累計達成，並產生 LINE 分享圖片。
- * 版本：v1.0.0R11
+ * 版本：v1.0.0R12
  */
 
 const MOBILE_CUMULATIVE_MONTH_STORAGE_KEY = 'XZDS_MOBILE_SHARE_MONTH';
@@ -9,6 +9,7 @@ const MOBILE_CUMULATIVE_REPORT_KEYS = [
   'qiu1', 'qiu2', 'qiu3',
   'fa1', 'fa2', 'fa3'
 ];
+const MOBILE_CUMULATIVE_MAX_CONCURRENCY = 2;
 const MOBILE_CUMULATIVE_GROUP_LABELS = {
   1: '一組',
   2: '二組',
@@ -91,20 +92,7 @@ async function loadMobileCumulativeReport_(selectedMonth) {
   const month = Number(selectedMonth);
 
   try {
-    const responses = await Promise.all(
-      MOBILE_CUMULATIVE_REPORT_KEYS.map(function (reportKey) {
-        const payload = {
-          action: 'getMobileShareReport',
-          reportKey: reportKey
-        };
-
-        if (Number.isInteger(month) && month >= 1 && month <= 12) {
-          payload.month = month;
-        }
-
-        return callApi(payload);
-      })
-    );
+    const responses = await loadMobileCumulativeReportsLimited_(month);
 
     if (serial !== mobileCumulativeRequestSerial_) return;
 
@@ -165,6 +153,53 @@ async function loadMobileCumulativeReport_(selectedMonth) {
       setMobileCumulativeLoading_(false);
     }
   }
+}
+
+
+/**
+ * 六張月報改成最多同時 2 支 API。
+ * 原本 Promise.all 一次打 6 支，只要其中 1 支傳輸暫時失敗，整頁就直接失敗；
+ * 本版配合 api.js 的唯讀自動重試，降低 Apps Script / JSONP 同時間尖峰。
+ */
+async function loadMobileCumulativeReportsLimited_(month) {
+  const responses = new Array(MOBILE_CUMULATIVE_REPORT_KEYS.length);
+  let nextIndex = 0;
+
+  async function worker_() {
+    while (true) {
+      const index = nextIndex;
+      nextIndex += 1;
+
+      if (index >= MOBILE_CUMULATIVE_REPORT_KEYS.length) {
+        return;
+      }
+
+      const reportKey = MOBILE_CUMULATIVE_REPORT_KEYS[index];
+      const payload = {
+        action: 'getMobileShareReport',
+        reportKey: reportKey
+      };
+
+      if (Number.isInteger(month) && month >= 1 && month <= 12) {
+        payload.month = month;
+      }
+
+      responses[index] = await callApi(payload);
+    }
+  }
+
+  const workers = [];
+  const workerCount = Math.min(
+    MOBILE_CUMULATIVE_MAX_CONCURRENCY,
+    MOBILE_CUMULATIVE_REPORT_KEYS.length
+  );
+
+  for (let i = 0; i < workerCount; i++) {
+    workers.push(worker_());
+  }
+
+  await Promise.all(workers);
+  return responses;
 }
 
 

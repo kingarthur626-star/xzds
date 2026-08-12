@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // 年度資料成功渲染後再讀最後更新時間，避免頁面載入時重複呼叫同一 API。
   loadAnnualStats(user);
-  loadAnnualSharedLastUpdate_();
 });
 
 async function loadAnnualStats(user) {

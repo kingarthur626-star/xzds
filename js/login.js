@@ -19,6 +19,7 @@
 let currentCaptchaId = '';
 let isCaptchaReady = false;
 let isCaptchaRequired = false;
+let isLoginSubmitting = false;
 
 /* =========================
 程式區塊：頁面初始化
@@ -54,6 +55,16 @@ showMessage('loginMessage', 'success', '密碼已更新，請重新登入');
 }
 
 hideCaptchaArea();
+
+// 背景先用公開 test API 暖機。使用者可先輸入帳密，不阻塞畫面。
+if (typeof warmUpApiTransport === 'function') {
+  warmUpApiTransport({
+    timeoutMs: 9000,
+    retryTimeoutMs: 18000
+  }).catch(function () {
+    // 暖機失敗不直接顯示紅字；真正按登入時再重新確認。
+  });
+}
 });
 
 /* =========================
@@ -67,12 +78,15 @@ hideCaptchaArea();
 async function handleLogin(event) {
 event.preventDefault();
 
+if (isLoginSubmitting) return;
+
 clearMessage('loginMessage');
 
 const account = document.getElementById('loginAccount').value.trim();
 const password = document.getElementById('loginPassword').value.trim();
 const captchaInputEl = document.getElementById('captchaInput');
 const captchaInput = captchaInputEl ? captchaInputEl.value.trim() : '';
+const loginBtn = document.getElementById('loginBtn');
 
 if (!account || !password) {
 showMessage('loginMessage', 'error', '請輸入帳號與密碼');
@@ -92,40 +106,75 @@ if (!captchaInput) {
 
 }
 
+isLoginSubmitting = true;
+setLoginSubmitting_(loginBtn, true);
+
 try {
-const result = await callApi({
-action: 'login',
-account: account,
-password: password,
-captchaId: currentCaptchaId,
-captchaInput: captchaInput
-});
-
-if (!result.success) {
-  showMessage('loginMessage', 'error', result.message || '登入失敗');
-
-  if (result.requireCaptcha) {
-    showCaptchaArea();
-    loadCaptcha();
-  } else {
-    hideCaptchaArea();
+  // 先確認公開 test 傳輸層。這一步不讀 Sheet、不需要 token。
+  if (typeof warmUpApiTransport === 'function') {
+    showMessage('loginMessage', 'warning', '正在確認系統連線…');
+    await warmUpApiTransport({
+      timeoutMs: 9000,
+      retryTimeoutMs: 18000
+    });
   }
 
-  return;
-}
+  clearMessage('loginMessage');
 
-hideCaptchaArea();
-saveCurrentUser(result.user, result.token);
-location.href = 'home.html';
+  const result = await callApi({
+    action: 'login',
+    account: account,
+    password: password,
+    captchaId: currentCaptchaId,
+    captchaInput: captchaInput
+  }, {
+    timeoutMs: 15000,
+    retryTimeoutMs: 20000,
+    maxAttempts: isCaptchaRequired ? 1 : 2,
+    onRetry: function () {
+      showMessage('loginMessage', 'warning', '第一次連線未完成，正在自動重新確認…');
+    }
+  });
+
+  if (!result.success) {
+    showMessage('loginMessage', 'error', result.message || '登入失敗');
+
+    if (result.requireCaptcha) {
+      showCaptchaArea();
+      loadCaptcha();
+    } else {
+      hideCaptchaArea();
+    }
+
+    return;
+  }
+
+  hideCaptchaArea();
+  saveCurrentUser(result.user, result.token);
+  location.href = 'home.html';
 
 } catch (err) {
-showMessage('loginMessage', 'error', err.message || '系統連線失敗，請稍後再試');
+  showMessage(
+    'loginMessage',
+    'error',
+    err && err.message ? err.message : '系統連線失敗，請稍後再試'
+  );
 
-if (isCaptchaRequired) {
-  loadCaptcha();
+  if (isCaptchaRequired) {
+    loadCaptcha();
+  }
+
+} finally {
+  isLoginSubmitting = false;
+  setLoginSubmitting_(loginBtn, false);
+}
 }
 
-}
+function setLoginSubmitting_(button, loading) {
+if (!button) return;
+
+button.disabled = Boolean(loading);
+button.textContent = loading ? '連線確認中…' : '登入';
 }
 
 /* =========================
