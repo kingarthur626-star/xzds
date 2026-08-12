@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <link rel="dns-prefetch" href="//script.google.com">
+  <link rel="dns-prefetch" href="//script.googleusercontent.com">
   <title>道務系統 API 唯讀診斷</title>
   <style>
     :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;color:#173f61;background:#f5f8fc}
@@ -31,7 +35,7 @@
 <div class="wrap">
   <h1>道務系統 API 唯讀診斷</h1>
   <div class="card warn">
-    此頁只讀取既有 API，不修改 Google Sheet、不建立 Trigger、不部署 Apps Script。R3 先測不需要登入的公開 API，再測登入 API，用來分辨 JSONP/網路傳輸層與 Session/權限層。R3 不會自動跳到 index.html，診斷結果不輸出 token。
+    此頁只讀取既有 API，不修改 Google Sheet、不建立 Trigger、不部署 Apps Script。R4 先測不需要登入的公開 API，再測登入 API，用來分辨 JSONP/網路傳輸層與 Session/權限層。R4 不會自動跳到 index.html，診斷結果不輸出 token。
   </div>
 
   <div class="card">
@@ -69,8 +73,8 @@
   </div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/api.js"></script>
+<script src="js/config.js?v=20260812-api-stability-031r1"></script>
+<script src="js/api.js?v=20260812-api-stability-031r1"></script>
 <script>
 /**
  * 程式名稱：api-diagnostic.html
@@ -80,12 +84,12 @@
  * 3. 以 15 秒正式 timeout 重現手機行為；若逾時則用 35 秒再唯讀確認一次。
  * 4. 六張成果報表另以 Promise.allSettled 並行測試，找出實際慢掉或失敗的 reportKey。
  * 5. 絕不輸出 token、密碼或其他登入憑證。
- * 版本：v1.0.0R3F1
+ * 版本：v1.0.0R4
  */
 (function(){
   'use strict';
 
-  const BUILD = 'v1.0.0R3F1';
+  const BUILD = 'v1.0.0R4';
   const DISTRICT_TOKEN = '__XINZHUANG_DISTRICT__';
   const REPORT_KEYS = ['qiu1','qiu2','qiu3','fa1','fa2','fa3'];
   let authReady = false;
@@ -114,7 +118,7 @@
   document.addEventListener('DOMContentLoaded', init);
 
   function init(){
-    loginState.innerHTML = '<span class="muted">R3 不自動導向登入頁。</span> 請先按「先測公開 API」。｜診斷版：' + BUILD;
+    loginState.innerHTML = '<span class="muted">R4 不自動導向登入頁。</span> 請先按「先測公開 API」。｜診斷版：' + BUILD;
     transportBtn.addEventListener('click', checkPublicTransport);
     authBtn.addEventListener('click', checkAuthState);
     templeSelect.addEventListener('change', function(){ selectedTemple = templeSelect.value || ''; });
@@ -283,7 +287,7 @@
   async function measureCall(label, payload, mode, timeoutMs, isRetry, commonStart){
     const started = commonStart || Date.now();
     try {
-      const result = await callApi(payload, {timeoutMs:timeoutMs});
+      const result = await callApi(payload, {timeoutMs:timeoutMs, retryOnTransport:false, maxAttempts:1, noAuthRedirect:true});
       const elapsed = Date.now() - started;
       return buildRecord(label, mode, elapsed, result, null, isRetry);
     } catch (err) {
