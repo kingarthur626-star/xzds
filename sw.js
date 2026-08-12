@@ -1,6 +1,6 @@
 /* =========================
    Program: sw.js
-   Update: 2026-08-12 API Transport Stability v1.0.0R1
+   Update: 2026-08-12 API Transport Stability v1.0.0R2
    Goals:
    1. Keep one canonical cache entry per path (ignore query-version duplication).
    2. Network-first for HTML/CSS/JS/JSON, with canonical cache fallback.
@@ -8,7 +8,7 @@
    4. Avoid apparent "logged out" jumps caused by offline/cache fallback.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260812-api-transport-stability-100r1';
+const CACHE_NAME = CACHE_PREFIX + '20260812-api-transport-stability-100r2';
 
 const STATIC_ASSETS = [
   './',
