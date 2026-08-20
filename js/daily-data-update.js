@@ -84,20 +84,17 @@ async function loadTduAll_(showMessage) {
 
   tduRequestRunning = true;
   try {
-    const results = await Promise.all([
-      callApi({ action: 'taoDailyUpdateGetStatus' }),
-      callApi({ action: 'taoDailyUpdateGetHistory', limit: 50 })
-    ]);
-
-    renderTduStatus_(results[0]);
-    renderTduHistory_(results[1]);
+    // 狀態只讀取 Script Properties，必須先顯示；歷史紀錄改為背景載入。
+    const statusResult = await callApi({ action: 'taoDailyUpdateGetStatus' });
+    renderTduStatus_(statusResult);
 
     if (showMessage) {
-      setTduActionMessage_('已重新整理。', false);
+      setTduActionMessage_('目前狀態已更新；更新紀錄載入中。', false);
     }
 
-    const current = results[0] && results[0].current ? results[0].current : {};
+    const current = statusResult && statusResult.current ? statusResult.current : {};
     updateTduPolling_(!!current.active);
+    loadTduHistoryOnly_();
   } catch (error) {
     renderTduLoadError_(error && error.message ? error.message : '資料讀取失敗');
   } finally {
@@ -129,7 +126,7 @@ async function loadTduStatusOnly_() {
 
 async function loadTduHistoryOnly_() {
   try {
-    const result = await callApi({ action: 'taoDailyUpdateGetHistory', limit: 50 });
+    const result = await callApi({ action: 'taoDailyUpdateGetHistory', limit: 15 });
     renderTduHistory_(result);
   } catch (error) {
     setTduActionMessage_(error && error.message ? error.message : '更新紀錄讀取失敗', true);
