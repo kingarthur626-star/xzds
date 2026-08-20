@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link rel="dns-prefetch" href="//script.google.com">
   <link rel="dns-prefetch" href="//script.googleusercontent.com">
-  <meta name="xzds-ui-version" content="20260810-member-search-100r1f4">
+  <meta name="xzds-ui-version" content="20260821-member-search-mode-100r2">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -27,15 +27,19 @@
 
     <header class="member-search-header">
       <h1>資料搜尋</h1>
-      <p>輸入姓名或道親編號</p>
+      <p>預設姓名搜尋；需要時可切換道親編號</p>
     </header>
 
     <section class="member-search-form-card" aria-label="道親搜尋">
+      <div class="member-search-mode" role="group" aria-label="搜尋方式">
+        <button class="member-search-mode-btn is-active" type="button" data-search-mode="name" aria-pressed="true">姓名搜尋</button>
+        <button class="member-search-mode-btn" type="button" data-search-mode="memberId" aria-pressed="false">道親編號搜尋</button>
+      </div>
       <div class="member-search-form-row">
-        <input id="memberSearchInput" type="search" inputmode="search" autocomplete="off" maxlength="80" placeholder="姓名／道親編號" aria-label="姓名或道親編號">
+        <input id="memberSearchInput" type="search" inputmode="search" autocomplete="off" maxlength="80" placeholder="輸入姓名" aria-label="姓名">
         <button id="memberSearchSubmitBtn" type="button">搜尋</button>
       </div>
-      <div id="memberSearchHint" class="member-search-hint">可輸入完整姓名、部分姓名或道親編號。</div>
+      <div id="memberSearchHint" class="member-search-hint">可輸入完整姓名或姓名前幾個字。</div>
     </section>
 
     <section id="memberSearchLoading" class="member-search-message" hidden>搜尋中...</section>
