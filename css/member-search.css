@@ -66,6 +66,29 @@ body.member-search-body {
 
 .member-search-form-card { padding: 12px; }
 
+.member-search-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.member-search-mode-btn {
+  height: 38px;
+  border: 1px solid #bcd5ed;
+  border-radius: 10px;
+  background: #f7fbff;
+  color: #35627f;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.member-search-mode-btn.is-active {
+  border-color: var(--msrch-blue-2);
+  background: #e5f2ff;
+  color: #125c96;
+}
+
 .member-search-form-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 82px;
