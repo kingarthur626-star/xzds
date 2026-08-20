@@ -6,6 +6,7 @@
 
 let memberSearchCurrentMember_ = null;
 let memberSearchRequestSerial_ = 0;
+let memberSearchMode_ = 'name';
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -21,6 +22,7 @@ function bindMemberSearchEvents_() {
   const logoutBtn = document.getElementById('memberSearchLogoutBtn');
   const submitBtn = document.getElementById('memberSearchSubmitBtn');
   const input = document.getElementById('memberSearchInput');
+  const modeButtons = document.querySelectorAll('[data-search-mode]');
   const list = document.getElementById('memberSearchResultList');
   const idBtn = document.getElementById('memberSearchMemberIdBtn');
   const detailGroups = document.getElementById('memberSearchDetailGroups');
@@ -31,6 +33,11 @@ function bindMemberSearchEvents_() {
   if (homeBtn) homeBtn.addEventListener('click', function () { location.href = 'home.html'; });
   if (logoutBtn) logoutBtn.addEventListener('click', function () { logout(); });
   if (submitBtn) submitBtn.addEventListener('click', runMemberSearch_);
+  modeButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      setMemberSearchMode_(button.getAttribute('data-search-mode'));
+    });
+  });
 
   if (input) {
     input.addEventListener('keydown', function (event) {
@@ -78,7 +85,7 @@ async function runMemberSearch_() {
   clearMemberDetail_();
 
   if (!query) {
-    showMemberSearchError_('請輸入姓名或道親編號。');
+    showMemberSearchError_(memberSearchMode_ === 'memberId' ? '請輸入道親編號。' : '請輸入姓名。');
     if (input) input.focus();
     return;
   }
@@ -89,7 +96,8 @@ async function runMemberSearch_() {
   try {
     const result = await callApi({
       action: 'taoMemberSearch',
-      query: query
+      query: query,
+      mode: memberSearchMode_
     });
 
     if (serial !== memberSearchRequestSerial_) return;
@@ -106,6 +114,27 @@ async function runMemberSearch_() {
   } finally {
     if (serial === memberSearchRequestSerial_) setMemberSearchLoading_(false);
   }
+}
+
+function setMemberSearchMode_(mode) {
+  memberSearchMode_ = mode === 'memberId' ? 'memberId' : 'name';
+  const isMemberId = memberSearchMode_ === 'memberId';
+  const input = document.getElementById('memberSearchInput');
+  const hint = document.getElementById('memberSearchHint');
+  document.querySelectorAll('[data-search-mode]').forEach(function (button) {
+    const active = button.getAttribute('data-search-mode') === memberSearchMode_;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  if (input) {
+    input.placeholder = isMemberId ? '輸入完整道親編號' : '輸入姓名';
+    input.setAttribute('aria-label', isMemberId ? '道親編號' : '姓名');
+    input.focus();
+  }
+  if (hint) hint.textContent = isMemberId
+    ? '請輸入完整道親編號，可快速精準查詢。'
+    : '可輸入完整姓名或姓名前幾個字。';
+  showMemberSearchError_('');
 }
 
 function renderMemberSearchResults_(result) {
