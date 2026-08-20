@@ -1,6 +1,6 @@
 /*
  * 程式名稱：member-search.js
- * 版本：v1.0.0R1F6
+ * 版本：v1.0.0R1F7
  * 功能：姓名／道親編號搜尋、完整資料顯示、道親編號 QR Code 與 LINE 分享。
  */
 
@@ -151,8 +151,11 @@ function renderMemberSearchResults_(result) {
 
   if (count) {
     const serverMs = Number(result.timing && result.timing.totalMs);
+    const searchMs = Number(result.timing && result.timing.searchMs);
+    const detailMs = Number(result.timing && result.timing.detailMs);
     const timingText = Number.isFinite(serverMs) && serverMs >= 0
-      ? '・後端 ' + (serverMs / 1000).toFixed(1) + ' 秒'
+      ? '・後端 ' + (serverMs / 1000).toFixed(1) + ' 秒' +
+        (Number.isFinite(searchMs) ? '（索引 ' + (searchMs / 1000).toFixed(1) + '／完整 ' + (Math.max(0, detailMs) / 1000).toFixed(1) + '）' : '')
       : '';
     count.textContent = total > 0
       ? '共 ' + total + ' 筆' + (result.truncated ? '（顯示前 ' + results.length + ' 筆）' : '') + timingText
