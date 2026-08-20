@@ -46,6 +46,7 @@ const XZDS_API_RETRYABLE_ACTIONS = [
   'getDutyActivityList',
   'getDutyActivityAdminData',
   'getMobileShareReport',
+  'getMobileShareBundle',
   'taoMemberSearch',
   'taoMemberGetDetail',
   'taoDailyUpdateGetStatus',
@@ -73,6 +74,7 @@ const XZDS_API_THREE_ATTEMPT_ACTIONS = [
   'getDutyActivityList',
   'getDutyActivityAdminData',
   'getMobileShareReport',
+  'getMobileShareBundle',
   'taoMemberSearch',
   'taoMemberGetDetail',
   'taoDailyUpdateGetStatus',
@@ -469,3 +471,4 @@ function addTokenToPayload(payload) {
 
   return payload;
 }
+
