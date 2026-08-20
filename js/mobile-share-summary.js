@@ -104,75 +104,20 @@ async function loadMobileCumulativeReport_(selectedMonth) {
   }
 
   try {
-    let loadResult = await loadMobileCumulativeReportsLimited_(normalizedMonth);
+    const reports = await loadMobileCumulativeBundle_(normalizedMonth);
 
     if (serial !== mobileCumulativeRequestSerial_) return;
 
-    /*
-     * 第一次完整輪次後，只針對仍失敗的 reportKey 再做一次低併發恢復。
-     * 每一個 callApi 內部本身已有 3 次傳輸嘗試；這裡只是把最後少數失敗
-     * 再隔開重讀一次，避免六張中任一張瞬斷就整頁失敗。
-     */
-    const missingIndexes = [];
-    loadResult.responses.forEach(function(item, index) {
-      if (!item || !item.success || !item.report) {
-        missingIndexes.push(index);
-      }
-    });
-
-    for (let i = 0; i < missingIndexes.length; i++) {
-      if (serial !== mobileCumulativeRequestSerial_) return;
-
-      const index = missingIndexes[i];
-      const reportKey = MOBILE_CUMULATIVE_REPORT_KEYS[index];
-
-      try {
-        await delayMobileCumulative_(500);
-        const recovered = await callApi(buildMobileCumulativePayload_(reportKey, normalizedMonth), {
-          timeoutMs: 12000,
-          retryTimeoutMs: 15000,
-          maxAttempts: 2,
-          onRetry: function() {
-            if (serial !== mobileCumulativeRequestSerial_) return;
-            showMobileCumulativeError_('部分資料正在重新確認…', 'warning');
-          }
-        });
-
-        if (recovered && recovered.success && recovered.report) {
-          loadResult.responses[index] = recovered;
-          writeMobileCumulativeCache_(reportKey, normalizedMonth, recovered.report);
-        }
-      } catch (ignore) {}
-    }
-
-    if (serial !== mobileCumulativeRequestSerial_) return;
-
-    let usedCacheCount = 0;
-    const reports = loadResult.responses.map(function (result, index) {
-      if (result && result.success && result.report) {
-        return result.report;
-      }
-
-      const reportKey = MOBILE_CUMULATIVE_REPORT_KEYS[index];
-      const cached = readMobileCumulativeCache_(reportKey, normalizedMonth);
-      if (cached && cached.report) {
-        usedCacheCount += 1;
-        return cached.report;
-      }
-
-      throw new Error(reportKey + ' 仍無法取得資料');
+    reports.forEach(function(report, index) {
+      writeMobileCumulativeCache_(
+        MOBILE_CUMULATIVE_REPORT_KEYS[index],
+        normalizedMonth,
+        report
+      );
     });
 
     renderMobileCumulativeReports_(reports);
-
-    if (usedCacheCount > 0) {
-      showMobileCumulativeError_(
-        '連線暫時不穩，部分資料使用上次成功結果；稍後可再重新整理。',
-        'warning'
-      );
-    } else {
-      showMobileCumulativeError_('', '');
-    }
+    showMobileCumulativeError_('', '');
 
   } catch (error) {
     if (serial !== mobileCumulativeRequestSerial_) return;
@@ -197,6 +142,32 @@ async function loadMobileCumulativeReport_(selectedMonth) {
       setMobileCumulativeLoading_(false);
     }
   }
+}
+
+
+async function loadMobileCumulativeBundle_(month) {
+  const result = await callApi(buildMobileCumulativeBundlePayload_(month), {
+    timeoutMs: 12000,
+    retryTimeoutMs: 15000,
+    maxAttempts: 3,
+    onRetry: function() {
+      showMobileCumulativeError_('資料連線正在自動重新確認…', 'warning');
+    }
+  });
+
+  if (!result || !result.success || !result.byKey) {
+    throw new Error(
+      result && result.message ? result.message : '三大組資料讀取失敗'
+    );
+  }
+
+  return MOBILE_CUMULATIVE_REPORT_KEYS.map(function(reportKey) {
+    const report = result.byKey[reportKey];
+    if (!report) {
+      throw new Error(reportKey + ' 資料不完整');
+    }
+    return report;
+  });
 }
 
 
@@ -252,6 +223,19 @@ async function loadMobileCumulativeReportsLimited_(month) {
 
   await Promise.all(workers);
   return { responses: responses };
+}
+
+
+function buildMobileCumulativeBundlePayload_(month) {
+  const payload = {
+    action: 'getMobileShareBundle'
+  };
+
+  if (Number.isInteger(month) && month >= 1 && month <= 12) {
+    payload.month = month;
+  }
+
+  return payload;
 }
 
 
@@ -811,3 +795,4 @@ function formatMobileCumulativeNumber_(value) {
     maximumFractionDigits: 0
   });
 }
+
