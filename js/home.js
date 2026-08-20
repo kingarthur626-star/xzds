@@ -34,6 +34,7 @@ templeEl.textContent = user.temple || '未取得壇名';
 }
 
 hideLastUpdateText_();
+setHomePermissionLoading_(true);
 
 bindHomeButtons();
 applyRecentDutyButtonText_();
@@ -149,6 +150,13 @@ logout();
 const HOME_PERMISSION_CACHE_KEY = 'XZDS_HOME_PERMISSIONS';
 const HOME_PERMISSION_CACHE_SECONDS = 600; // 10分鐘
 
+function setHomePermissionLoading_(loading) {
+const menu = document.querySelector('.home-menu');
+if (!menu) return;
+menu.style.visibility = loading ? 'hidden' : '';
+menu.setAttribute('aria-busy', loading ? 'true' : 'false');
+}
+
 /* =========================
 函式名稱：loadHomePermissions
 功能說明：
@@ -159,17 +167,13 @@ async function loadHomePermissions(user) {
 const btnUpdate = document.getElementById('btnUpdate');
 const btnMore = document.getElementById('btnMore');
 
-// 預設先隱藏，避免沒權限的人看到
-applyHomePermissions_({
-updateTaoReport: false,
-adminPanel: false
-});
-
+// 首次登入尚未取得權限時，整組功能先維持載入中，避免畫面分批跳出。
 // 先讀本機暫存權限，讓回首頁時不用等 2 秒
 const cached = getCachedHomePermissions_(user);
 
 if (cached) {
 applyHomePermissions_(cached);
+setHomePermissionLoading_(false);
 }
 
 try {
@@ -200,6 +204,8 @@ updateTaoReport: false,
 adminPanel: false
 });
 }
+} finally {
+setHomePermissionLoading_(false);
 }
 }
 
