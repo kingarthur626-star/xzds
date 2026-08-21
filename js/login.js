@@ -110,26 +110,8 @@ isLoginSubmitting = true;
 setLoginSubmitting_(loginBtn, true);
 
 try {
-  // 公開 test 只做短暫暖機，不再把登入綁死在暖機結果上。
-  // 實機已確認公開 test 本身也會偶發 JSONP 回傳遺失；若暖機失敗，
-  // 真正 login 仍應繼續嘗試，避免使用者明明帳密正確卻被 test 擋住。
-  if (typeof warmUpApiTransport === 'function') {
-    showMessage('loginMessage', 'warning', '正在確認系統連線…');
-    try {
-      await Promise.race([
-        warmUpApiTransport({
-          timeoutMs: 7000,
-          retryTimeoutMs: 10000
-        }),
-        new Promise(function(resolve) {
-          setTimeout(resolve, 5000);
-        })
-      ]);
-    } catch (ignore) {
-      // 暖機失敗不阻擋真正登入。
-    }
-  }
-
+  // 暖機只在頁面載入時背景進行；按下登入後必須立即送出帳密。
+  // 不等待 test API，避免慢速或遺失的 JSONP 暖機額外卡住登入。
   clearMessage('loginMessage');
 
   const result = await callApi({
