@@ -2597,10 +2597,11 @@ function injectActivityDetailNoteStyle_() {
       display: grid !important;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
       gap: 12px !important;
-      width: 100% !important;
-      height: 48px !important;
-      min-height: 48px !important;
-      max-height: 48px !important;
+      width: 68% !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      margin: 0 auto !important;
       align-items: stretch !important;
       position: relative !important;
       z-index: 6 !important;
@@ -2614,9 +2615,9 @@ function injectActivityDetailNoteStyle_() {
       flex: none !important;
       align-self: stretch !important;
       width: 100% !important;
-      height: 48px !important;
-      min-height: 48px !important;
-      max-height: 48px !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
       margin: 0 !important;
       padding: 0 10px !important;
       display: flex !important;
@@ -2625,7 +2626,7 @@ function injectActivityDetailNoteStyle_() {
       line-height: 1 !important;
       overflow: hidden !important;
       border-radius: 12px !important;
-      font-size: 18px !important;
+      font-size: 16px !important;
       font-weight: 900 !important;
     }
 
@@ -2863,9 +2864,10 @@ function injectActivityDetailNoteStyle_() {
       }
 
       .activity-detail-actions {
-        height: 48px !important;
-        min-height: 48px !important;
-        max-height: 48px !important;
+        width: 68% !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
       }
 
       .activity-detail-note-table td:not(.temple-cell),
@@ -2874,7 +2876,7 @@ function injectActivityDetailNoteStyle_() {
       }
 
       .activity-detail-modal {
-        padding-top: max(6px, env(safe-area-inset-top)) !important;
+        padding-top: max(48px, env(safe-area-inset-top)) !important;
         padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
       }
 
