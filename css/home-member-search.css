@@ -32,3 +32,15 @@
     font-size: 13px;
   }
 }
+
+
+/* 20260821 R21：首頁採用有層次的功能色，避免單一藍色視覺。 */
+.home-menu-btn:nth-child(1) { background: linear-gradient(135deg, #2E7DD7, #377FD1); }
+.home-menu-btn:nth-child(2) { background: linear-gradient(135deg, #5865C8, #4661BD); }
+.home-menu-btn:nth-child(3) { background: linear-gradient(135deg, #278FA1, #237D98); }
+.home-menu-btn:nth-child(4) { background: linear-gradient(135deg, #7A63B8, #6753A5); }
+.home-menu-btn:nth-child(5) { background: linear-gradient(135deg, #208B67, #187B59); }
+.home-menu-btn:nth-child(6) { background: linear-gradient(135deg, #2878A7, #216B98); }
+.home-menu-btn:nth-child(7) { background: linear-gradient(135deg, #64748B, #526175); }
+.home-menu-btn:nth-child(8) { background: linear-gradient(135deg, #B27727, #9A6118); }
+.home-menu-btn:hover { filter: brightness(1.04); }
