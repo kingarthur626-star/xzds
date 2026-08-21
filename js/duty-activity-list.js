@@ -187,7 +187,6 @@ async function loadDutyActivityList_(forceRefresh) {
 
   if (cachedActivities) {
     applyDutyActivityListResult_(cachedActivities);
-    showActivityListMessage_('已先顯示最近資料，正在更新…', '');
   } else if (area) {
     area.innerHTML = '<div class="small-text">讀取道務活動中...</div>';
   }
@@ -213,6 +212,7 @@ async function loadDutyActivityList_(forceRefresh) {
     const activities = result.activities || [];
     writeDutyActivityListSessionCache_(activities);
     applyDutyActivityListResult_(activities);
+    showActivityListMessage_('', '');
 
   } catch (err) {
     if (area) {
