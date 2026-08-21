@@ -630,3 +630,74 @@ body.tdu-modal-open {
   color: var(--xzds-nav-control-ink, #164568);
   border: 1px solid var(--xzds-nav-control-border, #d1dbe8);
 }
+
+
+/* 20260821 同步總覽 */
+.tdu-sync-card {
+  margin-top: 14px;
+}
+
+.tdu-sync-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tdu-sync-grid .tdu-summary-stat {
+  min-width: 0;
+  padding: 10px 5px;
+}
+
+.tdu-sync-grid .tdu-summary-stat strong {
+  font-size: 21px;
+}
+
+.tdu-sync-grid .tdu-summary-stat span {
+  font-size: 11px;
+}
+
+.tdu-sync-steps {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tdu-sync-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #dce5ef;
+  border-radius: 12px;
+  color: #486078;
+  background: #f9fbfd;
+  font-size: 13px;
+}
+
+.tdu-sync-step strong {
+  color: #1f7a4d;
+  font-size: 13px;
+}
+
+.tdu-sync-foot,
+.tdu-sync-warning {
+  margin-top: 10px;
+  color: #718196;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.tdu-sync-warning {
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: #8a5200;
+  background: #fff8e8;
+}
+
+@media (max-width: 380px) {
+  .tdu-sync-grid {
+    gap: 6px;
+  }
+}
