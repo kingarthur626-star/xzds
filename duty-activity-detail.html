@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>道務活動明細</title>
+  <link rel="stylesheet" href="css/style.css?v=20260821-r21" />
+  <style>
+    body.activity-detail-page {
+      min-height: 100dvh;
+      background: #f7f8fa;
+    }
+    .activity-detail-page .activity-detail-modal {
+      background: #f7f8fa !important;
+    }
+    .activity-detail-page .activity-detail-box {
+      background: #ffffff;
+      border: 1px solid #d9e3ef;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(18, 58, 98, .09);
+    }
+  </style>
+</head>
+<body class="activity-detail-page">
+  <main id="activityDetailModal" class="activity-detail-modal" style="display:none;">
+    <section class="activity-detail-box" aria-label="道務活動明細">
+      <h1 id="activityDetailTitle" class="activity-detail-title"></h1>
+      <div id="activityDetailNote" class="activity-detail-note"></div>
+      <div class="activity-detail-actions">
+        <button id="activityDetailBackBtn" class="activity-detail-close-btn" type="button">返回列表</button>
+        <button id="activityDetailShareBtn" class="activity-detail-share-btn" type="button" disabled>LINE分享</button>
+      </div>
+    </section>
+  </main>
+  <script src="js/config.js?v=20260623-13"></script>
+  <script src="js/api.js?v=20260812-api-stability-032r2"></script>
+  <script src="js/common.js?v=20260623-13"></script>
+  <script src="js/duty-activity-list.js?v=20260821-r25"></script>
+  <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
+</body>
+</html>
