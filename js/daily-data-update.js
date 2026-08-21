@@ -19,6 +19,7 @@ function bindTduButtons_() {
   const homeBtn = document.getElementById('tduHomeBtn');
   const logoutBtn = document.getElementById('tduLogoutBtn');
   const refreshBtn = document.getElementById('tduRefreshBtn');
+  const syncRefreshBtn = document.getElementById('tduSyncRefreshBtn');
   const manualBtn = document.getElementById('tduManualBtn');
   const closeBtn = document.getElementById('tduDetailCloseBtn');
   const modal = document.getElementById('tduDetailModal');
@@ -39,6 +40,10 @@ function bindTduButtons_() {
     refreshBtn.addEventListener('click', function () {
       loadTduAll_(true);
     });
+  }
+
+  if (syncRefreshBtn) {
+    syncRefreshBtn.addEventListener('click', loadTduSyncOverview_);
   }
 
   if (manualBtn) {
@@ -95,6 +100,7 @@ async function loadTduAll_(showMessage) {
     const current = statusResult && statusResult.current ? statusResult.current : {};
     updateTduPolling_(!!current.active);
     loadTduHistoryOnly_();
+    loadTduSyncOverview_();
   } catch (error) {
     renderTduLoadError_(error && error.message ? error.message : '資料讀取失敗');
   } finally {
@@ -131,6 +137,73 @@ async function loadTduHistoryOnly_() {
   } catch (error) {
     setTduActionMessage_(error && error.message ? error.message : '更新紀錄讀取失敗', true);
   }
+}
+
+
+async function loadTduSyncOverview_() {
+  const area = document.getElementById('tduSyncOverview');
+  if (!area) return;
+
+  area.replaceChildren(makeTduEmpty_('讀取同步總覽中…'));
+  try {
+    const result = await callApi({ action: 'getSyncOverview' });
+    renderTduSyncOverview_(result);
+  } catch (error) {
+    area.replaceChildren(makeTduEmpty_(error && error.message ? error.message : '同步總覽讀取失敗。'));
+  }
+}
+
+function renderTduSyncOverview_(result) {
+  const area = document.getElementById('tduSyncOverview');
+  if (!area) return;
+  area.replaceChildren();
+
+  if (!result || !result.success) {
+    area.appendChild(makeTduEmpty_('同步總覽讀取失敗。'));
+    return;
+  }
+
+  const pipeline = result.pipeline || {};
+  const queue = pipeline.queue || {};
+  const steps = pipeline.steps || {};
+  const latest = result.daily && Array.isArray(result.daily.latestRecords)
+    ? result.daily.latestRecords[0] : null;
+  const summary = document.createElement('div');
+  summary.className = 'tdu-sync-grid';
+  summary.appendChild(makeTduSummaryStat_('待確認', numberText_(queue.review || (latest && latest.review) || 0), Number(queue.review || (latest && latest.review) || 0) > 0 ? 'review' : ''));
+  summary.appendChild(makeTduSummaryStat_('待同步', numberText_(queue.pending || 0), Number(queue.pending || 0) > 0 ? 'review' : ''));
+  summary.appendChild(makeTduSummaryStat_('失敗', numberText_(queue.failed || (latest && latest.failed) || 0), Number(queue.failed || (latest && latest.failed) || 0) > 0 ? 'failed' : ''));
+  summary.appendChild(makeTduSummaryStat_('已完成', numberText_(queue.done || 0)));
+  area.appendChild(summary);
+
+  const stepsList = document.createElement('div');
+  stepsList.className = 'tdu-sync-steps';
+  [['master', '主檔'], ['detail', '年度明細'], ['annual', '年度報表']].forEach(function(item) {
+    const step = steps[item[0]] || {};
+    const row = document.createElement('div');
+    row.className = 'tdu-sync-step';
+    const name = document.createElement('span');
+    name.textContent = item[1];
+    const state = document.createElement('strong');
+    state.textContent = step.okForNext === true ? '已同步' : (pipeline.busy ? '處理中' : '待處理');
+    row.appendChild(name);
+    row.appendChild(state);
+    stepsList.appendChild(row);
+  });
+  area.appendChild(stepsList);
+
+  const foot = document.createElement('div');
+  foot.className = 'tdu-sync-foot';
+  foot.textContent = pipeline.busy ? '同步作業執行中，完成後此區會更新。' : ('最後檢查：' + (result.generatedAt || '--'));
+  area.appendChild(foot);
+
+  const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+  warnings.forEach(function(message) {
+    const warning = document.createElement('div');
+    warning.className = 'tdu-sync-warning';
+    warning.textContent = message;
+    area.appendChild(warning);
+  });
 }
 
 
