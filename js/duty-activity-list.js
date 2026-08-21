@@ -116,9 +116,41 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!user) return;
 
   bindActivityListButtons_();
+  bindActivityDetailModalActions_();
   checkActivitySettingButtonPermission_();
   loadDutyActivityList_();
 });
+
+function bindActivityDetailModalActions_() {
+  const modal = document.getElementById('activityDetailModal');
+  const closeBtn = document.getElementById('activityDetailCloseBtn');
+  const shareBtn = document.getElementById('activityDetailShareBtn');
+
+  if (closeBtn) {
+    closeBtn.onclick = function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeActivityDetailModal_();
+    };
+  }
+
+  if (shareBtn) {
+    shareBtn.onclick = function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!shareBtn.disabled) {
+        shareCurrentDutyActivityImage_();
+      }
+    };
+  }
+
+  if (modal) {
+    const mask = modal.querySelector('.activity-detail-mask');
+    if (mask) {
+      mask.onclick = closeActivityDetailModal_;
+    }
+  }
+}
 
 function bindActivityListButtons_() {
   const homeBtn = document.getElementById('homeBtn');
