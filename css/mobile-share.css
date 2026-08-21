@@ -643,3 +643,20 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+
+/* 20260821 R33：月報導覽與全站首頁／登出控制項同規格 */
+.mobile-share-fixed-nav .action-pill {
+  min-height: var(--xzds-nav-control-height, 40px);
+  height: var(--xzds-nav-control-height, 40px);
+  color: var(--xzds-nav-control-ink, #164568);
+  border-color: var(--xzds-nav-control-border, #d1dbe8);
+  font-size: 14px;
+}
+
+.mobile-share-fixed-nav #mobileShareLogoutBtn,
+.mobile-share-fixed-nav #mobileShareHomeBtn,
+.mobile-share-fixed-nav #mobileCumulativeLogoutBtn,
+.mobile-share-fixed-nav #mobileCumulativeHomeBtn {
+  min-width: var(--xzds-nav-control-min-width, 76px);
+}
