@@ -2449,7 +2449,10 @@ function injectActivityDetailNoteStyle_() {
       ) !important;
       min-height: 0 !important;
       margin: 0 auto !important;
-      overflow: hidden !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior-y: contain !important;
+      -webkit-overflow-scrolling: touch !important;
       padding:
         18px
         14px
@@ -2530,17 +2533,13 @@ function injectActivityDetailNoteStyle_() {
     }
 
     .activity-detail-note {
-      flex: 0 1 auto !important;
+      flex: 0 0 auto !important;
       min-height: 0 !important;
       height: auto !important;
-      max-height: min(52vh, 560px) !important;
-      overflow-x: hidden !important;
-      overflow-y: auto !important;
-      overscroll-behavior-y: contain !important;
-      -webkit-overflow-scrolling: touch !important;
-      touch-action: pan-y !important;
-      margin-bottom: 10px !important;
-      padding: 0 2px 18px 0 !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      margin-bottom: 18px !important;
+      padding: 0 2px 0 0 !important;
     }
 
     .activity-detail-close-btn {
