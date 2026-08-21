@@ -32,6 +32,7 @@ let activityShareObjectUrl_ = '';
 let activitySharePrepareToken_ = 0;
 
 const DUTY_ACTIVITY_LIST_SESSION_KEY = 'xzds.dutyActivityList.v1';
+const DUTY_ACTIVITY_LIST_PERSISTENT_CACHE_KEY = 'xzds.dutyActivityList.persistent.v1';
 const DUTY_ACTIVITY_DETAIL_SESSION_KEY = 'xzds.dutyActivityDetail.v1';
 
 const DUTY_ACTIVITY_TEMPLE_ORDER_R15 = [
@@ -282,7 +283,11 @@ function readDutyActivityListSessionCache_() {
   try {
     const raw = sessionStorage.getItem(DUTY_ACTIVITY_LIST_SESSION_KEY);
     const cached = raw ? JSON.parse(raw) : null;
-    return Array.isArray(cached) ? cached : null;
+    if (Array.isArray(cached)) return cached;
+
+    const persistentRaw = localStorage.getItem(DUTY_ACTIVITY_LIST_PERSISTENT_CACHE_KEY);
+    const persistent = persistentRaw ? JSON.parse(persistentRaw) : null;
+    return Array.isArray(persistent) ? persistent : null;
   } catch (err) {
     return null;
   }
@@ -290,7 +295,9 @@ function readDutyActivityListSessionCache_() {
 
 function writeDutyActivityListSessionCache_(activities) {
   try {
-    sessionStorage.setItem(DUTY_ACTIVITY_LIST_SESSION_KEY, JSON.stringify(activities || []));
+    const serialized = JSON.stringify(activities || []);
+    sessionStorage.setItem(DUTY_ACTIVITY_LIST_SESSION_KEY, serialized);
+    localStorage.setItem(DUTY_ACTIVITY_LIST_PERSISTENT_CACHE_KEY, serialized);
   } catch (err) {
     // sessionStorage 無法使用時，仍以伺服器回應正常顯示。
   }
