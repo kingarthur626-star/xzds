@@ -40,7 +40,7 @@
 }
 
 .tdu-nav-btn.tdu-logout {
-  color: #a33b3b;
+  color: #164568;
 }
 
 .tdu-nav-title {
@@ -616,4 +616,17 @@ body.tdu-modal-open {
   .tdu-summary-stat strong {
     font-size: 20px;
   }
+}
+
+
+/* 20260821 R33：與全站一致的首頁／登出按鈕 */
+.tdu-shell {
+  padding-top: max(14px, env(safe-area-inset-top)) !important;
+}
+
+.tdu-nav-btn {
+  min-width: var(--xzds-nav-control-min-width, 76px);
+  height: var(--xzds-nav-control-height, 40px);
+  color: var(--xzds-nav-control-ink, #164568);
+  border: 1px solid var(--xzds-nav-control-border, #d1dbe8);
 }
