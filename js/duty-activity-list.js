@@ -370,7 +370,7 @@ card.addEventListener('click', function () {
   const item = visibleDutyActivities[index] || {};
   const note = item.note || '';
 
-  openDutyActivityDetailPage_(title, dateRange, note);
+  showActivityDetailModal_(title, dateRange, note);
 });
 
 }
