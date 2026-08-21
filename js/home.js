@@ -398,7 +398,12 @@ setUpdateButtonLoading(btn, true);
 
 try {
 const result = await callApi({
-action: 'updateTaoReport01Stored'
+  action: 'updateTaoReport01Stored'
+}, {
+  // 外部系統需登入、轉址與抓取兩份報表；不得用一般讀取 API 的短逾時。
+  timeoutMs: 60000,
+  maxAttempts: 1,
+  timeoutMessage: '報表仍在同步中，請保持此畫面等待完成'
 });
 
 if (result.success) {
