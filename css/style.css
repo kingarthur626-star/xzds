@@ -4300,3 +4300,30 @@ textarea:focus {
     border-radius: 18px;
   }
 }
+
+
+/* 20260821 R21：首頁功能層級與活動列表行動版排版 */
+.activity-title-row {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.activity-title-row h1 {
+  margin: 0;
+  min-width: 0;
+  font-size: 23px;
+  line-height: 1.25;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.activity-title-row .admin-small-btn {
+  min-width: 78px;
+  padding: 0 10px;
+}
+
+@media (max-width: 390px) {
+  .activity-title-row h1 {
+    font-size: 23px;
+  }
+}
