@@ -31,6 +31,8 @@ let activityShareFile_ = null;
 let activityShareObjectUrl_ = '';
 let activitySharePrepareToken_ = 0;
 
+const DUTY_ACTIVITY_LIST_SESSION_KEY = 'xzds.dutyActivityList.v1';
+
 const DUTY_ACTIVITY_TEMPLE_ORDER_R15 = [
   "1A_瑩德",
   "1A_選德",
@@ -144,7 +146,7 @@ function bindActivityListButtons_() {
 
   if (reloadBtn) {
     reloadBtn.addEventListener('click', function () {
-      loadDutyActivityList_();
+      loadDutyActivityList_(true);
     });
   }
 }
@@ -174,18 +176,23 @@ async function checkActivitySettingButtonPermission_() {
   }
 }
 
-async function loadDutyActivityList_() {
+async function loadDutyActivityList_(forceRefresh) {
   const area = document.getElementById('activityListArea');
   const stats = document.getElementById('activityListStats');
   const reloadBtn = document.getElementById('reloadActivityListBtn');
 
   showActivityListMessage_('', '');
 
-  if (area) {
+  const cachedActivities = forceRefresh ? null : readDutyActivityListSessionCache_();
+
+  if (cachedActivities) {
+    applyDutyActivityListResult_(cachedActivities);
+    showActivityListMessage_('已先顯示最近資料，正在更新…', '');
+  } else if (area) {
     area.innerHTML = '<div class="small-text">讀取道務活動中...</div>';
   }
 
-  if (stats) {
+  if (stats && !cachedActivities) {
     stats.textContent = '讀取中...';
   }
 
@@ -195,19 +202,17 @@ async function loadDutyActivityList_() {
 
   try {
     const result = await callApi({
-      action: 'getDutyActivityList'
+      action: 'getDutyActivityList',
+      forceRefresh: forceRefresh === true
     });
 
     if (!result.success) {
       throw new Error(result.message || '讀取失敗');
     }
 
-    allDutyActivities = sortDutyActivitiesByDateDesc_(result.activities || []);
-    selectedDutyActivityYear = getDefaultDutyActivityYear_(allDutyActivities, selectedDutyActivityYear);
-    renderDutyActivityYearFilter_();
-    visibleDutyActivities = filterDutyActivitiesByYear_(allDutyActivities, selectedDutyActivityYear);
-
-    renderDutyActivityList_();
+    const activities = result.activities || [];
+    writeDutyActivityListSessionCache_(activities);
+    applyDutyActivityListResult_(activities);
 
   } catch (err) {
     if (area) {
@@ -224,6 +229,32 @@ async function loadDutyActivityList_() {
     if (reloadBtn) {
       reloadBtn.disabled = false;
     }
+  }
+}
+
+function applyDutyActivityListResult_(activities) {
+  allDutyActivities = sortDutyActivitiesByDateDesc_(activities || []);
+  selectedDutyActivityYear = getDefaultDutyActivityYear_(allDutyActivities, selectedDutyActivityYear);
+  renderDutyActivityYearFilter_();
+  visibleDutyActivities = filterDutyActivitiesByYear_(allDutyActivities, selectedDutyActivityYear);
+  renderDutyActivityList_();
+}
+
+function readDutyActivityListSessionCache_() {
+  try {
+    const raw = sessionStorage.getItem(DUTY_ACTIVITY_LIST_SESSION_KEY);
+    const cached = raw ? JSON.parse(raw) : null;
+    return Array.isArray(cached) ? cached : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function writeDutyActivityListSessionCache_(activities) {
+  try {
+    sessionStorage.setItem(DUTY_ACTIVITY_LIST_SESSION_KEY, JSON.stringify(activities || []));
+  } catch (err) {
+    // sessionStorage 無法使用時，仍以伺服器回應正常顯示。
   }
 }
 
@@ -2769,3 +2800,4 @@ function escapeActivityListHtml_(value) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
