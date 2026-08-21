@@ -2430,39 +2430,41 @@ function injectActivityDetailNoteStyle_() {
         max(8px, env(safe-area-inset-right))
         max(8px, env(safe-area-inset-bottom))
         max(8px, env(safe-area-inset-left)) !important;
-      align-items: center !important;
-      justify-content: center !important;
-      overflow: hidden !important;
-      overscroll-behavior: none !important;
-      touch-action: none;
-    }
-
-    .activity-detail-box {
-      position: relative !important;
-      display: flex !important;
-      flex-direction: column !important;
-      width: min(100%, 430px) !important;
-      height: auto !important;
-      max-height: min(
-        calc(var(--activity-detail-viewport-height, 100vh) - 16px),
-        760px
-      ) !important;
-      min-height: 0 !important;
-      margin: 0 auto !important;
+      display: block !important;
       overflow-x: hidden !important;
       overflow-y: auto !important;
       overscroll-behavior-y: contain !important;
       -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y !important;
+    }
+
+    .activity-detail-box {
+      position: relative !important;
+      display: block !important;
+      width: min(100%, 430px) !important;
+      height: auto !important;
+      max-height: none !important;
+      min-height: 0 !important;
+      margin: 0 auto !important;
+      overflow: visible !important;
       padding:
         18px
         14px
-        max(12px, env(safe-area-inset-bottom)) !important;
+        max(18px, env(safe-area-inset-bottom)) !important;
     }
 
     .activity-detail-title,
     .activity-detail-date,
     .activity-detail-close-btn {
       min-height: 0;
+    }
+
+    .activity-detail-date {
+      position: static !important;
+      margin: 0 0 14px !important;
+      text-align: center !important;
+      font-size: 14px !important;
+      line-height: 1.55 !important;
     }
 
     .activity-detail-title {
