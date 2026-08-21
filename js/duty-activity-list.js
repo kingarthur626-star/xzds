@@ -2534,7 +2534,7 @@ function injectActivityDetailNoteStyle_() {
       height: var(--activity-detail-viewport-height, 100vh) !important;
       max-height: var(--activity-detail-viewport-height, 100vh) !important;
       padding:
-        max(8px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-top))
         max(8px, env(safe-area-inset-right))
         max(8px, env(safe-area-inset-bottom))
         max(8px, env(safe-area-inset-left)) !important;
@@ -2564,7 +2564,7 @@ function injectActivityDetailNoteStyle_() {
       margin: 0 auto !important;
       overflow: visible !important;
       padding:
-        18px
+        30px
         14px
         max(18px, env(safe-area-inset-bottom)) !important;
     }
