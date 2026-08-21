@@ -2430,7 +2430,7 @@ function injectActivityDetailNoteStyle_() {
         max(8px, env(safe-area-inset-right))
         max(8px, env(safe-area-inset-bottom))
         max(8px, env(safe-area-inset-left)) !important;
-      align-items: stretch !important;
+      align-items: center !important;
       justify-content: center !important;
       overflow: hidden !important;
       overscroll-behavior: none !important;
@@ -2439,11 +2439,14 @@ function injectActivityDetailNoteStyle_() {
 
     .activity-detail-box {
       position: relative !important;
-      display: grid !important;
-      grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+      display: flex !important;
+      flex-direction: column !important;
       width: min(100%, 430px) !important;
-      height: 100% !important;
-      max-height: none !important;
+      height: auto !important;
+      max-height: min(
+        calc(var(--activity-detail-viewport-height, 100vh) - 16px),
+        760px
+      ) !important;
       min-height: 0 !important;
       margin: 0 auto !important;
       overflow: hidden !important;
@@ -2527,10 +2530,12 @@ function injectActivityDetailNoteStyle_() {
     }
 
     .activity-detail-note {
+      flex: 0 1 auto !important;
       min-height: 0 !important;
-      height: 100% !important;
+      height: auto !important;
+      max-height: min(52vh, 560px) !important;
       overflow-x: hidden !important;
-      overflow-y: scroll !important;
+      overflow-y: auto !important;
       overscroll-behavior-y: contain !important;
       -webkit-overflow-scrolling: touch !important;
       touch-action: pan-y !important;
