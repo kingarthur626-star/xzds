@@ -32,6 +32,7 @@ let activityShareObjectUrl_ = '';
 let activitySharePrepareToken_ = 0;
 
 const DUTY_ACTIVITY_LIST_SESSION_KEY = 'xzds.dutyActivityList.v1';
+const DUTY_ACTIVITY_DETAIL_SESSION_KEY = 'xzds.dutyActivityDetail.v1';
 
 const DUTY_ACTIVITY_TEMPLE_ORDER_R15 = [
   "1A_瑩德",
@@ -114,6 +115,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
 
   if (!user) return;
+
+  if (document.body.classList.contains('duty-activity-detail-page')) {
+    initDutyActivityDetailPage_();
+    return;
+  }
 
   bindActivityListButtons_();
   bindActivityDetailModalActions_();
@@ -357,7 +363,7 @@ card.addEventListener('click', function () {
   const item = visibleDutyActivities[index] || {};
   const note = item.note || '';
 
-  showActivityDetailModal_(title, dateRange, note);
+  openDutyActivityDetailPage_(title, dateRange, note);
 });
 
 }
@@ -382,6 +388,75 @@ if (mask) {
 }
 
 }
+}
+
+function openDutyActivityDetailPage_(title, dateRange, note) {
+  const detail = {
+    title: normalizeActivityListText_(title),
+    dateRange: normalizeActivityListText_(dateRange),
+    note: String(note || '')
+  };
+
+  try {
+    sessionStorage.setItem(DUTY_ACTIVITY_DETAIL_SESSION_KEY, JSON.stringify(detail));
+  } catch (err) {
+    // The detail page can still show a clear return action if storage is unavailable.
+  }
+
+  location.href = 'duty-activity-detail.html';
+}
+
+function initDutyActivityDetailPage_() {
+  const raw = sessionStorage.getItem(DUTY_ACTIVITY_DETAIL_SESSION_KEY);
+  let detail = null;
+
+  try {
+    detail = raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    detail = null;
+  }
+
+  if (!detail || !detail.title) {
+    location.replace('duty-activity-list.html');
+    return;
+  }
+
+  injectActivityDetailNoteStyle_();
+  currentDutyActivityDetail_ = detail;
+
+  const modal = document.getElementById('activityDetailModal');
+  const titleEl = document.getElementById('activityDetailTitle');
+  const noteEl = document.getElementById('activityDetailNote');
+  const backBtn = document.getElementById('activityDetailBackBtn');
+  const shareBtn = document.getElementById('activityDetailShareBtn');
+
+  if (titleEl) titleEl.textContent = detail.title;
+  if (noteEl) {
+    noteEl.innerHTML = renderActivityDetailNoteHtml_(detail.note, detail.dateRange);
+    noteEl.style.whiteSpace = 'normal';
+  }
+
+  if (modal) {
+    modal.style.display = 'block';
+    modal.scrollTop = 0;
+  }
+
+  if (backBtn) {
+    backBtn.onclick = function() {
+      location.href = 'duty-activity-list.html';
+    };
+  }
+
+  if (shareBtn) {
+    shareBtn.onclick = function(event) {
+      event.preventDefault();
+      if (!shareBtn.disabled) shareCurrentDutyActivityImage_();
+    };
+  }
+
+  resetDutyActivityShareFile_();
+  setDutyActivityShareButtonState_('preparing');
+  prepareCurrentDutyActivityShareImage_();
 }
 
 function showActivityDetailModal_(title, dateRange, note) {
