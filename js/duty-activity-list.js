@@ -2650,6 +2650,14 @@ function injectActivityDetailNoteStyle_() {
       border-color: #b96a00 !important;
     }
 
+    .activity-detail-bottom-spacer {
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
     .activity-detail-note {
       flex: 0 0 auto !important;
       min-height: 0 !important;
