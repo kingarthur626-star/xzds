@@ -4327,3 +4327,36 @@ textarea:focus {
     font-size: 23px;
   }
 }
+
+
+/* 20260821 R32 導覽與活動詳情比例統一 */
+.page-action-bar .action-pill {
+  height: 40px !important;
+  min-width: 76px !important;
+  padding: 0 12px !important;
+  border: 1px solid #d1dbe8 !important;
+  border-radius: 999px !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+.page-action-bar #logoutBtn {
+  order: -1 !important;
+  margin-right: auto !important;
+}
+
+.page-action-bar #backBtn,
+.page-action-bar #homeBtn,
+.page-action-bar #backHomeBtn {
+  margin-left: auto !important;
+}
+
+.duty-form-grid.two > .form-group {
+  min-width: 0;
+}
+
+.duty-form-grid.two input,
+.duty-form-grid.two select {
+  width: 100%;
+  min-width: 0;
+}
