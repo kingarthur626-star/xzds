@@ -4165,3 +4165,138 @@ body.admin-page .page-action-bar.admin-top-action-bar #backBtn {
   background: #fff0f0;
   color: #b42318;
 }
+
+
+/* ==========================================================================
+   20260821 R20：全站精緻化共用視覺基礎
+   僅提供可重用的色彩、間距與元件層；不改變既有資料流程或事件。
+   ========================================================================== */
+:root {
+  --color-canvas: #F7F8FA;
+  --color-ink: #123A62;
+  --color-action: #2878D4;
+  --color-surface-info: #E9F1FA;
+  --color-surface-warning: #FFF4D6;
+  --color-surface-success: #EAF7EF;
+  --color-surface-error: #FDEBEC;
+  --color-border: #D9E3EF;
+  --color-muted: #61748A;
+  --shadow-card: 0 12px 30px rgba(18, 58, 98, 0.09);
+  --radius-card: 20px;
+  --radius-control: 14px;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  line-height: 1.55;
+}
+
+.app-shell,
+.page {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.app-card,
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.app-nav,
+.page-action-bar {
+  border-color: var(--color-border);
+}
+
+input,
+select,
+textarea {
+  border-color: var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-action);
+  box-shadow: 0 0 0 3px rgba(40, 120, 212, 0.16);
+}
+
+.btn,
+.menu-btn,
+.home-menu-btn {
+  border-radius: var(--radius-control);
+  background: var(--color-action);
+  box-shadow: 0 6px 16px rgba(40, 120, 212, 0.18);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.btn:hover,
+.menu-btn:hover,
+.home-menu-btn:hover {
+  background: #1E69BE;
+  box-shadow: 0 9px 20px rgba(40, 120, 212, 0.24);
+}
+
+.btn:active,
+.menu-btn:active,
+.home-menu-btn:active {
+  transform: translateY(1px);
+}
+
+.ui-info,
+.message.ui-info,
+.message.info {
+  display: block;
+  color: #244F7A;
+  background: var(--color-surface-info);
+  border: 1px solid #BCD3EC;
+}
+
+.ui-success,
+.message.ui-success,
+.message.success {
+  display: block;
+  color: #22724A;
+  background: var(--color-surface-success);
+  border: 1px solid #B8E5C8;
+}
+
+.ui-warning,
+.message.ui-warning,
+.message.warning {
+  display: block;
+  color: #8A6214;
+  background: var(--color-surface-warning);
+  border: 1px solid #F0D893;
+}
+
+.ui-error,
+.message.ui-error,
+.message.error {
+  display: block;
+  color: #B53336;
+  background: var(--color-surface-error);
+  border: 1px solid #F2BFC1;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 480px) {
+  .app-shell,
+  .page {
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-card,
+  .card {
+    border-radius: 18px;
+  }
+}
