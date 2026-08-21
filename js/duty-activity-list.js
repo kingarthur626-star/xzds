@@ -2547,6 +2547,8 @@ function injectActivityDetailNoteStyle_() {
     }
 
     .activity-detail-mask {
+      position: fixed !important;
+      inset: 0 !important;
       z-index: 0 !important;
     }
 
