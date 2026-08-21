@@ -386,19 +386,13 @@ noteEl.innerHTML = renderActivityDetailNoteHtml_(note, dateRange);
 noteEl.style.whiteSpace = 'normal';
 }
 
-modal.style.display = 'flex';
+modal.style.display = 'block';
 lockActivityDetailPageScroll_();
-prepareActivityDetailIOSScroll_();
-
-if (noteEl) {
-  noteEl.scrollTop = 0;
-}
+modal.scrollTop = 0;
 
 window.requestAnimationFrame(function() {
   updateActivityDetailViewportHeight_();
-  if (noteEl) {
-    noteEl.scrollTop = 0;
-  }
+  modal.scrollTop = 0;
 });
 
 prepareCurrentDutyActivityShareImage_();
@@ -2438,8 +2432,14 @@ function injectActivityDetailNoteStyle_() {
       touch-action: pan-y !important;
     }
 
+    .activity-detail-mask {
+      z-index: 0 !important;
+    }
+
     .activity-detail-box {
       position: relative !important;
+      z-index: 1 !important;
+      pointer-events: auto !important;
       display: block !important;
       width: min(100%, 430px) !important;
       height: auto !important;
