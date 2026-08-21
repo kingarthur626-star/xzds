@@ -4370,3 +4370,24 @@ textarea:focus {
 .home-title {
   margin-top: 0 !important;
 }
+
+
+/* 20260821 R33：跨頁導覽控制項一致化 */
+:root {
+  --xzds-nav-control-height: 40px;
+  --xzds-nav-control-min-width: 76px;
+  --xzds-nav-control-border: #d1dbe8;
+  --xzds-nav-control-ink: #164568;
+}
+
+.action-pill.logout {
+  background: #ffffff !important;
+  color: var(--xzds-nav-control-ink) !important;
+}
+
+.page-action-bar .action-pill {
+  height: var(--xzds-nav-control-height) !important;
+  min-width: var(--xzds-nav-control-min-width) !important;
+  color: var(--xzds-nav-control-ink) !important;
+  border-color: var(--xzds-nav-control-border) !important;
+}
