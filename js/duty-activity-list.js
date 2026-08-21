@@ -516,7 +516,7 @@ function closeActivityDetailModal_() {
 const modal = document.getElementById('activityDetailModal');
 
 if (modal) {
-modal.style.display = 'none';
+modal.style.setProperty('display', 'none', 'important');
 }
 
 activitySharePrepareToken_++;
