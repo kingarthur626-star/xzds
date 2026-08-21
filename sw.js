@@ -8,7 +8,7 @@
    4. Avoid apparent "logged out" jumps caused by offline/cache fallback.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260812-api-transport-stability-100r2';
+const CACHE_NAME = CACHE_PREFIX + '20260821-navigation-r32';
 
 const STATIC_ASSETS = [
   './',
