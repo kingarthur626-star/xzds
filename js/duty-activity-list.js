@@ -1426,7 +1426,7 @@ function injectDutyActivityShareStyle_() {
       z-index: -1000;
       width: 1080px;
       box-sizing: border-box;
-      padding: 54px 46px 48px;
+      padding: 48px 46px 48px;
       color: #0a2f63;
       background:
         radial-gradient(circle at 4% 4%, rgba(216, 162, 50, .12), transparent 18%),
@@ -2534,7 +2534,7 @@ function injectActivityDetailNoteStyle_() {
       height: var(--activity-detail-viewport-height, 100vh) !important;
       max-height: var(--activity-detail-viewport-height, 100vh) !important;
       padding:
-        max(16px, env(safe-area-inset-top))
+        max(32px, env(safe-area-inset-top))
         max(8px, env(safe-area-inset-right))
         max(8px, env(safe-area-inset-bottom))
         max(8px, env(safe-area-inset-left)) !important;
@@ -2598,9 +2598,9 @@ function injectActivityDetailNoteStyle_() {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
       gap: 12px !important;
       width: 100% !important;
-      height: 54px !important;
-      min-height: 54px !important;
-      max-height: 54px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
       align-items: stretch !important;
       position: relative !important;
       z-index: 6 !important;
@@ -2614,9 +2614,9 @@ function injectActivityDetailNoteStyle_() {
       flex: none !important;
       align-self: stretch !important;
       width: 100% !important;
-      height: 54px !important;
-      min-height: 54px !important;
-      max-height: 54px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
       margin: 0 !important;
       padding: 0 10px !important;
       display: flex !important;
@@ -2624,21 +2624,21 @@ function injectActivityDetailNoteStyle_() {
       justify-content: center !important;
       line-height: 1 !important;
       overflow: hidden !important;
-      border-radius: 15px !important;
-      font-size: 20px !important;
+      border-radius: 12px !important;
+      font-size: 18px !important;
       font-weight: 900 !important;
     }
 
     .activity-detail-close-btn {
       color: #1976e8 !important;
       background: #ffffff !important;
-      border: 2px solid #1976e8 !important;
+      border: 1px solid #1976e8 !important;
     }
 
     .activity-detail-share-btn {
       color: #ffffff !important;
       background: linear-gradient(180deg, #2f87f5, #1976e8) !important;
-      border: 2px solid #1976e8 !important;
+      border: 1px solid #1976e8 !important;
     }
 
     .activity-detail-share-btn:disabled {
@@ -2863,9 +2863,9 @@ function injectActivityDetailNoteStyle_() {
       }
 
       .activity-detail-actions {
-        height: 54px !important;
-        min-height: 54px !important;
-        max-height: 54px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
       }
 
       .activity-detail-note-table td:not(.temple-cell),
