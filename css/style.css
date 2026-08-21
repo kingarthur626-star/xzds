@@ -4360,3 +4360,13 @@ textarea:focus {
   width: 100%;
   min-width: 0;
 }
+
+
+/* 20260821 R33：首頁標題避開頂端安全區，與活動明細維持一致留白 */
+.home-page {
+  padding-top: max(48px, calc(env(safe-area-inset-top, 0px) + 36px)) !important;
+}
+
+.home-title {
+  margin-top: 0 !important;
+}
