@@ -5,6 +5,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   form.addEventListener('submit', handleResetPassword);
 
+  const params = new URLSearchParams(location.search);
+  if (params.get('force') === '1') {
+    const accountInput = document.getElementById('forgotAccount');
+    const forcedAccount = sessionStorage.getItem('forcedPasswordResetAccount') || '';
+    if (accountInput && forcedAccount) {
+      accountInput.value = forcedAccount;
+      accountInput.readOnly = true;
+    }
+    showMessage('forgotMessage', 'warning', '請先完成密碼變更，完成後才能登入系統。');
+  }
+
   document.querySelectorAll('input[name="forgotGroup"]').forEach(function(radio) {
     radio.addEventListener('change', function() {
       const group = getSelectedRadioValue('forgotGroup');
@@ -70,6 +81,7 @@ async function handleResetPassword(e) {
     });
 
     if (result.success) {
+      sessionStorage.removeItem('forcedPasswordResetAccount');
       alert(result.message || '密碼變更成功，請登入');
       location.href = 'index.html?reset=success';
     } else {
