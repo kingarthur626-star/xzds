@@ -3,50 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="preconnect" href="https://script.google.com">
-  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
-  <link rel="dns-prefetch" href="//script.google.com">
-  <link rel="dns-prefetch" href="//script.googleusercontent.com">
-
-  <title>系統後台｜帳號管理</title>
-
-  <link rel="stylesheet" href="css/style.css?v=20260806-013" />
+  <title>系統後台｜帳號維護</title>
+  <link rel="stylesheet" href="css/style.css?v=20260825-account-maintenance" />
+  <link rel="stylesheet" href="css/account-maintenance.css?v=20260825-1" />
 </head>
-
 <body class="admin-page">
-  <div class="page">
-    <div class="page-inner">
-
-      <div class="page-action-bar admin-top-action-bar">
-        <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
-        <button class="action-pill" id="backBtn" type="button">首頁</button>
-      </div>
-
-      <div class="card wide-card admin-card">
-        <h1>系統後台</h1>
-
-        <div class="small-text">帳號管理｜角色與啟用狀態</div>
-
-        <div id="adminMessage" class="message"></div>
-
-        <div class="admin-toolbar">
-          <input id="adminSearchInput" class="admin-search-input" type="text" placeholder="搜尋壇名、姓名、帳號" autocomplete="off" />
-          <button id="reloadAccountsBtn" class="admin-small-btn" type="button">重新整理</button>
-        </div>
-
-        <div id="adminStatsText" class="small-text admin-stats-text">讀取中...</div>
-
-        <div id="adminAccountList" class="admin-account-list">
-          <div class="small-text">讀取帳號中...</div>
-        </div>
-      </div>
-
+  <div class="page"><div class="page-inner">
+    <div class="page-action-bar admin-top-action-bar">
+      <button class="action-pill logout" id="logoutBtn" type="button">登出</button>
+      <button class="action-pill" id="backBtn" type="button">首頁</button>
     </div>
-  </div>
-
+    <div class="card wide-card admin-card">
+      <h1>系統後台</h1>
+      <div class="small-text">帳號維護｜新增、編輯、停用、封存與維護紀錄</div>
+      <div id="adminMessage" class="message" aria-live="polite"></div>
+      <section class="admin-maintenance-section">
+        <h2>新增帳號</h2>
+        <p class="small-text">初始密碼只會安全寫入後端；請以私下方式通知本人，首次登入後須修改。</p>
+        <form id="createAccountForm" class="admin-maintenance-grid">
+          <label>壇名<input id="createTemple" name="temple" required maxlength="80" /></label>
+          <label>姓名<input id="createName" name="name" required maxlength="80" /></label>
+          <label>帳號 Email<input id="createAccount" name="account" type="email" required autocomplete="off" /></label>
+          <label>角色<select id="createRole" name="role"><option value="user">user｜一般帳號</option><option value="admin">admin｜管理帳號</option></select></label>
+          <label class="admin-maintenance-wide">初始密碼<input id="initialPassword" name="initialPassword" type="password" required autocomplete="new-password" /></label>
+          <button class="admin-save-btn admin-maintenance-wide" type="submit">建立帳號</button>
+        </form>
+      </section>
+      <div class="admin-toolbar">
+        <input id="adminSearchInput" class="admin-search-input" type="search" placeholder="搜尋壇名、姓名、帳號" autocomplete="off" />
+        <button id="reloadAccountsBtn" class="admin-small-btn" type="button">重新整理</button>
+      </div>
+      <div id="adminStatsText" class="small-text admin-stats-text">讀取中...</div>
+      <div id="adminAccountList" class="admin-account-list"><div class="small-text">讀取帳號中...</div></div>
+      <section class="admin-maintenance-section">
+        <div class="admin-section-head"><h2>維護紀錄</h2><button id="reloadAuditBtn" class="admin-small-btn" type="button">重新整理</button></div>
+        <div id="adminAuditList" class="admin-audit-list"><div class="small-text">尚未讀取維護紀錄</div></div>
+      </section>
+    </div>
+  </div></div>
   <script src="js/config.js?v=20260620-1"></script>
   <script src="js/api.js?v=20260812-api-stability-032r2"></script>
   <script src="js/common.js?v=20260620-1"></script>
-  <script src="js/admin.js?v=20260806-012"></script>
+  <script src="js/admin.js?v=20260825-account-maintenance"></script>
 </body>
 </html>
