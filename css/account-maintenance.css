@@ -1,0 +1,12 @@
+.admin-maintenance-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid #d9e2ee; }
+.admin-maintenance-section h2 { margin: 0 0 8px; color: #163b61; font-size: 1.2rem; }
+.admin-maintenance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 100%; }
+.admin-maintenance-grid label { display: grid; gap: 6px; color: #244866; font-weight: 700; min-width: 0; }
+.admin-maintenance-grid input, .admin-maintenance-grid select { box-sizing: border-box; width: 100%; max-width: 100%; min-height: 42px; border: 1px solid #cbd8e6; border-radius: 12px; padding: 8px 10px; background: #fff; color: #173b5c; }
+.admin-maintenance-wide { grid-column: 1 / -1; }
+.admin-card-actions, .admin-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.admin-card-actions .admin-save-btn { flex: 1; }
+.admin-audit-list { display: grid; gap: 8px; }
+.admin-audit-row { display: grid; gap: 3px; padding: 12px; border: 1px solid #d9e2ee; border-radius: 12px; background: #f9fbfd; color: #244866; }
+.admin-audit-row span, .admin-audit-row small { color: #62778d; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .admin-maintenance-grid { grid-template-columns: 1fr; } .admin-maintenance-wide { grid-column: auto; } .admin-card-actions, .admin-section-head { align-items: stretch; flex-direction: column; } .admin-card-actions .admin-small-btn, .admin-section-head .admin-small-btn { width: 100%; } }
