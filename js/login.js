@@ -130,6 +130,11 @@ try {
   });
 
   if (!result.success) {
+    if (result.requirePasswordReset) {
+      sessionStorage.setItem('forcedPasswordResetAccount', account);
+      location.href = 'forgot.html?force=1';
+      return;
+    }
     showMessage('loginMessage', 'error', result.message || '登入失敗');
 
     if (result.requireCaptcha) {
