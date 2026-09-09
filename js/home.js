@@ -94,6 +94,7 @@ const btnAnnual = document.getElementById('btnAnnual');
 const btnHistory = document.getElementById('btnHistory');
 const btnDutyActivityList = document.getElementById('btnDutyActivityList');
 const btnMobileShare = document.getElementById('btnMobileShare');
+const btnResponsibilityOwnership = document.getElementById('btnResponsibilityOwnership');
 const btnDailyDataUpdate = document.getElementById('btnDailyDataUpdate');
 const btnMemberSearch = document.getElementById('btnMemberSearch');
 const btnUpdate = document.getElementById('btnUpdate');
@@ -120,6 +121,12 @@ if (btnDutyActivityList) {
 if (btnMobileShare) {
   btnMobileShare.addEventListener('click', function () {
     location.href = 'mobile-share.html';
+  });
+}
+
+if (btnResponsibilityOwnership) {
+  btnResponsibilityOwnership.addEventListener('click', function () {
+    location.href = 'responsibility-ownership.html';
   });
 }
 
@@ -218,6 +225,7 @@ function applyHomePermissions_(permissions) {
 const btnDailyDataUpdate = document.getElementById('btnDailyDataUpdate');
 const btnMemberSearch = document.getElementById('btnMemberSearch');
 const btnMobileShare = document.getElementById('btnMobileShare');
+const btnResponsibilityOwnership = document.getElementById('btnResponsibilityOwnership');
 const btnUpdate = document.getElementById('btnUpdate');
 const btnMore = document.getElementById('btnMore');
 
@@ -231,6 +239,10 @@ btnMemberSearch.style.display = (permissions.updateTaoReport || permissions.admi
 
 if (btnMobileShare) {
 btnMobileShare.style.display = (permissions.updateTaoReport || permissions.adminPanel) ? 'flex' : 'none';
+}
+
+if (btnResponsibilityOwnership) {
+btnResponsibilityOwnership.style.display = (permissions.updateTaoReport || permissions.adminPanel) ? 'flex' : 'none';
 }
 
 if (btnUpdate) {

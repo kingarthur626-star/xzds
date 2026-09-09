@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <link rel="dns-prefetch" href="//script.google.com">
+  <link rel="dns-prefetch" href="//script.googleusercontent.com">
+  <meta name="xzds-ui-version" content="20260909-responsibility-ownership-r1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>責任點傳師 忠字班道務歸屬｜新莊區道務檢視</title>
+  <meta name="theme-color" content="#f5f7fb">
+  <link rel="manifest" href="./manifest.json?v=20260623-001">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css?v=20260821-r20">
+  <link rel="stylesheet" href="./css/responsibility-ownership.css?v=20260909-r1">
+</head>
+<body class="responsibility-ownership-body">
+  <main class="responsibility-ownership-page">
+    <nav class="responsibility-ownership-nav" aria-label="頁面導覽">
+      <button class="action-pill logout" id="responsibilityLogoutBtn" type="button">登出</button>
+      <span class="responsibility-nav-title">責任公壇檢視</span>
+      <button class="action-pill" id="responsibilityHomeBtn" type="button">首頁</button>
+    </nav>
+
+    <header class="responsibility-ownership-header">
+      <h1>責任點傳師<br>忠字班道務歸屬</h1>
+      <p id="responsibilitySubtitle">讀取責任公壇資料中…</p>
+    </header>
+
+    <section class="responsibility-controls" aria-label="月份選擇">
+      <label for="responsibilityMonthSelect">檢視月份</label>
+      <select id="responsibilityMonthSelect" aria-label="檢視月份">
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
+      <button id="responsibilityReloadBtn" type="button">重新讀取</button>
+    </section>
+
+    <section id="responsibilityLoading" class="responsibility-message">讀取責任公壇資料中…</section>
+    <section id="responsibilityError" class="responsibility-message error" hidden></section>
+    <section id="responsibilityWarning" class="responsibility-message warning" hidden></section>
+    <section id="responsibilityGroups" class="responsibility-groups" aria-live="polite"></section>
+  </main>
+
+  <script src="./js/config.js?v=20260619-2"></script>
+  <script src="./js/api.js?v=20260909-responsibility-ownership-r1"></script>
+  <script src="./js/common.js?v=20260623-04"></script>
+  <script src="./js/responsibility-ownership.js?v=20260909-r1"></script>
+  <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
+</body>
+</html>

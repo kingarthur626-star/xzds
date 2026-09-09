@@ -8,7 +8,7 @@
    4. Avoid apparent "logged out" jumps caused by offline/cache fallback.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260825-account-maintenance-r34';
+const CACHE_NAME = CACHE_PREFIX + '20260909-responsibility-ownership-r1';
 
 const STATIC_ASSETS = [
   './',
@@ -18,6 +18,7 @@ const STATIC_ASSETS = [
   './history.html',
   './mobile-share.html',
   './mobile-share-summary.html',
+  './responsibility-ownership.html',
   './daily-data-update.html',
   './member-search.html',
   './duty-activity-list.html',
@@ -33,6 +34,7 @@ const STATIC_ASSETS = [
   './css/home-member-search.css',
   './css/mobile-share.css',
   './css/mobile-share-summary.css',
+  './css/responsibility-ownership.css',
   './css/daily-data-update.css',
   './css/member-search.css',
   './js/config.js',
@@ -46,6 +48,7 @@ const STATIC_ASSETS = [
   './js/history.js',
   './js/mobile-share.js',
   './js/mobile-share-summary.js',
+  './js/responsibility-ownership.js',
   './js/daily-data-update.js',
   './js/member-search.js',
   './js/qr-local.js',

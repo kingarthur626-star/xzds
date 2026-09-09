@@ -44,3 +44,11 @@
 .home-menu-btn:nth-child(7) { background: linear-gradient(135deg, #64748B, #526175); }
 .home-menu-btn:nth-child(8) { background: linear-gradient(135deg, #B27727, #9A6118); }
 .home-menu-btn:hover { filter: brightness(1.04); }
+
+/* 功能增加後仍以固定識別碼維持各功能配色。 */
+#btnResponsibilityOwnership { background: linear-gradient(135deg, #9c647e, #80566f); }
+#btnResponsibilityOwnership .home-menu-main { font-size: 17px; line-height: 1.45; }
+#btnDailyDataUpdate { background: linear-gradient(135deg, #208B67, #187B59); }
+#btnMemberSearch { background: linear-gradient(135deg, #2878A7, #216B98); }
+#btnMore { background: linear-gradient(135deg, #64748B, #526175); }
+#btnUpdate { background: linear-gradient(135deg, #B27727, #9A6118); }
