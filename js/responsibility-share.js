@@ -90,7 +90,8 @@
     const token = sequence;
     element('Send').disabled = true;
     try {
-      await navigator.share({files:[file], title:'責任點傳師 忠字班道務歸屬'});
+      // 只交付圖片，避免 LINE 同時產生標題文字訊息。
+      await navigator.share({files:[file]});
       if (token === sequence) message('已交給系統分享選單；是否傳送完成請在 LINE 確認。');
     } catch (error) {
       if (token === sequence) {
