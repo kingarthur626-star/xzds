@@ -117,7 +117,7 @@
     const temples = snapshot.group.temples || [];
     if (!temples.length) throw new Error('此區塊沒有可匯出的佛堂。');
     const width = 1200;
-    const top = 132;
+    const top = 80;
     const headerHeight = 54;
     const templeHeight = 92;
     const height = top + headerHeight + temples.length * templeHeight + 24;
@@ -140,11 +140,10 @@
       do { ctx.font = (weight || 500) + ' ' + actual + 'px ' + font; if (!maxWidth || ctx.measureText(label).width <= maxWidth) break; actual -= 1; } while (actual > 12);
       ctx.fillText(label,x,y,maxWidth);
     }
-    text('責任點傳師　　　忠字班道務歸屬',width/2,44,32,ink,'center',1136,800);
     // 年月、組別與責任人整行一起量測，確保同字型、同字級、不溢出。
     text(snapshot.year + ' 年 ' + snapshot.month + ' 月｜' + getResponsibilityGroupLabel_(snapshot.majorGroup) +
       '　　責任點傳師：' + (snapshot.group.responsibleTransmitter || '—') + '　　責任忠字班：' +
-      (snapshot.group.responsibleZhongZiClass || '—'),width/2,96,27,ink,'center',1136,700);
+      (snapshot.group.responsibleZhongZiClass || '—'),width/2,44,27,ink,'center',1136,700);
     const columns = [220,85,130,130,90,130,351];
     const starts = []; let cursor = 32;
     columns.forEach(function (size) { starts.push(cursor); cursor += size; });
@@ -156,7 +155,8 @@
       const y = top + headerHeight + index * templeHeight;
       // 每個佛堂兩列緊接，只在不同佛堂之間畫分隔線。
       if (index % 2) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(32,y,1136,templeHeight); }
-      text(temple.formalTempleName,starts[0]+columns[0]-12,y+24,25,ink,'right',columns[0]-22,700);
+      // 以 25px 字級計算，佛堂名稱向左移兩個中文字，其他欄位不動。
+      text(temple.formalTempleName,starts[0]+columns[0]-12-50,y+24,25,ink,'right',columns[0]-22-50,700);
       const metrics = Array.isArray(temple.metrics) ? temple.metrics : [];
       [0,1].forEach(function (row) {
         const metric = metrics[row] || {};
