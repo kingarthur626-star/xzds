@@ -24,6 +24,7 @@ function bindResponsibilityActions_() {
   const homeButton = document.getElementById('responsibilityHomeBtn');
   const reloadButton = document.getElementById('responsibilityReloadBtn');
   const monthSelect = document.getElementById('responsibilityMonthSelect');
+  const groupSelect = document.getElementById('responsibilityGroupSelect');
   const groups = document.getElementById('responsibilityGroups');
 
   if (logoutButton) {
@@ -48,6 +49,15 @@ function bindResponsibilityActions_() {
 
   if (groups) {
     groups.addEventListener('click', function (event) {
+      const exportButton = event.target.closest('[data-responsibility-export]');
+      if (exportButton && groups.contains(exportButton)) {
+        const selectedGroups = getResponsibilityVisibleGroups_(responsibilityCurrentData_);
+        const group = selectedGroups[Number(exportButton.dataset.responsibilityExport)];
+        if (group && window.ResponsibilityShare) {
+          window.ResponsibilityShare.open(group, responsibilityCurrentData_, getResponsibilitySelectedGroup_(), exportButton);
+        }
+        return;
+      }
       const button = event.target.closest('[data-responsibility-temple-key]');
       if (!button || !groups.contains(button)) return;
       toggleResponsibilityTemple_(String(button.dataset.responsibilityTempleKey || ''));
@@ -55,9 +65,18 @@ function bindResponsibilityActions_() {
 
     // 原生 button 自動支援 Enter／空白鍵，避免重複觸發。
   }
+
+  if (groupSelect) {
+    groupSelect.addEventListener('change', function () {
+      if (window.ResponsibilityShare) window.ResponsibilityShare.close();
+      responsibilityExpandedTempleKey_ = '';
+      if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
+    });
+  }
 }
 
 async function loadResponsibilityOwnership_(requestedMonth) {
+  if (window.ResponsibilityShare) window.ResponsibilityShare.close();
   const serial = ++responsibilityRequestSerial_;
   const month = normalizeResponsibilityMonth_(requestedMonth);
   // 僅保留此頁記憶體中的同月份資料，不將跨壇責任資料寫入瀏覽器儲存空間。
@@ -71,6 +90,9 @@ async function loadResponsibilityOwnership_(requestedMonth) {
     renderResponsibilityOwnership_(cached);
     setResponsibilityWarning_('目前先顯示上次成功資料，正在重新確認最新資料…');
   } else {
+    // 清除不同月份的記憶體資料，避免讀取期間切換組別重畫舊月份。
+    responsibilityCurrentData_ = null;
+    responsibilityExpandedTempleKey_ = '';
     setResponsibilityLoading_(true);
     setResponsibilityError_('');
     setResponsibilityWarning_('');
@@ -138,13 +160,13 @@ function renderResponsibilityOwnership_(data) {
   const subtitle = document.getElementById('responsibilitySubtitle');
   if (!area) return;
 
-  const groups = Array.isArray(data && data.groups) ? data.groups : [];
+  const groups = getResponsibilityVisibleGroups_(data);
   const month = Number(data && data.month || 0);
 
   if (subtitle) {
     subtitle.textContent = (data && data.year ? data.year + ' 年 ' : '') +
       (month ? month + ' 月資料' : '年度資料') +
-      '｜正式佛堂名稱對應';
+      '｜' + getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_()) + '・' + groups.length + ' 個責任區塊';
   }
 
   if (!groups.length) {
@@ -152,12 +174,33 @@ function renderResponsibilityOwnership_(data) {
     return;
   }
 
-  area.innerHTML = groups.map(function (group) {
-    return buildResponsibilityGroupHtml_(group, month);
+  area.innerHTML = groups.map(function (group, index) {
+    return buildResponsibilityGroupHtml_(group, month, index);
   }).join('');
 }
 
-function buildResponsibilityGroupHtml_(group, month) {
+function getResponsibilitySelectedGroup_() {
+  const select = document.getElementById('responsibilityGroupSelect');
+  return select && /^[123]$/.test(select.value) ? select.value : '1';
+}
+
+function getResponsibilityGroupLabel_(value) {
+  return ({ '1': '第一組', '2': '第二組', '3': '第三組' })[value] || '第一組';
+}
+
+function getResponsibilityVisibleGroups_(data) {
+  const selected = getResponsibilitySelectedGroup_();
+  return (Array.isArray(data && data.groups) ? data.groups : []).map(function (group) {
+    const temples = (Array.isArray(group.temples) ? group.temples : []).filter(function (temple) {
+      // 只依正式名稱的數字組別篩選，不猜測姓名或別名，也不修改後端資料。
+      const match = /^([123])[A-Z]_/.exec(String(temple.formalTempleName || '').trim());
+      return match && match[1] === selected;
+    });
+    return Object.assign({}, group, { temples: temples });
+  }).filter(function (group) { return group.temples.length > 0; });
+}
+
+function buildResponsibilityGroupHtml_(group, month, index) {
   const temples = Array.isArray(group && group.temples) ? group.temples : [];
   return (
     '<section class="responsibility-group">' +
@@ -168,6 +211,9 @@ function buildResponsibilityGroupHtml_(group, month) {
       '<div class="responsibility-group-gap" aria-hidden="true"></div>' +
       buildResponsibilityTableHeadHtml_(month) +
       temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple); }).join('') +
+      '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
+        '" aria-label="產生' + escapeResponsibilityAttribute_(group.responsibleZhongZiClass || '此責任區塊') +
+        '的分享圖片">圖片分享／下載</button></div>' +
     '</section>'
   );
 }
