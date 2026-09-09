@@ -116,10 +116,10 @@
     const temples = snapshot.group.temples || [];
     if (!temples.length) throw new Error('此區塊沒有可匯出的佛堂。');
     const width = 1200;
-    const top = 166;
+    const top = 132;
     const headerHeight = 54;
     const templeHeight = 92;
-    const height = top + headerHeight + temples.length * templeHeight + 54;
+    const height = top + headerHeight + temples.length * templeHeight + 24;
     if (height * 2 > 8192) throw new Error('此區塊資料過多，請縮小範圍後再試。');
     const canvas = document.createElement('canvas');
     canvas.width = width * 2;
@@ -139,10 +139,11 @@
       do { ctx.font = (weight || 500) + ' ' + actual + 'px ' + font; if (!maxWidth || ctx.measureText(label).width <= maxWidth) break; actual -= 1; } while (actual > 12);
       ctx.fillText(label,x,y,maxWidth);
     }
-    text('責任點傳師 忠字班道務歸屬',width/2,44,32,ink,'center',1136,800);
-    text(snapshot.year + ' 年 ' + snapshot.month + ' 月｜' + getResponsibilityGroupLabel_(snapshot.majorGroup),width/2,84,23,'#66788e');
-    text('責任點傳師：' + (snapshot.group.responsibleTransmitter || '—') + '　　責任忠字班：' +
-      (snapshot.group.responsibleZhongZiClass || '—'),width/2,128,27,ink,'center',1136,700);
+    text('責任點傳師　　　忠字班道務歸屬',width/2,44,32,ink,'center',1136,800);
+    // 年月、組別與責任人整行一起量測，確保同字型、同字級、不溢出。
+    text(snapshot.year + ' 年 ' + snapshot.month + ' 月｜' + getResponsibilityGroupLabel_(snapshot.majorGroup) +
+      '　　責任點傳師：' + (snapshot.group.responsibleTransmitter || '—') + '　　責任忠字班：' +
+      (snapshot.group.responsibleZhongZiClass || '—'),width/2,96,27,ink,'center',1136,700);
     const columns = [220,85,130,130,90,130,351];
     const starts = []; let cursor = 32;
     columns.forEach(function (size) { starts.push(cursor); cursor += size; });
@@ -154,14 +155,16 @@
       const y = top + headerHeight + index * templeHeight;
       // 每個佛堂兩列緊接，只在不同佛堂之間畫分隔線。
       if (index % 2) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(32,y,1136,templeHeight); }
-      text(temple.formalTempleName,starts[0]+12,y+24,25,ink,'left',columns[0]-22,700);
+      text(temple.formalTempleName,starts[0]+columns[0]-12,y+24,25,ink,'right',columns[0]-22,700);
       const metrics = Array.isArray(temple.metrics) ? temple.metrics : [];
       [0,1].forEach(function (row) {
         const metric = metrics[row] || {};
         const cy = y + 24 + row * 40;
         const values = [metric.category || (row ? '法會':'求道'),metric.previousActual,metric.annualTarget,metric.monthValue,metric.cumulative];
         values.forEach(function (value,i) {
-          text(i ? formatResponsibilityNumber_(value) : value,starts[i+1]+columns[i+1]/2,cy,26,i ? '#243b50':'#66788e','center',columns[i+1]-10,i ? 500:700);
+          // 只有月份欄的已知零值留白；未知值保留「—」，其他欄的零值照常顯示。
+          const monthZero = i === 3 && value !== null && value !== undefined && Number(value) === 0;
+          text(monthZero ? '' : (i ? formatResponsibilityNumber_(value) : value),starts[i+1]+columns[i+1]/2,cy,26,i ? '#243b50':'#66788e','center',columns[i+1]-10,i ? 500:700);
         });
         const rate = metric.ratePercent;
         const tone = getResponsibilityTone_(rate);
@@ -177,7 +180,6 @@
       ctx.strokeStyle = '#dce5ef'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(32,y+templeHeight); ctx.lineTo(1168,y+templeHeight); ctx.stroke();
     });
-    text('新莊區道務檢視｜' + temples.length + ' 間佛堂・數值依目前選定月份',width/2,height-24,19,'#66788e');
     return canvas;
   }
 
