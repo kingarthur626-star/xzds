@@ -240,19 +240,20 @@ function buildResponsibilityTempleHtml_(temple) {
       '<button class="responsibility-temple-toggle" type="button" data-responsibility-temple-key="' +
         escapeResponsibilityAttribute_(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') +
         '" aria-label="展開 ' + templeName + ' 的責任資料">' +
-        buildResponsibilityMetricRowHtml_(templeName, qiu, true) +
-        buildResponsibilityMetricRowHtml_('', fahui, false) +
+        '<span class="responsibility-temple-name"><span>' + templeName + '</span><b class="responsibility-chevron" aria-hidden="true">⌄</b></span>' +
+        buildResponsibilityMetricRowHtml_(qiu) +
+        buildResponsibilityMetricRowHtml_(fahui) +
       '</button>' +
       (expanded ? buildResponsibilityDetailHtml_(temple) : '') +
     '</article>'
   );
 }
 
-function buildResponsibilityMetricRowHtml_(templeName, metric, showTempleName) {
+function buildResponsibilityMetricRowHtml_(metric) {
   const tone = getResponsibilityTone_(metric && metric.ratePercent);
   return (
     '<div class="responsibility-metric-row">' +
-      '<span class="temple">' + (showTempleName ? templeName + '<b class="responsibility-chevron" aria-hidden="true">⌄</b>' : '') + '</span>' +
+      '<span class="temple" aria-hidden="true"></span>' +
       '<span class="category">' + escapeResponsibilityHtml_(metric && metric.category || '—') + '</span>' +
       '<span class="number">' + formatResponsibilityNumber_(metric && metric.previousActual) + '</span>' +
       '<span class="number">' + formatResponsibilityNumber_(metric && metric.annualTarget) + '</span>' +

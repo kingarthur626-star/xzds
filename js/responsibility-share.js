@@ -118,8 +118,8 @@
     if (!temples.length) throw new Error('此區塊沒有可匯出的佛堂。');
     const width = 1200;
     const top = 80;
-    const headerHeight = 54;
-    const templeHeight = 92;
+    const headerHeight = 64;
+    const templeHeight = 108;
     const height = top + headerHeight + temples.length * templeHeight + 24;
     if (height * 2 > 8192) throw new Error('此區塊資料過多，請縮小範圍後再試。');
     const canvas = document.createElement('canvas');
@@ -143,39 +143,39 @@
     // 年月、組別與責任人整行一起量測，確保同字型、同字級、不溢出。
     text(snapshot.year + ' 年 ' + snapshot.month + ' 月｜' + getResponsibilityGroupLabel_(snapshot.majorGroup) +
       '　　責任點傳師：' + (snapshot.group.responsibleTransmitter || '—') + '　　責任忠字班：' +
-      (snapshot.group.responsibleZhongZiClass || '—'),width/2,44,27,ink,'center',1136,700);
+      (snapshot.group.responsibleZhongZiClass || '—'),width/2,44,30,ink,'center',1136,700);
     const columns = [220,85,130,130,90,130,351];
     const starts = []; let cursor = 32;
     columns.forEach(function (size) { starts.push(cursor); cursor += size; });
     ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,1136,headerHeight);
     ['佛堂','類別','去年實績','年度目標',snapshot.month+'月','本年累計','達成率'].forEach(function (label,i) {
-      text(label,starts[i]+columns[i]/2,top+headerHeight/2,22,'#305572','center',columns[i]-10,700);
+      text(label,starts[i]+columns[i]/2,top+headerHeight/2,26,'#305572','center',columns[i]-10,700);
     });
     temples.forEach(function (temple,index) {
       const y = top + headerHeight + index * templeHeight;
       // 每個佛堂兩列緊接，只在不同佛堂之間畫分隔線。
       if (index % 2) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(32,y,1136,templeHeight); }
-      // 以 25px 字級計算，佛堂名稱向左移兩個中文字，其他欄位不動。
-      text(temple.formalTempleName,starts[0]+columns[0]-12-50,y+24,25,ink,'right',columns[0]-22-50,700);
+      // 保留前版左移位置，名稱放大並置於求道、法會兩列正中間。
+      text(temple.formalTempleName,starts[0]+columns[0]-12-50,y+54,29,ink,'right',columns[0]-22-50,700);
       const metrics = Array.isArray(temple.metrics) ? temple.metrics : [];
       [0,1].forEach(function (row) {
         const metric = metrics[row] || {};
-        const cy = y + 24 + row * 40;
+        const cy = y + 30 + row * 48;
         const values = [metric.category || (row ? '法會':'求道'),metric.previousActual,metric.annualTarget,metric.monthValue,metric.cumulative];
         values.forEach(function (value,i) {
           // 只有月份欄的已知零值留白；未知值保留「—」，其他欄的零值照常顯示。
           const monthZero = i === 3 && value !== null && value !== undefined && Number(value) === 0;
-          text(monthZero ? '' : (i ? formatResponsibilityNumber_(value) : value),starts[i+1]+columns[i+1]/2,cy,26,i ? '#243b50':'#66788e','center',columns[i+1]-10,i ? 500:700);
+          text(monthZero ? '' : (i ? formatResponsibilityNumber_(value) : value),starts[i+1]+columns[i+1]/2,cy,31,i ? '#243b50':'#66788e','center',columns[i+1]-10,i ? 500:700);
         });
         const rate = metric.ratePercent;
         const tone = getResponsibilityTone_(rate);
         const color = ({green:'#0b9a45',yellow:'#e59a00',red:'#df2424'})[tone];
-        const rateStart = starts[6] + (columns[6] - 243) / 2;
-        text(formatResponsibilityNumber_(rate) + (rate == null ? '' : '%'),rateStart+65,cy,24,rate == null ? '#66788e' : color,'right',67,700);
+        const rateStart = starts[6] + (columns[6] - 263) / 2;
+        text(formatResponsibilityNumber_(rate) + (rate == null ? '' : '%'),rateStart+85,cy,29,rate == null ? '#66788e' : color,'right',87,700);
         const active = getResponsibilityProgressSegments_(rate);
         for (let i=0;i<10;i+=1) {
           ctx.fillStyle = i<active ? color : '#e1e7ef';
-          ctx.fillRect(rateStart+76+i*17,cy-8,14,16);
+          ctx.fillRect(rateStart+96+i*17,cy-9,14,18);
         }
       });
       ctx.strokeStyle = '#dce5ef'; ctx.lineWidth = 1;

@@ -78,3 +78,15 @@ html.responsibility-share-open { overflow: hidden; }
   .responsibility-segments b { width: 6px; height: 9px; }
   .responsibility-rate { gap: 3px; }
 }
+
+/* 佛堂名稱跨求道、法會兩列置中；明細仍由同一個原生按鈕展開。 */
+.responsibility-temple-toggle { display: grid; grid-template-columns: minmax(78px, 1.25fr) 35px repeat(4, minmax(38px, .63fr)) minmax(123px, 1.5fr); padding: 0 10px; }
+.responsibility-temple-toggle .responsibility-metric-row { grid-column: 1 / -1; grid-template-columns: inherit; padding-inline: 0; min-height: 34px; padding-bottom: 0; }
+.responsibility-temple-toggle .responsibility-metric-row:nth-of-type(1) { grid-row: 1; }
+.responsibility-temple-toggle .responsibility-metric-row:nth-of-type(2) { grid-row: 2; }
+.responsibility-temple-name { grid-area: 1 / 1 / 3 / 2; align-self: center; display: flex; align-items: center; min-width: 0; z-index: 1; color: var(--ro-ink); font-size: 15px; font-weight: 900; text-align: left; }
+.responsibility-temple-name > span { min-width: 0; overflow-wrap: anywhere; }
+.responsibility-temple-name .responsibility-chevron { flex-shrink: 0; margin-left: 2px; font-size: 11px; }
+@media (max-width: 430px) { .responsibility-temple-toggle { grid-template-columns: minmax(70px, 1.2fr) 31px repeat(4, minmax(31px, .55fr)) minmax(88px, 1.25fr); padding-inline: 7px; }.responsibility-temple-name { font-size: 14px; } }
+@media (max-width: 370px) { .responsibility-temple-toggle { grid-template-columns: minmax(62px, 1.12fr) 28px repeat(4, minmax(28px, .48fr)) minmax(82px, 1.15fr); }.responsibility-temple-name { font-size: 13px; } }
+@media (min-width: 371px) and (max-width: 450px) { .responsibility-temple-toggle { grid-template-columns: minmax(62px, 1.1fr) 28px repeat(4, minmax(28px, .55fr)) minmax(104px, 1.4fr); padding-inline: 7px; } }
