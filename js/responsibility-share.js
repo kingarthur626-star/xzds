@@ -148,7 +148,7 @@
     const starts = []; let cursor = 32;
     columns.forEach(function (size) { starts.push(cursor); cursor += size; });
     ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,1136,headerHeight);
-    ['佛堂','類別','去年實績','年度目標',snapshot.month+'月','本年累計','達成率'].forEach(function (label,i) {
+    ['佛堂','類別','去年實績','年度目標',snapshot.month+'月','本年累計',getResponsibilityRateLabel_(snapshot.month)].forEach(function (label,i) {
       text(label,starts[i]+columns[i]/2,top+headerHeight/2,26,'#305572','center',columns[i]-10,700);
     });
     temples.forEach(function (temple,index) {

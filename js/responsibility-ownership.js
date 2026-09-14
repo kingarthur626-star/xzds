@@ -222,7 +222,7 @@ function buildResponsibilityTableHeadHtml_(month) {
   return (
     '<div class="responsibility-table-head">' +
       '<span>佛堂</span><span>類別</span><span>去年<br>實績</span><span>年度<br>目標</span>' +
-      '<span>' + escapeResponsibilityHtml_(month ? month + '月' : '本月') + '</span><span>本年<br>累計</span><span>達成率</span>' +
+      '<span>' + escapeResponsibilityHtml_(month ? month + '月' : '本月') + '</span><span>本年<br>累計</span><span>' + getResponsibilityRateLabel_(month) + '</span>' +
     '</div>'
   );
 }
@@ -290,12 +290,21 @@ function toggleResponsibilityTemple_(templeKey) {
   });
 }
 
+function getResponsibilityTargetPercent_(month) {
+  const selectedMonth = normalizeResponsibilityMonth_(month);
+  return selectedMonth ? Math.round(selectedMonth / 12 * 100) : null;
+}
+
+function getResponsibilityRateLabel_(month) {
+  const target = getResponsibilityTargetPercent_(month);
+  return '達成率' + (target === null ? '' : '（' + target + '%）');
+}
+
 function getResponsibilityTone_(ratePercent, month) {
   const rate = Number(ratePercent);
-  const selectedMonth = normalizeResponsibilityMonth_(month);
-  if (!selectedMonth || ratePercent == null || !Number.isFinite(rate)) return 'red';
+  const target = getResponsibilityTargetPercent_(month);
+  if (target === null || ratePercent == null || !Number.isFinite(rate)) return 'red';
   // 依資料所屬月份判色：8 月 67%、9 月 75%；差距剛好 10 個百分點仍為黃色。
-  const target = Math.round(selectedMonth / 12 * 100);
   if (rate >= target) return 'green';
   if (target - rate <= 10) return 'yellow';
   return 'red';
