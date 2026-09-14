@@ -210,7 +210,7 @@ function buildResponsibilityGroupHtml_(group, month, index) {
       '</div>' +
       '<div class="responsibility-group-gap" aria-hidden="true"></div>' +
       buildResponsibilityTableHeadHtml_(month) +
-      temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple); }).join('') +
+      temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple, month); }).join('') +
       '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
         '" aria-label="產生' + escapeResponsibilityAttribute_(group.responsibleZhongZiClass || '此責任區塊') +
         '的分享圖片">圖片分享／下載</button></div>' +
@@ -227,7 +227,7 @@ function buildResponsibilityTableHeadHtml_(month) {
   );
 }
 
-function buildResponsibilityTempleHtml_(temple) {
+function buildResponsibilityTempleHtml_(temple, month) {
   const key = String(temple && temple.templeKey || '');
   const expanded = key && key === responsibilityExpandedTempleKey_;
   const metrics = Array.isArray(temple && temple.metrics) ? temple.metrics : [];
@@ -241,23 +241,23 @@ function buildResponsibilityTempleHtml_(temple) {
         escapeResponsibilityAttribute_(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') +
         '" aria-label="展開 ' + templeName + ' 的責任資料">' +
         '<span class="responsibility-temple-name"><span>' + templeName + '</span><b class="responsibility-chevron" aria-hidden="true">⌄</b></span>' +
-        buildResponsibilityMetricRowHtml_(qiu) +
-        buildResponsibilityMetricRowHtml_(fahui) +
+        buildResponsibilityMetricRowHtml_(qiu, month) +
+        buildResponsibilityMetricRowHtml_(fahui, month) +
       '</button>' +
       (expanded ? buildResponsibilityDetailHtml_(temple) : '') +
     '</article>'
   );
 }
 
-function buildResponsibilityMetricRowHtml_(metric) {
-  const tone = getResponsibilityTone_(metric && metric.ratePercent);
+function buildResponsibilityMetricRowHtml_(metric, month) {
+  const tone = getResponsibilityTone_(metric && metric.ratePercent, month);
   return (
     '<div class="responsibility-metric-row">' +
       '<span class="temple" aria-hidden="true"></span>' +
       '<span class="category">' + escapeResponsibilityHtml_(metric && metric.category || '—') + '</span>' +
       '<span class="number">' + formatResponsibilityNumber_(metric && metric.previousActual) + '</span>' +
       '<span class="number">' + formatResponsibilityNumber_(metric && metric.annualTarget) + '</span>' +
-      '<span class="number">' + formatResponsibilityNumber_(metric && metric.monthValue) + '</span>' +
+      '<span class="number">' + formatResponsibilityMonthValue_(metric && metric.monthValue) + '</span>' +
       '<span class="number">' + formatResponsibilityNumber_(metric && metric.cumulative) + '</span>' +
       '<span class="responsibility-rate ' + tone + '"><strong>' +
         formatResponsibilityNumber_(metric && metric.ratePercent) + (metric.ratePercent == null ? '' : '%') + '</strong>' +
@@ -290,10 +290,14 @@ function toggleResponsibilityTemple_(templeKey) {
   });
 }
 
-function getResponsibilityTone_(ratePercent) {
+function getResponsibilityTone_(ratePercent, month) {
   const rate = Number(ratePercent);
-  if (Number.isFinite(rate) && rate >= 70) return 'green';
-  if (Number.isFinite(rate) && rate >= 50) return 'yellow';
+  const selectedMonth = normalizeResponsibilityMonth_(month);
+  if (!selectedMonth || ratePercent == null || !Number.isFinite(rate)) return 'red';
+  // 依資料所屬月份判色：8 月 67%、9 月 75%；差距剛好 10 個百分點仍為黃色。
+  const target = Math.round(selectedMonth / 12 * 100);
+  if (rate >= target) return 'green';
+  if (target - rate <= 10) return 'yellow';
   return 'red';
 }
 
@@ -357,6 +361,12 @@ function syncResponsibilityMonth_(data) {
 function normalizeResponsibilityMonth_(value) {
   const month = Number(value || 0);
   return Number.isInteger(month) && month >= 1 && month <= 12 ? month : 0;
+}
+
+function formatResponsibilityMonthValue_(value) {
+  // 只隱藏已知零值；未知值仍顯示「—」，其他數值欄位維持原規則。
+  if (value !== null && value !== undefined && Number(value) === 0) return '';
+  return formatResponsibilityNumber_(value);
 }
 
 function formatResponsibilityNumber_(value) {

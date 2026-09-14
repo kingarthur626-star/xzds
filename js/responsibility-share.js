@@ -163,12 +163,12 @@
         const cy = y + 30 + row * 48;
         const values = [metric.category || (row ? '法會':'求道'),metric.previousActual,metric.annualTarget,metric.monthValue,metric.cumulative];
         values.forEach(function (value,i) {
-          // 只有月份欄的已知零值留白；未知值保留「—」，其他欄的零值照常顯示。
-          const monthZero = i === 3 && value !== null && value !== undefined && Number(value) === 0;
-          text(monthZero ? '' : (i ? formatResponsibilityNumber_(value) : value),starts[i+1]+columns[i+1]/2,cy,31,i ? '#243b50':'#66788e','center',columns[i+1]-10,i ? 500:700);
+          // 與手機畫面共用月份零值規則，避免兩種呈現不一致。
+          const label = i === 3 ? formatResponsibilityMonthValue_(value) : (i ? formatResponsibilityNumber_(value) : value);
+          text(label,starts[i+1]+columns[i+1]/2,cy,31,i ? '#243b50':'#66788e','center',columns[i+1]-10,i ? 500:700);
         });
         const rate = metric.ratePercent;
-        const tone = getResponsibilityTone_(rate);
+        const tone = getResponsibilityTone_(rate, snapshot.month);
         const color = ({green:'#0b9a45',yellow:'#e59a00',red:'#df2424'})[tone];
         const rateStart = starts[6] + (columns[6] - 263) / 2;
         text(formatResponsibilityNumber_(rate) + (rate == null ? '' : '%'),rateStart+85,cy,29,rate == null ? '#66788e' : color,'right',87,700);
