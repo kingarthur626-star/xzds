@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link rel="dns-prefetch" href="//script.google.com">
   <link rel="dns-prefetch" href="//script.googleusercontent.com">
-  <meta name="xzds-ui-version" content="20260914-responsibility-ownership-r8">
+  <meta name="xzds-ui-version" content="20260914-responsibility-ownership-r9">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -16,7 +16,7 @@
   <link rel="manifest" href="./manifest.json?v=20260623-001">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./css/style.css?v=20260821-r20">
-  <link rel="stylesheet" href="./css/responsibility-ownership.css?v=20260910-r6">
+  <link rel="stylesheet" href="./css/responsibility-ownership.css?v=20260914-r9">
 </head>
 <body class="responsibility-ownership-body">
   <main class="responsibility-ownership-page">
@@ -43,6 +43,7 @@
       <select id="responsibilityGroupSelect" aria-label="組別">
         <option value="1">第一組</option><option value="2">第二組</option><option value="3">第三組</option>
       </select>
+      <button id="responsibilityBatchExportBtn" type="button" aria-label="產生第一組全部分享圖片" disabled>第一組圖片</button>
       <button id="responsibilityReloadBtn" type="button" aria-label="重新讀取資料">重讀</button>
     </section>
 
@@ -59,6 +60,7 @@
     </div>
     <p id="responsibilityShareStatus" role="status">準備圖片中…</p>
     <img id="responsibilityShareImage" alt="所選責任忠字班的完整道務報表預覽" hidden>
+    <div id="responsibilityShareGallery" class="responsibility-share-gallery" hidden></div>
     <div class="responsibility-share-actions">
       <button id="responsibilityShareSend" type="button" disabled>分享圖片</button>
       <button id="responsibilityShareDownload" type="button" disabled>下載 PNG</button>
@@ -69,8 +71,9 @@
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20260909-responsibility-ownership-r1"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/responsibility-share.js?v=20260914-r8"></script>
-  <script src="./js/responsibility-ownership.js?v=20260914-r8"></script>
+  <script src="./js/responsibility-zip.js?v=20260914-r9"></script>
+  <script src="./js/responsibility-share.js?v=20260914-r9"></script>
+  <script src="./js/responsibility-ownership.js?v=20260914-r9"></script>
   <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
 </body>
 </html>

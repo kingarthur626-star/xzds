@@ -1,8 +1,10 @@
 /* 責任歸屬圖片：在已登入頁面的記憶體產生 PNG，不上傳資料至第三方服務。 */
 (function () {
   'use strict';
-  let file = null;
-  let imageUrl = '';
+  let files = [];
+  let imageUrls = [];
+  let downloadUrl = '';
+  let downloadName = '';
   let sequence = 0;
   let opener = null;
   let bound = false;
@@ -12,11 +14,16 @@
 
   function clearImage() {
     sequence += 1;
-    file = null;
+    files = [];
     element('Image').hidden = true;
     element('Image').removeAttribute('src');
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    imageUrl = '';
+    element('Gallery').replaceChildren();
+    element('Gallery').hidden = true;
+    imageUrls.forEach(function (url) { URL.revokeObjectURL(url); });
+    if (downloadUrl && !imageUrls.includes(downloadUrl)) URL.revokeObjectURL(downloadUrl);
+    imageUrls = [];
+    downloadUrl = '';
+    downloadName = '';
     element('Send').disabled = true;
     element('Download').disabled = true;
   }
@@ -42,75 +49,121 @@
     element('Download').addEventListener('click', download);
   }
 
-  async function open(group, data, majorGroup, trigger) {
+  function open(group, data, majorGroup, trigger) {
+    return openMany([group], data, majorGroup, trigger, false);
+  }
+
+  function openAll(groups, data, majorGroup, trigger) {
+    return openMany(groups, data, majorGroup, trigger, true);
+  }
+
+  async function openMany(groups, data, majorGroup, trigger, batch) {
     bind();
     clearImage();
     opener = trigger;
     const token = sequence;
     const dialog = element('Dialog');
     message('正在產生高解析圖片…');
-    element('Title').textContent = String(group.responsibleZhongZiClass || '責任區塊') + '・圖片預覽';
+    const caption = getResponsibilityGroupLabel_(majorGroup);
+    element('Title').textContent = batch ? caption + '・全部圖片' : String(groups[0].responsibleZhongZiClass || '責任區塊') + '・圖片預覽';
+    element('Send').textContent = batch ? '分享全部圖片' : '分享圖片';
+    element('Download').textContent = batch ? '下載全部 ZIP' : '下載 PNG';
     if (!dialog.open) dialog.showModal();
     document.documentElement.classList.add('responsibility-share-open');
     try {
-      // 只截取目前責任區塊；之後切月份、換組或關閉會作廢這次產圖。
-      const snapshot = JSON.parse(JSON.stringify({group:group, year:data.year, month:data.month, majorGroup:majorGroup}));
+      // 固定這次的組別／月份快照，依原始順序逐張產圖，關閉後作廢整批。
+      const snapshot = JSON.parse(JSON.stringify({groups:groups, year:data.year, month:data.month, majorGroup:majorGroup}));
+      if (!snapshot.groups.length) throw new Error('沒有可分享的責任區塊。');
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       if (token !== sequence || !dialog.open) return;
-      const canvas = drawReport(snapshot);
-      const blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (value) {
-          if (value) resolve(value); else reject(new Error('圖片產生失敗，請重試。'));
-        }, 'image/png');
-      });
+      const readyFiles = [], sizes = [];
+      for (let index = 0; index < snapshot.groups.length; index += 1) {
+        if (token !== sequence || !dialog.open) return;
+        message('正在產生第 ' + (index + 1) + '／' + snapshot.groups.length + ' 張圖片…');
+        const group = snapshot.groups[index];
+        const canvas = drawReport({group:group, year:snapshot.year, month:snapshot.month, majorGroup:snapshot.majorGroup});
+        sizes.push(canvas.width + ' × ' + canvas.height);
+        let blob;
+        try {
+          blob = await new Promise(function (resolve, reject) {
+            canvas.toBlob(function (value) {
+              if (value) resolve(value); else reject(new Error('圖片產生失敗，請重試。'));
+            }, 'image/png');
+          });
+        } finally { canvas.width = 0; canvas.height = 0; }
+        if (token !== sequence || !dialog.open) return;
+        const name = ((batch ? String(index + 1).padStart(2,'0') + '_' : '') +
+          snapshot.year + '-' + String(snapshot.month).padStart(2,'0') + '_' + caption + '_' +
+          group.responsibleTransmitter + '_' + group.responsibleZhongZiClass + '_道務歸屬')
+          .replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').slice(0,120) + '.png';
+        readyFiles.push(new File([blob], name, {type:'image/png'}));
+      }
+      const downloadBlob = batch ? await window.ResponsibilityZip.create(readyFiles) : readyFiles[0];
       if (token !== sequence || !dialog.open) return;
-      const caption = getResponsibilityGroupLabel_(snapshot.majorGroup);
-      const name = (snapshot.year + '-' + String(snapshot.month).padStart(2,'0') + '_' + caption + '_' +
-        snapshot.group.responsibleTransmitter + '_' + snapshot.group.responsibleZhongZiClass + '_道務歸屬')
-        .replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').slice(0,120) + '.png';
-      file = new File([blob], name, {type:'image/png'});
-      imageUrl = URL.createObjectURL(blob);
-      element('Image').src = imageUrl;
-      element('Image').hidden = false;
+      files = readyFiles;
+      imageUrls = files.map(function (file) { return URL.createObjectURL(file); });
+      downloadUrl = batch ? URL.createObjectURL(downloadBlob) : imageUrls[0];
+      downloadName = batch ? snapshot.year + '-' + String(snapshot.month).padStart(2,'0') + '_' + caption + '_全部圖片.zip' : files[0].name;
+      if (batch) {
+        files.forEach(function (file,index) {
+          const figure = document.createElement('figure');
+          const title = document.createElement('figcaption');
+          title.textContent = (index + 1) + '／' + files.length + '　' + (snapshot.groups[index].responsibleZhongZiClass || '責任區塊');
+          const img = document.createElement('img');
+          img.src = imageUrls[index]; img.alt = title.textContent + '道務報表';
+          const link = document.createElement('a');
+          link.href = imageUrls[index]; link.download = file.name; link.textContent = '下載這張 PNG';
+          figure.append(title, img, link); element('Gallery').appendChild(figure);
+        });
+        element('Gallery').hidden = false;
+      } else {
+        element('Image').src = imageUrls[0];
+        element('Image').hidden = false;
+      }
       element('Send').disabled = false;
       element('Download').disabled = false;
-      message(canvas.width + ' × ' + canvas.height + ' 像素 PNG，適合 LINE 或 PPT。');
+      message(batch ? '已產生 ' + files.length + ' 張圖片，每張寬 2400 像素。按「分享全部圖片」後選 LINE；不支援時可下載 ZIP，解壓縮後選取圖片傳送。' : sizes[0] + ' 像素 PNG，適合 LINE 或 PPT。');
     } catch (error) {
-      if (token === sequence) message('無法產生圖片：' + (error.message || '請稍後重試。'));
+      if (token === sequence) {
+        clearImage();
+        message('無法產生圖片：' + (error.message || '請稍後重試。'));
+      }
     }
   }
 
   async function share() {
-    if (!file) return;
+    if (!files.length) return;
     // 先產圖、再由使用者按分享，保留手機瀏覽器要求的即時點擊權限。
-    if (!navigator.share || !navigator.canShare || !navigator.canShare({files:[file]})) {
-      message('此瀏覽器不支援圖片分享，請按「下載 PNG」，再從 LINE 傳送圖片。');
+    let supported = false;
+    try { supported = !!(navigator.share && navigator.canShare && navigator.canShare({files:files})); } catch (_) {}
+    if (!supported) {
+      message('此瀏覽器不支援這批圖片分享，請按下載；若為 ZIP，解壓縮後在 LINE 選取圖片傳送。');
       return;
     }
     const token = sequence;
     element('Send').disabled = true;
     try {
       // 只交付圖片，避免 LINE 同時產生標題文字訊息。
-      await navigator.share({files:[file]});
+      await navigator.share({files:files.slice()});
       if (token === sequence) message('已交給系統分享選單；是否傳送完成請在 LINE 確認。');
     } catch (error) {
       if (token === sequence) {
         message(error.name === 'AbortError' ? '已取消分享，可重新分享或下載圖片。' : '分享未完成，請重試或下載 PNG 後自行傳送。');
       }
     } finally {
-      if (token === sequence && file) element('Send').disabled = false;
+      if (token === sequence && files.length) element('Send').disabled = false;
     }
   }
 
   function download() {
-    if (!file || !imageUrl) return;
+    if (!files.length || !downloadUrl) return;
     const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = file.name;
+    link.href = downloadUrl;
+    link.download = downloadName;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    message('已開始下載原始 PNG；可插入 PPT，或在 LINE 選擇這張圖片。');
+    message(downloadName.endsWith('.zip') ? '已開始下載整批 ZIP；解壓縮後可選取全部 PNG 傳送 LINE 或插入 PPT。' : '已開始下載原始 PNG；可插入 PPT，或在 LINE 選擇這張圖片。');
   }
 
   function drawReport(snapshot) {
@@ -184,5 +237,5 @@
     return canvas;
   }
 
-  window.ResponsibilityShare = {open:open, close:close};
+  window.ResponsibilityShare = {open:open, openAll:openAll, close:close};
 })();

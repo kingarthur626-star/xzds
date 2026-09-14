@@ -26,6 +26,17 @@ function bindResponsibilityActions_() {
   const monthSelect = document.getElementById('responsibilityMonthSelect');
   const groupSelect = document.getElementById('responsibilityGroupSelect');
   const groups = document.getElementById('responsibilityGroups');
+  const batchButton = document.getElementById('responsibilityBatchExportBtn');
+
+  if (batchButton) {
+    batchButton.addEventListener('click', function () {
+      if (!responsibilityCurrentData_) return;
+      const selectedGroups = getResponsibilityVisibleGroups_(responsibilityCurrentData_);
+      if (selectedGroups.length && window.ResponsibilityShare) {
+        window.ResponsibilityShare.openAll(selectedGroups, responsibilityCurrentData_, getResponsibilitySelectedGroup_(), batchButton);
+      }
+    });
+  }
 
   if (logoutButton) {
     logoutButton.addEventListener('click', function () { logout(); });
@@ -70,6 +81,7 @@ function bindResponsibilityActions_() {
     groupSelect.addEventListener('change', function () {
       if (window.ResponsibilityShare) window.ResponsibilityShare.close();
       responsibilityExpandedTempleKey_ = '';
+      syncResponsibilityBatchButton_();
       if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
     });
   }
@@ -156,6 +168,7 @@ async function loadResponsibilityOwnership_(requestedMonth) {
 }
 
 function renderResponsibilityOwnership_(data) {
+  syncResponsibilityBatchButton_();
   const area = document.getElementById('responsibilityGroups');
   const subtitle = document.getElementById('responsibilitySubtitle');
   if (!area) return;
@@ -182,6 +195,15 @@ function renderResponsibilityOwnership_(data) {
 function getResponsibilitySelectedGroup_() {
   const select = document.getElementById('responsibilityGroupSelect');
   return select && /^[123]$/.test(select.value) ? select.value : '1';
+}
+
+function syncResponsibilityBatchButton_() {
+  const button = document.getElementById('responsibilityBatchExportBtn');
+  if (!button) return;
+  const label = getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_());
+  button.textContent = label + '圖片';
+  button.setAttribute('aria-label', '產生' + label + '全部分享圖片');
+  button.disabled = !responsibilityCurrentData_ || !getResponsibilityVisibleGroups_(responsibilityCurrentData_).length;
 }
 
 function getResponsibilityGroupLabel_(value) {
@@ -332,6 +354,7 @@ function buildResponsibilityWarning_(data) {
 }
 
 function setResponsibilityLoading_(loading) {
+  syncResponsibilityBatchButton_();
   const area = document.getElementById('responsibilityLoading');
   if (!area) return;
   area.hidden = !loading;
