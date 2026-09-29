@@ -163,6 +163,24 @@
   word-break: break-word;
 }
 
+.tdu-status-progress {
+  margin-top: 8px;
+  color: #234b69;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.tdu-status-read-meta {
+  margin-top: 8px;
+  color: #52687c;
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
 .tdu-status-time {
   margin-top: 8px;
   color: #8997a5;
@@ -709,6 +727,7 @@ body.tdu-modal-open {
 .tdu-section-head > div { min-width: 0; }
 .tdu-section-head > .tdu-text-btn { flex: 0 0 auto; min-height: 44px; }
 .tdu-header p, .tdu-help, .tdu-history-sub, .tdu-status-message,
+.tdu-status-progress, .tdu-status-read-meta,
 .tdu-status-time, .tdu-action-message, .tdu-empty, .tdu-record-counts,
 .tdu-record-note, .tdu-record-time, .tdu-source-chip, .tdu-record-result,
 .tdu-detail-item-meta, .tdu-detail-item-title, .tdu-sync-foot,
