@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link rel="dns-prefetch" href="//script.google.com">
   <link rel="dns-prefetch" href="//script.googleusercontent.com">
-  <meta name="xzds-ui-version" content="20260821-sync-overview-r33">
+  <meta name="xzds-ui-version" content="20260929-daily-issues-r1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -16,7 +16,7 @@
   <link rel="manifest" href="./manifest.json?v=20260623-001">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./css/style.css?v=20260801-5">
-  <link rel="stylesheet" href="./css/daily-data-update.css?v=20260821-sync-overview-r33">
+  <link rel="stylesheet" href="./css/daily-data-update.css?v=20260929-daily-issues-r1">
 </head>
 <body class="tdu-page">
   <main class="tdu-shell">
@@ -28,7 +28,7 @@
 
     <header class="tdu-header">
       <h1>每日資料更新</h1>
-      <p>手動更新與每日自動排程使用同一套正式差異更新流程</p>
+      <p>每日自動逐筆更新；未完成的資料會保留，可個別重試或確認結案。</p>
     </header>
 
     <section class="tdu-card tdu-status-card" aria-labelledby="tduStatusTitle">
@@ -47,18 +47,42 @@
     <section class="tdu-card tdu-manual-card" aria-labelledby="tduManualTitle">
       <h2 id="tduManualTitle">手動更新資料</h2>
       <p class="tdu-help">立即檢查最近差異。若自動排程正在執行，系統會阻止重複更新。</p>
-      <button class="tdu-primary-btn" id="tduManualBtn" type="button">手動更新資料</button>
+      <button class="tdu-primary-btn" id="tduManualBtn" type="button" disabled>讀取狀態中…</button>
       <div class="tdu-action-message" id="tduActionMessage" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="tdu-card tdu-issues-card" aria-labelledby="tduIssuesTitle">
+      <div class="tdu-section-head">
+        <div>
+          <h2 id="tduIssuesTitle">待處理資料</h2>
+          <p class="tdu-history-sub">包含所有尚未完成的事件。每筆可獨立重試，失敗或待確認資料會繼續保留。</p>
+        </div>
+        <button class="tdu-text-btn" id="tduIssuesRefreshBtn" type="button">重新整理</button>
+      </div>
+      <label class="tdu-filter-label" for="tduIssueFilter">顯示資料
+        <select id="tduIssueFilter">
+          <option value="open">待處理</option>
+          <option value="closed">已更新／已結案</option>
+        </select>
+      </label>
+      <div id="tduIssueListMessage" class="tdu-action-message" role="status" aria-live="polite"></div>
+      <div id="tduIssueList" class="tdu-work-list"><div class="tdu-empty">讀取待處理資料中…</div></div>
+      <nav class="tdu-pagination" aria-label="待處理資料分頁">
+        <button id="tduIssuePreviousBtn" class="tdu-row-secondary" type="button" disabled>上一頁</button>
+        <span id="tduIssuePage" aria-live="polite">讀取中</span>
+        <button id="tduIssueNextBtn" class="tdu-row-secondary" type="button" disabled>下一頁</button>
+      </nav>
     </section>
 
     <section class="tdu-card tdu-sync-card" aria-labelledby="tduSyncTitle">
       <div class="tdu-section-head">
         <div>
-          <h2 id="tduSyncTitle">同步總覽</h2>
-          <p class="tdu-history-sub">即時顯示正式主檔、年度明細與年度報表的同步狀態。</p>
+          <h2 id="tduSyncTitle">本輪每日更新摘要</h2>
+          <p class="tdu-history-sub">顯示本輪更新與最近驗證結果；所有未結事件請看上方「待處理資料」。</p>
         </div>
         <button class="tdu-text-btn" id="tduSyncRefreshBtn" type="button">重新整理</button>
       </div>
+      <div id="tduSyncMessage" class="tdu-action-message" role="status" aria-live="polite"></div>
       <div class="tdu-sync-overview" id="tduSyncOverview">
         <div class="tdu-empty">讀取同步總覽中…</div>
       </div>
@@ -68,9 +92,10 @@
       <div class="tdu-section-head">
         <div>
           <h2 id="tduHistoryTitle">更新紀錄</h2>
-          <p class="tdu-history-sub">包含手動更新與每日自動排程；只顯示重要結果；有待確認或失敗時可點開處理</p>
+          <p class="tdu-history-sub">保留每次手動更新與自動排程的紀錄；目前待辦請到「待處理資料」處理。</p>
         </div>
       </div>
+      <div id="tduHistoryMessage" class="tdu-action-message" role="status" aria-live="polite"></div>
       <div class="tdu-history-list" id="tduHistoryList">
         <div class="tdu-empty">讀取更新紀錄中…</div>
       </div>
@@ -94,9 +119,9 @@
   </div>
 
   <script src="./js/config.js?v=20260619-2"></script>
-  <script src="./js/api.js?v=20260812-api-stability-032r2"></script>
+  <script src="./js/api.js?v=20260929-daily-issues-r1"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/daily-data-update.js?v=20260821-sync-overview-r33"></script>
+  <script src="./js/daily-data-update.js?v=20260929-daily-issues-r1"></script>
   <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
 </body>
 </html>
