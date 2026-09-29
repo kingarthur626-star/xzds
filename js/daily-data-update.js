@@ -1,9 +1,35 @@
-/* 新莊區道務檢視｜每日資料更新 v1.0.0R2｜簡潔管理版 */
+/* 新莊區道務檢視｜每日資料更新 20260929｜逐筆處理 */
 
 const TDU_POLL_MS = 5000;
 let tduPollTimer = null;
-let tduRequestRunning = false;
+let tduStatusRunning = false;
+let tduMutationRunning = false;
 let tduCanUpdate = false;
+let tduCurrentActive = false;
+let tduStatusKnown = false;
+let tduManualUnconfirmed = false;
+let tduHistoryRunning = false;
+let tduHistoryHasSnapshot = false;
+let tduSyncRunning = false;
+let tduSyncHasSnapshot = false;
+let tduIssuesRunning = false;
+let tduIssueForceNext = false;
+let tduIssuesHasSnapshot = false;
+let tduIssuePage = 0;
+let tduIssueFilter = 'open';
+let tduIssueCursors = [''];
+let tduIssueNextCursor = '';
+let tduIssueHasMore = false;
+let tduIssueTotal = 0;
+let tduIssueChangeVersion = 0;
+let tduIssueItems = new Map();
+const tduIssueBusy = new Set();
+const tduIssueUnconfirmed = new Set();
+const tduIssueMessages = new Map();
+const tduIssueCards = new Map();
+const tduIssueDrafts = new Map();
+const TDU_READ_OPTIONS = { timeoutMs: 15000, maxAttempts: 1 };
+const TDU_BACKGROUND_OPTIONS = { timeoutMs: 30000, maxAttempts: 1 };
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -46,6 +72,15 @@ function bindTduButtons_() {
     syncRefreshBtn.addEventListener('click', loadTduSyncOverview_);
   }
 
+  const issuesRefresh = document.getElementById('tduIssuesRefreshBtn');
+  const issuesFilter = document.getElementById('tduIssueFilter');
+  const previous = document.getElementById('tduIssuePreviousBtn');
+  const next = document.getElementById('tduIssueNextBtn');
+  if (issuesRefresh) issuesRefresh.addEventListener('click', function () { loadTduIssues_(true); });
+  if (issuesFilter) issuesFilter.addEventListener('change', function () { changeTduIssueFilter_(issuesFilter.value); });
+  if (previous) previous.addEventListener('click', function () { changeTduIssuePage_(-1); });
+  if (next) next.addEventListener('click', function () { changeTduIssuePage_(1); });
+
   if (manualBtn) {
     manualBtn.addEventListener('click', runTduManualUpdate_);
   }
@@ -66,91 +101,102 @@ function bindTduButtons_() {
 
 async function checkTduPermissionAndLoad_() {
   setTduActionMessage_('', false);
-
-  try {
-    const result = await callApi({ action: 'getMyPermissions' });
-    const permissions = result && result.permissions ? result.permissions : {};
-    tduCanUpdate = !!permissions.updateTaoReport;
-
-    if (!result.success || !tduCanUpdate) {
-      renderTduPermissionDenied_();
-      return;
-    }
-
-    await loadTduAll_(false);
-  } catch (error) {
-    renderTduLoadError_(error && error.message ? error.message : '權限讀取失敗');
-  }
+  refreshTduManualButton_();
+  // 此端點本身受伺服器權限檢查保護，避免先做一次獨立權限查詢。
+  await loadTduAll_(false);
 }
 
 
 async function loadTduAll_(showMessage) {
-  if (!tduCanUpdate || tduRequestRunning) return;
-
-  tduRequestRunning = true;
-  try {
-    // 狀態只讀取 Script Properties，必須先顯示；歷史紀錄改為背景載入。
-    const statusResult = await callApi({ action: 'taoDailyUpdateGetStatus' });
-    renderTduStatus_(statusResult);
-
-    if (showMessage) {
-      setTduActionMessage_('目前狀態已更新；更新紀錄載入中。', false);
-    }
-
-    const current = statusResult && statusResult.current ? statusResult.current : {};
-    updateTduPolling_(!!current.active);
-    loadTduHistoryOnly_();
-    loadTduSyncOverview_();
-  } catch (error) {
-    renderTduLoadError_(error && error.message ? error.message : '資料讀取失敗');
-  } finally {
-    tduRequestRunning = false;
+  const loaded = await readTduStatus_();
+  if (loaded) {
+    if (showMessage && !tduManualUnconfirmed) setTduActionMessage_('目前狀態已更新，其他資料各自重新讀取中。', false);
+    refreshTduBackground_();
   }
 }
 
 
 async function loadTduStatusOnly_() {
-  if (!tduCanUpdate || tduRequestRunning) return;
+  if (!tduCanUpdate) return;
+  const loaded = await readTduStatus_();
+  if (loaded && !tduCurrentActive) refreshTduBackground_();
+}
 
-  tduRequestRunning = true;
+async function readTduStatus_() {
+  if (tduStatusRunning) return false;
+  tduStatusRunning = true;
+  const refresh = document.getElementById('tduRefreshBtn');
+  if (refresh) refresh.disabled = true;
   try {
-    const result = await callApi({ action: 'taoDailyUpdateGetStatus' });
-    renderTduStatus_(result);
-
-    const current = result && result.current ? result.current : {};
-    if (!current.active) {
-      stopTduPolling_();
-      await loadTduHistoryOnly_();
+    const result = await callApi({ action: 'taoDailyUpdateGetStatus' }, TDU_READ_OPTIONS);
+    if (!result || !result.success) {
+      if (result && /DENIED|FORBIDDEN|AUTH_REQUIRED/.test(String(result.code || ''))) {
+        tduCanUpdate = false; tduStatusKnown = false; stopTduPolling_();
+        renderTduPermissionDenied_();
+      } else {
+        throw new Error(result && result.message || '目前狀態尚未取得');
+      }
+      return false;
     }
+    tduCanUpdate = true;
+    tduStatusKnown = true;
+    tduManualUnconfirmed = false;
+    renderTduStatus_(result);
+    updateTduPolling_(tduCurrentActive);
+    return true;
   } catch (error) {
-    setTduActionMessage_(error && error.message ? error.message : '狀態讀取失敗', true);
+    if (tduStatusKnown) setTduActionMessage_('狀態重新讀取未完成；保留前次快照，請稍後重新整理。', true);
+    else renderTduLoadError_('目前狀態尚未取得，請按重新整理。');
+    return false;
   } finally {
-    tduRequestRunning = false;
+    tduStatusRunning = false;
+    if (refresh) refresh.disabled = false;
+    refreshTduManualButton_();
   }
+}
+
+function refreshTduBackground_() {
+  loadTduHistoryOnly_();
+  loadTduSyncOverview_();
+  loadTduIssues_();
 }
 
 
 async function loadTduHistoryOnly_() {
+  if (!tduCanUpdate || tduHistoryRunning) return;
+  tduHistoryRunning = true;
   try {
-    const result = await callApi({ action: 'taoDailyUpdateGetHistory', limit: 15 });
+    const result = await callApi({ action: 'taoDailyUpdateGetHistory', limit: 15 }, TDU_BACKGROUND_OPTIONS);
+    if (!result || !result.success) throw new Error('讀取未完成');
     renderTduHistory_(result);
+    tduHistoryHasSnapshot = true;
   } catch (error) {
-    setTduActionMessage_(error && error.message ? error.message : '更新紀錄讀取失敗', true);
-  }
+    const area = document.getElementById('tduHistoryList');
+    if (area && !tduHistoryHasSnapshot) area.replaceChildren(makeTduEmpty_('更新紀錄尚未取得，請按上方重新整理。'));
+    const note = document.getElementById('tduHistoryMessage');
+    if (note) note.textContent = tduHistoryHasSnapshot ? '重新讀取未完成，以下保留前次更新紀錄。' : '';
+  } finally { tduHistoryRunning = false; }
 }
 
 
 async function loadTduSyncOverview_() {
   const area = document.getElementById('tduSyncOverview');
-  if (!area) return;
-
-  area.replaceChildren(makeTduEmpty_('讀取同步總覽中…'));
+  if (!area || !tduCanUpdate || tduSyncRunning) return;
+  tduSyncRunning = true;
+  const refresh = document.getElementById('tduSyncRefreshBtn');
+  if (refresh) refresh.disabled = true;
+  if (!tduSyncHasSnapshot) area.replaceChildren(makeTduEmpty_('讀取同步總覽中…'));
   try {
-    const result = await callApi({ action: 'getSyncOverview' });
+    const result = await callApi({ action: 'getSyncOverview' }, TDU_BACKGROUND_OPTIONS);
+    if (!result || !result.success || !result.pipeline) throw new Error('同步總覽尚未取得');
     renderTduSyncOverview_(result);
+    const note = document.getElementById('tduSyncMessage');
+    if (note) note.textContent = '';
   } catch (error) {
-    area.replaceChildren(makeTduEmpty_(error && error.message ? error.message : '同步總覽讀取失敗。'));
-  }
+    if (!tduSyncHasSnapshot) area.replaceChildren(makeTduEmpty_('同步總覽尚未取得，請重新整理；這不代表更新作業失敗。'));
+    const note = document.getElementById('tduSyncMessage');
+    if (note) note.textContent = tduSyncHasSnapshot ? '重新讀取未完成，以下保留前次同步快照。' : '';
+  } finally { tduSyncRunning = false; if (refresh) refresh.disabled = false; }
 }
 
 function renderTduSyncOverview_(result) {
@@ -163,18 +209,33 @@ function renderTduSyncOverview_(result) {
     return;
   }
 
-  const pipeline = result.pipeline || {};
+  if (!result.pipeline) {
+    area.appendChild(makeTduEmpty_('同步總覽未取得，不能判定同步結果。'));
+    return;
+  }
+  tduSyncHasSnapshot = true;
+  const pipeline = result.pipeline;
+  const title = document.getElementById('tduSyncTitle');
+  if (title) title.textContent = pipeline.summaryLabel || '本輪每日更新摘要';
   const queue = pipeline.queue || {};
   const steps = pipeline.steps || {};
-  const latest = result.daily && Array.isArray(result.daily.latestRecords)
-    ? result.daily.latestRecords[0] : null;
   const summary = document.createElement('div');
   summary.className = 'tdu-sync-grid';
-  summary.appendChild(makeTduSummaryStat_('待確認', numberText_(queue.review || (latest && latest.review) || 0), Number(queue.review || (latest && latest.review) || 0) > 0 ? 'review' : ''));
+  summary.appendChild(makeTduSummaryStat_('待確認', numberText_(queue.review || 0), Number(queue.review || 0) > 0 ? 'review' : ''));
   summary.appendChild(makeTduSummaryStat_('待同步', numberText_(queue.pending || 0), Number(queue.pending || 0) > 0 ? 'review' : ''));
-  summary.appendChild(makeTduSummaryStat_('失敗', numberText_(queue.failed || (latest && latest.failed) || 0), Number(queue.failed || (latest && latest.failed) || 0) > 0 ? 'failed' : ''));
+  summary.appendChild(makeTduSummaryStat_('失敗', numberText_(queue.failed || 0), Number(queue.failed || 0) > 0 ? 'failed' : ''));
   summary.appendChild(makeTduSummaryStat_('已完成', numberText_(queue.done || 0)));
   area.appendChild(summary);
+  if (result.recovery && result.recovery.status && result.recovery.status !== 'IDLE') {
+    const recovery = result.recovery;
+    const labels = { SCHEDULED: '等待續跑', RUNNING: '覆核中', RETRYING: '等待重試', FAILED: '覆核中斷，需檢查', NEEDS_RETRY: '仍有資料待重試／待確認', COMPLETED: '本輪覆核完成' };
+    const recoveryLine = document.createElement('p');
+    recoveryLine.className = 'tdu-sync-foot';
+    recoveryLine.textContent = '安全覆核：' + (labels[recovery.status] || '狀態待確認') +
+      '｜已檢查 ' + numberText_(recovery.checked) + '｜已同步 ' + numberText_(recovery.synced) +
+      '｜累積重試次數 ' + numberText_(recovery.retry);
+    area.appendChild(recoveryLine);
+  }
 
   const stepsList = document.createElement('div');
   stepsList.className = 'tdu-sync-steps';
@@ -185,16 +246,20 @@ function renderTduSyncOverview_(result) {
     const name = document.createElement('span');
     name.textContent = item[1];
     const state = document.createElement('strong');
-    state.textContent = step.okForNext === true ? '已同步' : (pipeline.busy ? '處理中' : '待處理');
+    state.className = step.okForNext === true ? 'is-verified' : 'is-unverified';
+    state.textContent = step.okForNext === true ? '已同步' : (pipeline.busy ? '處理中' : '待確認');
     row.appendChild(name);
     row.appendChild(state);
+    if (step.reason) {
+      const reason = document.createElement('p'); reason.className = 'tdu-step-reason'; reason.textContent = step.reason; row.appendChild(reason);
+    }
     stepsList.appendChild(row);
   });
   area.appendChild(stepsList);
 
   const foot = document.createElement('div');
   foot.className = 'tdu-sync-foot';
-  foot.textContent = pipeline.busy ? '同步作業執行中，完成後此區會更新。' : ('最後檢查：' + (result.generatedAt || '--'));
+  foot.textContent = '區間同步快照：' + (result.generatedAt || '--') + (pipeline.busy ? '｜同步作業執行中。' : '');
   area.appendChild(foot);
 
   const warnings = Array.isArray(result.warnings) ? result.warnings : [];
@@ -207,30 +272,271 @@ function renderTduSyncOverview_(result) {
 }
 
 
-async function runTduManualUpdate_() {
-  if (!tduCanUpdate || tduRequestRunning) return;
+async function loadTduIssues_(force) {
+  if (!tduCanUpdate) return false;
+  if (tduIssuesRunning) { if (force === true) tduIssueForceNext = true; return false; }
+  const forceRead = force === true;
+  tduIssueForceNext = false;
+  tduIssuesRunning = true;
+  const area = document.getElementById('tduIssueList');
+  if (!tduIssuesHasSnapshot && area) area.replaceChildren(makeTduEmpty_('讀取待處理資料中…'));
+  if (tduIssuesHasSnapshot) setTduIssueListMessage_('正在重新讀取，以下暫時保留前次清單。');
+  const requestedVersion = tduIssueChangeVersion;
+  let needsRefresh = false;
+  updateTduIssueNavigation_();
+  try {
+    const result = await callApi({ action: 'taoDailyIssueList', cursor: tduIssueCursors[tduIssuePage] || '', limit: 20, status: tduIssueFilter, force: forceRead }, TDU_BACKGROUND_OPTIONS);
+    if (!result || !result.success) throw new Error(result && result.message || '資料尚未取得');
+    if (requestedVersion !== tduIssueChangeVersion) { needsRefresh = true; return false; }
+    renderTduIssues_(result, forceRead && result.cached !== true);
+    setTduIssueListMessage_('');
+    return true;
+  } catch (error) {
+    if (!tduIssuesHasSnapshot && area) area.replaceChildren(makeTduEmpty_('待處理資料尚未取得，請重新整理。'));
+    setTduIssueListMessage_(tduIssuesHasSnapshot ? '重新讀取未完成，保留前次清單；請稍後重新整理。' : '');
+    return false;
+  } finally {
+    tduIssuesRunning = false;
+    updateTduIssueNavigation_();
+    if (needsRefresh || tduIssueForceNext) window.setTimeout(function () { loadTduIssues_(true); }, 0);
+  }
+}
 
-  const btn = document.getElementById('tduManualBtn');
-  tduRequestRunning = true;
-  setTduManualButton_(btn, true, '排程中…');
+function renderTduIssues_(result, verifiedFresh) {
+  if (!result || !result.success) return;
+  const issues = Array.isArray(result.issues) ? result.issues : [];
+  tduIssueItems = new Map(issues.map(function (item) { return [String(item.issueId), item]; }));
+  tduIssueTotal = Number(result.total || 0);
+  tduIssueHasMore = !!result.hasMore;
+  tduIssueNextCursor = result.nextCursor || '';
+  tduIssuesHasSnapshot = true;
+  issues.forEach(function (item) {
+    const id = String(item.issueId);
+    if (verifiedFresh === true && tduIssueUnconfirmed.has(id) && !tduIssueBusy.has(id)) {
+      tduIssueUnconfirmed.delete(id);
+      tduIssueMessages.set(id, '已重新取得這筆的目前狀態；請依下方結果決定是否操作。');
+    }
+  });
+  renderTduIssueItems_();
+  updateTduIssueNavigation_();
+}
+
+function renderTduIssueItems_() {
+  const list = document.getElementById('tduIssueList');
+  if (!list) return;
+  list.replaceChildren();
+  tduIssueCards.clear();
+  if (!tduIssueItems.size) list.appendChild(makeTduEmpty_(tduIssueFilter === 'closed' ? '目前沒有已處理資料。' : '目前沒有待處理資料。'));
+  tduIssueItems.forEach(function (item) {
+    const card = makeTduIssueCard_(item);
+    tduIssueCards.set(String(item.issueId), card);
+    list.appendChild(card);
+  });
+}
+
+function updateTduIssueCard_(issueId) {
+  const existing = tduIssueCards.get(issueId);
+  const item = tduIssueItems.get(issueId);
+  if (!existing || !item) return;
+  const replacement = makeTduIssueCard_(item);
+  existing.replaceWith(replacement);
+  tduIssueCards.set(issueId, replacement);
+}
+
+function makeTduIssueCard_(issue) {
+  const id = String(issue.issueId);
+  const busy = tduIssueBusy.has(id);
+  const unconfirmed = tduIssueUnconfirmed.has(id);
+  const closed = ['resolved', 'closed'].includes(String(issue.status));
+  const labels = { pending: '等待更新', auto_retry: '待重試', manual_review: '待確認', resolved: '已更新', closed: '已結案' };
+  const card = makeTduIssueItem_([issue.name || '未列姓名', issue.memberId || ''].filter(Boolean).join('　'), issue.reason || issue.lastError || '等待確認來源資料。', labels[issue.status] || '待確認');
+  card.className += ' tdu-work-item';
+  card.setAttribute('aria-busy', busy ? 'true' : 'false');
+  const meta = document.createElement('div');
+  meta.className = 'tdu-issue-meta';
+  meta.textContent = '重試次數：' + numberText_(issue.attemptCount == null ? issue.attempts : issue.attemptCount) +
+    (issue.updatedAt ? '　更新時間：' + issue.updatedAt : '') +
+    (issue.eventCount ? '　相關事件：' + numberText_(issue.eventCount) + ' 筆' : '');
+  card.appendChild(meta);
+  const sourceDetails = [issue.sourceFunction, issue.operation, issue.mutationTime].filter(function (value) { return typeof value === 'string' && value.trim(); });
+  if (sourceDetails.length) {
+    const source = document.createElement('div'); source.className = 'tdu-issue-meta';
+    source.textContent = '來源異動：' + sourceDetails.join('｜'); card.appendChild(source);
+  }
+  if (closed) {
+    const resolution = document.createElement('div');
+    resolution.className = 'tdu-issue-meta';
+    resolution.textContent = (issue.status === 'closed' ? '結案原因：' : '處理結果：') + (issue.resolutionReason || '已處理') + (issue.resolvedAt ? '　' + issue.resolvedAt : '');
+    card.appendChild(resolution);
+  }
+  const feedback = document.createElement('div');
+  feedback.className = 'tdu-issue-feedback';
+  feedback.setAttribute('role', 'status');
+  feedback.setAttribute('aria-live', 'polite');
+  feedback.textContent = busy ? '正在處理這筆，其他資料仍可操作。' : (tduIssueMessages.get(id) || '');
+  card.appendChild(feedback);
+
+  if (!closed) {
+    const buttons = document.createElement('div');
+    buttons.className = 'tdu-issue-actions';
+    const retry = document.createElement('button');
+    retry.type = 'button'; retry.className = 'tdu-row-primary'; retry.textContent = '重試';
+    retry.disabled = busy || unconfirmed || issue.canRetry !== true;
+    retry.addEventListener('click', function () { runTduIssueAction_(id, 'retry'); });
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'tdu-row-secondary'; close.textContent = '確認結案';
+    close.disabled = busy || unconfirmed || issue.canClose !== true;
+    close.addEventListener('click', function () {
+      const draft = tduIssueDrafts.get(id) || { choice: '', note: '' };
+      draft.open = !draft.open; tduIssueDrafts.set(id, draft); updateTduIssueCard_(id);
+    });
+    buttons.appendChild(retry); buttons.appendChild(close); card.appendChild(buttons);
+    if (unconfirmed) {
+      const refresh = document.createElement('button');
+      refresh.type = 'button'; refresh.className = 'tdu-text-btn'; refresh.textContent = '重新確認這筆狀態';
+      refresh.addEventListener('click', function () { loadTduIssues_(true); });
+      card.appendChild(refresh);
+    }
+    const draft = tduIssueDrafts.get(id);
+    if (draft && draft.open) card.appendChild(makeTduIssueCloseForm_(issue, draft, busy || unconfirmed));
+  }
+  return card;
+}
+
+function makeTduIssueCloseForm_(issue, draft, disabled) {
+  const id = String(issue.issueId);
+  const form = document.createElement('form'); form.className = 'tdu-close-form';
+  const label = document.createElement('label'); label.textContent = '結案原因';
+  const choice = document.createElement('select'); choice.disabled = disabled; choice.required = true;
+  [['', '請選擇已確認的原因'], ['missing', '已確認來源不存在'], ['other', '其他原因（請填備註）']].forEach(function (entry) {
+    const option = document.createElement('option'); option.value = entry[0]; option.textContent = entry[1]; choice.appendChild(option);
+  });
+  choice.value = draft.choice || ''; label.appendChild(choice); form.appendChild(label);
+  const noteLabel = document.createElement('label'); noteLabel.textContent = '備註（其他原因必填）';
+  const note = document.createElement('textarea'); note.rows = 2; note.maxLength = 450; note.value = draft.note || ''; note.disabled = disabled;
+  noteLabel.appendChild(note); form.appendChild(noteLabel);
+  choice.addEventListener('change', function () { draft.choice = choice.value; note.required = choice.value === 'other'; });
+  note.addEventListener('input', function () { draft.note = note.value; });
+  note.required = choice.value === 'other';
+  const help = document.createElement('p'); help.className = 'tdu-help';
+  help.textContent = '結案會保留處理紀錄，並停止重試這筆事件；不會刪除正式主檔。'; form.appendChild(help);
+  const submit = document.createElement('button'); submit.type = 'submit'; submit.className = 'tdu-row-primary'; submit.textContent = '確認結案'; submit.disabled = disabled;
+  form.appendChild(submit);
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const reason = tduCloseReason_(choice.value, note.value);
+    if (!reason) { tduIssueMessages.set(id, '請選擇結案原因；選擇其他原因時請填寫備註。'); updateTduIssueCard_(id); return; }
+    runTduIssueAction_(id, 'close', reason, choice.value === 'missing' ? 'source_missing' : 'manual_confirmed');
+  });
+  return form;
+}
+
+function tduCloseReason_(choice, note) {
+  const text = String(note || '').trim().slice(0, 450);
+  if (choice === 'missing') return '已確認來源不存在' + (text ? '：' + text : '');
+  return choice === 'other' ? text : '';
+}
+
+async function runTduIssueAction_(issueId, action, reason, reasonCode) {
+  const id = String(issueId);
+  const item = tduIssueItems.get(id);
+  if (!tduCanUpdate || !item || tduIssueBusy.has(id) || tduIssueUnconfirmed.has(id)) return;
+  if (action === 'retry' && item.canRetry !== true) return;
+  if (action === 'close' && (item.canClose !== true || !String(reason || '').trim())) return;
+  if (!['retry', 'close'].includes(action)) return;
+  tduIssueBusy.add(id); tduIssueChangeVersion++; tduIssueMessages.delete(id); updateTduIssueCard_(id);
+  let refreshAfter = false;
+  let completed = false;
+  try {
+    const payload = { action: action === 'retry' ? 'taoDailyIssueRetry' : 'taoDailyIssueClose', issueId: id, revision: item.revision };
+    if (action === 'close') { payload.reason = reason; payload.reasonCode = reasonCode || 'manual_confirmed'; }
+    const result = await callApi(payload, { timeoutMs: 60000, maxAttempts: 1, retryOnTransport: false });
+    if (!result || !result.success) {
+      const code = String(result && result.code || '');
+      tduIssueMessages.set(id, result && result.message || '目前無法處理，這筆仍保留在清單。');
+      if (['CONFLICT', 'NOT_FOUND', 'BUSY', 'WRITE_FAILED'].includes(code)) { tduIssueUnconfirmed.add(id); refreshAfter = true; }
+    } else if (!result.issue || !['resolved', 'unresolved', 'closed'].includes(result.outcome)) {
+      tduIssueUnconfirmed.add(id);
+      tduIssueMessages.set(id, '處理回應未確認，原資料仍保留；請先重新確認這筆狀態。');
+    } else {
+      if (tduIssueItems.has(id)) tduIssueItems.set(id, result.issue);
+      tduIssueMessages.set(id, result.message || (result.outcome === 'unresolved' ? '已重試，仍有原因待處理，這筆資料繼續保留。' : result.outcome === 'closed' ? '已結案，處理紀錄已保留。' : '這筆已更新完成。'));
+      if (result.outcome !== 'unresolved') tduIssueDrafts.delete(id);
+      completed = true;
+    }
+  } catch (error) {
+    tduIssueUnconfirmed.add(id);
+    tduIssueMessages.set(id, '處理回應未確認，可能仍在執行；原資料保留，請先重新確認這筆狀態。');
+  } finally {
+    tduIssueBusy.delete(id); tduIssueChangeVersion++; updateTduIssueCard_(id);
+    if (refreshAfter) {
+      setTduIssueListMessage_('這筆狀態已有變動，正在重新確認清單。');
+      loadTduIssues_(true);
+    }
+    if (completed) window.setTimeout(function () { loadTduIssues_(true); }, 1200);
+  }
+}
+
+function setTduIssueListMessage_(message) {
+  const element = document.getElementById('tduIssueListMessage');
+  if (element) element.textContent = message || '';
+}
+
+function updateTduIssueNavigation_() {
+  const previous = document.getElementById('tduIssuePreviousBtn');
+  const next = document.getElementById('tduIssueNextBtn');
+  const refresh = document.getElementById('tduIssuesRefreshBtn');
+  const filter = document.getElementById('tduIssueFilter');
+  const page = document.getElementById('tduIssuePage');
+  if (previous) previous.disabled = tduIssuesRunning || tduIssuePage === 0;
+  if (next) next.disabled = tduIssuesRunning || !tduIssueHasMore || !tduIssueNextCursor;
+  if (refresh) refresh.disabled = tduIssuesRunning;
+  if (filter) filter.disabled = tduIssuesRunning;
+  if (page) page.textContent = tduIssuesHasSnapshot ? '第 ' + (tduIssuePage + 1) + ' 頁｜共 ' + numberText_(tduIssueTotal) + ' 筆' : '讀取中';
+}
+
+async function changeTduIssuePage_(direction) {
+  if (tduIssuesRunning || (direction < 0 && tduIssuePage === 0) || (direction > 0 && (!tduIssueHasMore || !tduIssueNextCursor))) return;
+  const oldPage = tduIssuePage;
+  if (direction > 0) { tduIssuePage++; tduIssueCursors[tduIssuePage] = tduIssueNextCursor; }
+  else tduIssuePage--;
+  if (!await loadTduIssues_()) { tduIssuePage = oldPage; updateTduIssueNavigation_(); }
+}
+
+async function changeTduIssueFilter_(filter) {
+  if (tduIssuesRunning) return;
+  const previous = { filter: tduIssueFilter, page: tduIssuePage, cursors: tduIssueCursors };
+  tduIssueFilter = filter === 'closed' ? 'closed' : 'open'; tduIssuePage = 0; tduIssueCursors = [''];
+  if (!await loadTduIssues_()) {
+    tduIssueFilter = previous.filter; tduIssuePage = previous.page; tduIssueCursors = previous.cursors;
+    const select = document.getElementById('tduIssueFilter'); if (select) select.value = tduIssueFilter;
+    updateTduIssueNavigation_();
+  }
+}
+
+async function runTduManualUpdate_() {
+  if (!tduCanUpdate || tduMutationRunning || tduCurrentActive || tduManualUnconfirmed) return;
+  tduMutationRunning = true;
+  refreshTduManualButton_();
   setTduActionMessage_('正在排入手動更新…', false);
 
   try {
-    const result = await callApi({ action: 'taoDailyUpdateRunManual' });
+    const result = await callApi({ action: 'taoDailyUpdateRunManual' }, { timeoutMs: 30000, maxAttempts: 1, retryOnTransport: false });
 
-    if (!result.success) {
-      setTduActionMessage_(result.message || '目前無法執行手動更新。', true);
-      await loadTduAll_(false);
+    if (!result || !result.success) {
+      setTduActionMessage_(result && result.message || '目前未接受手動更新，請重新讀取狀態。', true);
       return;
     }
 
+    tduCurrentActive = true;
     setTduActionMessage_('手動更新已排入背景執行，頁面可關閉。', false);
     updateTduPolling_(true);
   } catch (error) {
-    setTduActionMessage_(error && error.message ? error.message : '手動更新排程失敗', true);
+    tduManualUnconfirmed = true;
+    setTduActionMessage_('排程回應未確認，可能仍在處理。請先重新整理狀態，再決定是否操作。', true);
   } finally {
-    tduRequestRunning = false;
-    setTduManualButton_(btn, false, '手動更新資料');
+    tduMutationRunning = false;
+    refreshTduManualButton_();
     window.setTimeout(function () {
       loadTduStatusOnly_();
     }, 1200);
@@ -257,16 +563,17 @@ function renderTduStatus_(result) {
 
   const current = result.current || {};
   const status = String(current.status || 'IDLE').toUpperCase();
+  tduCurrentActive = !!current.active;
 
   if (badge) {
-    badge.textContent = tduStatusLabel_(status);
-    setTduStatusClass_(badge, status);
+    badge.textContent = current.stale || current.recoveryNeeded ? '需重新確認' : tduStatusLabel_(status);
+    setTduStatusClass_(badge, current.stale || current.recoveryNeeded ? 'COMPLETED_WITH_REVIEW' : status);
   }
 
   if (source) source.textContent = current.sourceLabel || '';
 
   if (message) {
-    message.textContent = tduFriendlyCurrentMessage_(current);
+    message.textContent = tduFriendlyCurrentMessage_(current) + (result.staleManual ? ' 另有較早的手動更新未確認完成，待處理資料仍保留。' : '');
   }
 
   if (time) {
@@ -274,10 +581,14 @@ function renderTduStatus_(result) {
     time.textContent = t ? '時間：' + t : '';
   }
 
-  if (btn) {
-    btn.disabled = !!current.active;
-    btn.textContent = current.active ? '更新執行中…' : '手動更新資料';
-  }
+  refreshTduManualButton_();
+}
+
+function refreshTduManualButton_() {
+  const btn = document.getElementById('tduManualBtn');
+  if (!btn) return;
+  btn.disabled = !tduCanUpdate || tduMutationRunning || tduCurrentActive || tduManualUnconfirmed;
+  btn.textContent = tduMutationRunning ? '排程中…' : tduManualUnconfirmed ? '請先重新確認狀態' : tduCurrentActive ? '更新執行中…' : '手動更新資料';
 }
 
 function renderTduHistory_(result) {
@@ -290,6 +601,8 @@ function renderTduHistory_(result) {
     list.appendChild(makeTduEmpty_('更新紀錄讀取失敗。'));
     return;
   }
+  const historyMessage = document.getElementById('tduHistoryMessage');
+  if (historyMessage) historyMessage.textContent = '';
 
   const records = Array.isArray(result.records) ? result.records : [];
   if (!records.length) {
@@ -326,7 +639,9 @@ function renderTduHistory_(result) {
     resultBadge.className = 'tdu-record-result';
     resultBadge.textContent = failedCount > 0
       ? '失敗 ' + failedCount
-      : (reviewCount > 0 ? '待確認 ' + reviewCount : '完成');
+      : (reviewCount > 0 ? '待確認 ' + reviewCount :
+        (resultStatus === 'COMPLETED_WITH_REVIEW' ? '待重試／待確認' :
+          (['SUCCESS', 'COMPLETED'].includes(resultStatus) ? '完成' : '狀態待確認')));
     setTduStatusClass_(resultBadge, failedCount > 0 ? 'FAILED' : (reviewCount > 0 ? 'COMPLETED_WITH_REVIEW' : resultStatus));
 
     top.appendChild(left);
@@ -344,6 +659,9 @@ function renderTduHistory_(result) {
       item.classList.add('has-problem');
     } else if (reviewCount > 0) {
       note.textContent = '有 ' + reviewCount + ' 筆需要確認，請點開查看。';
+      item.classList.add('has-review');
+    } else if (!['SUCCESS', 'COMPLETED'].includes(resultStatus)) {
+      note.textContent = '仍有資料待重試或需確認，請到「待處理資料」逐筆處理。';
       item.classList.add('has-review');
     } else {
       note.textContent = '更新正常，無需處理。';
@@ -378,7 +696,7 @@ async function openTduDetail_(record) {
       action: 'taoDailyUpdateGetDetail',
       rowNumber: record.rowNumber,
       runId: record.runId || ''
-    });
+    }, TDU_BACKGROUND_OPTIONS);
 
     renderTduDetail_(result);
   } catch (error) {
@@ -406,6 +724,7 @@ function renderTduDetail_(result) {
 
   const s = result.summary || {};
   const reviews = Array.isArray(result.reviews) ? result.reviews : [];
+  const autoRetries = Array.isArray(result.autoRetries) ? result.autoRetries : [];
   const events = Array.isArray(result.externalEvents) ? result.externalEvents : [];
   const failedEvents = events.filter(function (event) {
     return !!String(event.error || '').trim() &&
@@ -424,16 +743,27 @@ function renderTduDetail_(result) {
   summarySection.appendChild(simple);
 
   const resultLine = document.createElement('div');
-  resultLine.className = failedCount > 0 ? 'tdu-action-summary is-failed' : (reviewCount > 0 ? 'tdu-action-summary is-review' : 'tdu-action-summary is-ok');
+  const incomplete = autoRetries.length > 0 || !['SUCCESS', 'COMPLETED'].includes(String(s.result || '').toUpperCase());
+  resultLine.className = failedCount > 0 ? 'tdu-action-summary is-failed' : (reviewCount > 0 || incomplete ? 'tdu-action-summary is-review' : 'tdu-action-summary is-ok');
   if (failedCount > 0) {
     resultLine.textContent = '有資料更新失敗，請看下方「需要處理」。';
   } else if (reviewCount > 0) {
     resultLine.textContent = '更新已完成，有 ' + reviewCount + ' 筆需要人工確認。';
+  } else if (incomplete) {
+    resultLine.textContent = '仍有資料待重試或狀態待確認，請到「待處理資料」逐筆處理。';
   } else {
     resultLine.textContent = '更新正常完成，沒有需要處理的問題。';
   }
   summarySection.appendChild(resultLine);
   body.appendChild(summarySection);
+
+  if (autoRetries.length) {
+    const retrySection = makeTduSection_('待重試');
+    autoRetries.forEach(function (item) {
+      retrySection.appendChild(makeTduIssueItem_([item.name || '未列姓名', item.memberId || ''].filter(Boolean).join('　'), item.note || item.reason || '完整資料尚未同步成功。', '待重試'));
+    });
+    body.appendChild(retrySection);
+  }
 
   if (reviews.length || failedEvents.length) {
     const issueSection = makeTduSection_('需要處理');
@@ -457,7 +787,7 @@ function renderTduDetail_(result) {
 
     const help = document.createElement('div');
     help.className = 'tdu-help-box';
-    help.textContent = '有問題時，把這一段截圖給我即可，不需要提供全部更新明細。';
+    help.textContent = '這裡保留當次紀錄；請關閉明細，到「待處理資料」查看目前結果、逐筆重試或確認結案。';
     issueSection.appendChild(help);
     body.appendChild(issueSection);
   }
@@ -534,6 +864,9 @@ function tduFriendlyReviewReason_(review) {
 
 function tduFriendlyCurrentMessage_(current) {
   const status = String(current.status || 'IDLE').toUpperCase();
+  if (current.stale || current.recoveryNeeded || status === 'STALE') {
+    return current.message || '上次更新未確認完成，可重新檢查；待處理資料仍保留。';
+  }
   if (current.active) {
     return current.sourceLabel ? current.sourceLabel + '正在執行，完成後會自動更新紀錄。' : '資料更新正在執行。';
   }
@@ -695,6 +1028,7 @@ function tduStatusLabel_(status) {
   if (s === 'WAITING') return '等待中';
   if (s === 'FAILED' || s === 'ERROR') return '失敗';
   if (s === 'IDLE' || !s) return '待命';
+  if (s === 'STALE') return '需重新確認';
   return status || '待命';
 }
 
