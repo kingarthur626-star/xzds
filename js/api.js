@@ -53,6 +53,7 @@ const XZDS_API_RETRYABLE_ACTIONS = [
   'taoDailyUpdateGetStatus',
   'taoDailyUpdateGetHistory',
   'taoDailyUpdateGetDetail',
+  'taoDailyIssueList',
   'taoMobileGetStatus',
   'adminGetAccounts'
 ];
@@ -82,6 +83,7 @@ const XZDS_API_THREE_ATTEMPT_ACTIONS = [
   'taoDailyUpdateGetStatus',
   'taoDailyUpdateGetHistory',
   'taoDailyUpdateGetDetail',
+  'taoDailyIssueList',
   'taoMobileGetStatus',
   'adminGetAccounts'
 ];
@@ -90,9 +92,37 @@ let xzdsApiWarmupPromise_ = null;
 
 function callApi(payload, options) {
   const basePayload = addTokenToPayload(payload || {});
+  // 單筆處理的登入資訊、案件識別與結案備註僅送在 POST 本文。
+  if (['taoDailyIssueRetry', 'taoDailyIssueClose'].indexOf(basePayload.action) !== -1) {
+    return callDailyIssuePost_(basePayload, options || {});
+  }
   const normalizedOptions = normalizeApiOptions_(basePayload, options || {});
 
   return callApiWithRetry_(basePayload, normalizedOptions);
+}
+
+async function callDailyIssuePost_(payload, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(function () { controller.abort(); }, clampApiTimeout_(options.timeoutMs || 60000));
+  try {
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify(payload),
+      credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store', signal: controller.signal
+    });
+    if (!response.ok) throw new Error('HTTP 回應未確認');
+    const result = await response.json();
+    if (!result || typeof result.success !== 'boolean') throw new Error('回應格式未確認');
+    return result;
+  } catch (cause) {
+    // 網路錯誤不代表伺服器沒有執行；不得重送，也不得改用 GET。
+    const error = new Error('處理回應未確認，請先重新讀取這筆狀態。');
+    error.code = 'API_WRITE_UNCONFIRMED';
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function callApiWithRetry_(basePayload, options) {
