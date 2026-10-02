@@ -524,7 +524,7 @@ async function shareMobileCumulativeImage_() {
 
 function buildMobileCumulativePngBlob_(report) {
   const width = 1080;
-  const height = 1230;
+  const height = 220 + 64 * 2 + 80 * (report.receive.rows.length + report.seminar.rows.length) + 28 + 52;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -548,40 +548,41 @@ function buildMobileCumulativePngBlob_(report) {
 function drawMobileCumulativeCanvas_(ctx, canvas, report) {
   const width = canvas.width;
   const colors = {
-    blue: '#064cff',
-    green: '#0b9732',
-    red: '#f10d17',
-    purple: '#5422bd',
-    ink: '#142238',
+    blue: '#245c91',
+    green: '#167344',
+    red: '#b43f48',
+    navy: '#173f63',
+    ink: '#24374b',
     muted: '#667085',
-    line: '#cbd5e1',
-    head: '#f5f7fb',
-    total: '#b9cbea'
+    line: '#e5ebf2',
+    head: '#f3f6fa',
+    alternate: '#fbfcfe',
+    total: '#eaf1f8'
   };
 
   ctx.fillStyle = '#f5f7fb';
   ctx.fillRect(0, 0, width, canvas.height);
-  cumulativeRoundRect_(ctx, 28, 28, width - 56, canvas.height - 56, 32, '#ffffff', '#dbe3ed');
+  cumulativeRoundRect_(ctx, 28, 24, width - 56, canvas.height - 48, 28, '#ffffff', colors.line);
 
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#173f63';
-  ctx.font = '900 58px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('三大組 累計達成', width / 2, 92);
+  ctx.fillStyle = colors.navy;
+  ctx.font = '800 48px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText('三大組 累計達成', width / 2, 74);
 
-  cumulativeRoundRect_(ctx, 315, 195, 190, 70, 18, '#ffffff', '#cbd5e1');
-  ctx.fillStyle = colors.blue;
-  ctx.font = '900 38px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText(report.month + '月', 410, 230);
+  cumulativeRoundRect_(ctx, 348, 130, 158, 54, 13, '#ffffff', colors.line);
+  ctx.fillStyle = colors.navy;
+  ctx.font = '800 30px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText(report.month + '月', 427, 157);
 
-  cumulativeRoundRect_(ctx, 525, 195, 240, 70, 18, '#0b9732', null);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-  ctx.fillText('目標 ' + report.targetPercent + '%', 645, 230);
+  cumulativeRoundRect_(ctx, 526, 130, 206, 54, 13, '#edf7f0', '#d6e9dc');
+  ctx.fillStyle = colors.green;
+  ctx.font = '800 27px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillText('目標 ' + report.targetPercent + '%', 629, 157);
 
-  let y = 310;
+  let y = 220;
   y = drawMobileCumulativeTableCanvas_(ctx, report.receive.rows, '求道', report.month, y, colors);
-  y += 32;
+  y += 28;
   drawMobileCumulativeTableCanvas_(ctx, report.seminar.rows, '法會', report.month, y, colors);
 }
 
@@ -589,22 +590,16 @@ function drawMobileCumulativeCanvas_(ctx, canvas, report) {
 function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, colors) {
   const x = 58;
   const width = 964;
-  const headerHeight = 72;
-  const rowHeight = 86;
-  const columns = [0, .23, .38, .53, .68, .84, 1];
+  const headerHeight = 64;
+  const rowHeight = 80;
+  const columns = [0, .18, .34, .50, .66, .83, 1];
+  const tableHeight = headerHeight + rowHeight * rows.length;
 
-  cumulativeRoundRect_(ctx, x, startY, width, headerHeight + rowHeight * rows.length, 18, '#ffffff', colors.line);
+  ctx.save();
+  cumulativeRoundRect_(ctx, x, startY, width, tableHeight, 18, '#ffffff', null);
+  ctx.clip();
   ctx.fillStyle = colors.head;
-  ctx.fillRect(x + 1, startY + 1, width - 2, headerHeight - 1);
-
-  for (let i = 1; i < columns.length - 1; i += 1) {
-    ctx.strokeStyle = colors.line;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x + width * columns[i], startY);
-    ctx.lineTo(x + width * columns[i], startY + headerHeight + rowHeight * rows.length);
-    ctx.stroke();
-  }
+  ctx.fillRect(x, startY, width, headerHeight);
 
   const centers = [];
   for (let i = 0; i < columns.length - 1; i += 1) {
@@ -612,8 +607,8 @@ function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, co
   }
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = colors.ink;
-  ctx.font = '900 25px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  ctx.fillStyle = colors.navy;
+  ctx.font = '800 25px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   ctx.fillText('組別', centers[0], startY + headerHeight / 2);
   drawMobileCumulativeMixedTargetHeader_(
     ctx,
@@ -622,63 +617,67 @@ function drawMobileCumulativeTableCanvas_(ctx, rows, category, month, startY, co
     startY + headerHeight / 2,
     colors
   );
-  ctx.fillText(month + '月達成', centers[2], startY + headerHeight / 2);
-  ctx.fillText('今年累計', centers[3], startY + headerHeight / 2);
-  ctx.fillText('實際達成率', centers[4], startY + headerHeight / 2);
-  ctx.fillText('目前增減', centers[5], startY + headerHeight / 2);
+  ctx.fillText(month + '月', centers[2], startY + 20);
+  ctx.fillText('達成', centers[2], startY + 45);
+  ctx.fillText('今年', centers[3], startY + 20);
+  ctx.fillText('累計', centers[3], startY + 45);
+  ctx.fillText('實際', centers[4], startY + 20);
+  ctx.fillText('達成率', centers[4], startY + 45);
+  ctx.fillText('目前', centers[5], startY + 20);
+  ctx.fillText('增減', centers[5], startY + 45);
 
   rows.forEach(function (row, index) {
     const rowY = startY + headerHeight + index * rowHeight;
-    const background = row.total ? colors.total : '#ffffff';
+    const background = row.total ? colors.total : (index % 2 ? colors.alternate : '#ffffff');
     ctx.fillStyle = background;
     ctx.fillRect(x + 1, rowY, width - 2, rowHeight);
     ctx.strokeStyle = colors.line;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x, rowY);
     ctx.lineTo(x + width, rowY);
     ctx.stroke();
 
-    ctx.fillStyle = row.total ? '#12325a' : colors.purple;
-    ctx.font = '900 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(row.groupLabel, centers[0], rowY + 31);
+    ctx.fillStyle = colors.navy;
+    ctx.font = '800 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(row.groupLabel, centers[0], rowY + 28);
     ctx.fillStyle = colors.muted;
-    ctx.font = '800 18px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
-    ctx.fillText(row.templeCount + '壇', centers[0], rowY + 60);
+    ctx.font = '600 18px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillText(row.templeCount + '壇', centers[0], rowY + 56);
 
     ctx.fillStyle = colors.ink;
-    ctx.font = '800 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.font = (row.total ? '800' : '700') + ' 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.fillText(formatMobileCumulativeNumber_(row.target), centers[1], rowY + rowHeight / 2);
     ctx.fillText(formatMobileCumulativeNumber_(row.monthValue), centers[2], rowY + rowHeight / 2);
     ctx.fillText(formatMobileCumulativeNumber_(row.cumulative), centers[3], rowY + rowHeight / 2);
 
     const toneColor = row.tone === 'green' ? colors.green : colors.red;
     ctx.fillStyle = toneColor;
-    ctx.font = '900 31px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.font = '800 29px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.fillText(formatMobileCumulativeNumber_(row.ratePercent) + '%', centers[4], rowY + rowHeight / 2);
 
-    const deltaX = x + width * columns[5] + 1;
-    const deltaWidth = width * (columns[6] - columns[5]) - 2;
-
-    if (row.tone === 'green') {
-      ctx.fillStyle = colors.green;
-      ctx.fillRect(deltaX, rowY, deltaWidth, rowHeight);
-      ctx.fillStyle = '#ffffff';
-    } else {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(deltaX, rowY, deltaWidth, rowHeight);
-      ctx.fillStyle = colors.red;
-    }
-
-    ctx.font = '950 34px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    ctx.fillStyle = toneColor;
+    ctx.font = '800 30px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
     ctx.fillText(row.deltaText, centers[5], rowY + rowHeight / 2);
   });
 
-  return startY + headerHeight + rowHeight * rows.length;
+  for (let i = 1; i < columns.length - 1; i += 1) {
+    ctx.strokeStyle = colors.line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + width * columns[i], startY);
+    ctx.lineTo(x + width * columns[i], startY + tableHeight);
+    ctx.stroke();
+  }
+  ctx.restore();
+  cumulativeRoundRect_(ctx, x, startY, width, tableHeight, 18, null, colors.line);
+
+  return startY + tableHeight;
 }
 
 
 function drawMobileCumulativeMixedTargetHeader_(ctx, category, centerX, centerY, colors) {
-  const font = '900 24px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+  const font = '800 24px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
   const suffix = '目標';
 
   ctx.font = font;
@@ -688,7 +687,7 @@ function drawMobileCumulativeMixedTargetHeader_(ctx, category, centerX, centerY,
   let x = centerX - totalWidth / 2;
 
   ctx.textAlign = 'left';
-  ctx.fillStyle = colors.blue;
+  ctx.fillStyle = category === '法會' ? colors.green : colors.blue;
   ctx.fillText(category, x, centerY);
 
   x += categoryWidth;

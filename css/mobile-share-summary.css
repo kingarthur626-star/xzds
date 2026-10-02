@@ -1,192 +1,185 @@
-/*
-程式名稱：mobile-share-summary.css
-功能：三大組求道／法會累計達成頁與 LINE 分享。
-版本：v1.0.0R11
-*/
-
+/* 三大組累計達成：手機緊湊標題、細緻表格與一致的總計列。 */
 .mobile-cumulative-page {
   width: min(100%, 620px);
 }
-
 .mobile-cumulative-header {
-  padding: 10px 0 16px;
+  padding: 6px 0 8px;
   text-align: center;
 }
-
 .mobile-cumulative-header h1 {
   margin: 0;
   color: #173f63;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-  font-size: clamp(30px, 9vw, 42px);
-  font-weight: 850;
-  letter-spacing: .04em;
-  line-height: 1.15;
+  font-size: clamp(24px, 6.7vw, 30px);
+  font-weight: 800;
+  letter-spacing: .025em;
+  line-height: 1.25;
 }
-
 .mobile-cumulative-header h1 span {
-  margin-left: .22em;
+  margin-left: .12em;
 }
-
 .mobile-cumulative-month-row {
   display: inline-grid;
-  grid-template-columns: minmax(104px, 145px) minmax(106px, 145px);
+  grid-template-columns: 106px 128px;
   align-items: center;
-  gap: 12px;
-  margin-top: 44px;
+  gap: 8px;
+  margin-top: 14px;
 }
-
 .mobile-cumulative-month-row select {
   width: 100%;
-  height: 50px;
-  padding: 0 38px 0 14px;
-  border: 1px solid #c4cfdd;
-  border-radius: 14px;
+  height: 44px;
+  padding: 0 28px 0 12px;
+  border: 1px solid #d1dbe6;
+  border-radius: 11px;
   background: #fff;
-  color: #0e45d5;
-  font-size: clamp(23px, 7vw, 31px);
-  font-weight: 900;
+  color: #173f63;
+  font-size: 20px;
+  font-weight: 750;
   text-align: center;
+  box-shadow: 0 2px 6px rgba(27, 55, 88, .03);
 }
-
 .mobile-cumulative-month-row .mobile-share-target-badge {
-  padding-top: 13px;
-  padding-bottom: 13px;
-  font-size: clamp(14px, 4vw, 17px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 8px;
+  border: 1px solid #d6e9dc;
+  border-radius: 11px;
+  background: #edf7f0;
+  color: #167344;
+  font-size: 14px;
+  font-weight: 750;
+  box-shadow: none;
 }
-
+.mobile-cumulative-month-row select:focus-visible {
+  outline: 3px solid rgba(21, 89, 214, .18);
+  outline-offset: 2px;
+}
 .mobile-cumulative-report {
   padding-bottom: 10px;
 }
-
 .mobile-cumulative-section {
+  margin-top: 14px;
+}
+.mobile-cumulative-section + .mobile-cumulative-section {
   margin-top: 16px;
 }
-
 .mobile-cumulative-table {
   overflow: hidden;
-  border: 1px solid #b9c5d4;
-  border-radius: 14px;
+  border: 1px solid #dbe4ee;
+  border-radius: 15px;
   background: #fff;
-  box-shadow: 0 6px 18px rgba(27, 55, 88, .06);
+  box-shadow: 0 4px 16px rgba(27, 55, 88, .045);
 }
-
 .mobile-cumulative-table-head,
 .mobile-cumulative-row {
   display: grid;
   grid-template-columns:
-    minmax(68px, 1.18fr)
-    minmax(50px, .82fr)
-    minmax(45px, .72fr)
-    minmax(48px, .78fr)
-    minmax(55px, .88fr)
-    minmax(54px, .86fr);
+    minmax(54px, .95fr)
+    minmax(56px, .98fr)
+    minmax(42px, .78fr)
+    minmax(56px, .98fr)
+    minmax(58px, 1.02fr)
+    minmax(50px, .89fr);
   align-items: stretch;
   width: 100%;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
-
 .mobile-cumulative-table-head {
-  min-height: 58px;
-  background: #f5f7fb;
-  color: #122742;
-  font-size: clamp(10px, 2.75vw, 13px);
-  font-weight: 900;
-  line-height: 1.12;
+  min-height: 52px;
+  background: #f3f6fa;
+  color: #41556c;
+  font-size: clamp(11px, 3vw, 12.5px);
+  font-weight: 700;
+  line-height: 1.25;
 }
-
 .mobile-cumulative-target-head {
   flex-direction: row;
   gap: 0;
   white-space: nowrap;
-  letter-spacing: -.18px;
-  font-size: clamp(9px, 2.48vw, 12px);
+  letter-spacing: -.2px;
+  font-size: clamp(10.5px, 2.8vw, 12px);
 }
-
 .mobile-cumulative-target-head b {
-  color: #064cff;
-  font-size: 1em;
-  font-weight: 950;
+  color: #245c91;
+  font-weight: 800;
 }
-
+.mobile-cumulative-section[aria-label="法會三大組累計"] .mobile-cumulative-target-head b {
+  color: #167344;
+}
 .mobile-cumulative-row {
   min-height: 58px;
-  border-top: 1px solid #d8e0ea;
-  color: #142238;
-  font-size: clamp(13px, 3.8vw, 17px);
-  font-weight: 700;
+  border-top: 1px solid #e5ebf2;
+  color: #24374b;
+  font-size: clamp(14px, 4vw, 17px);
+  font-weight: 650;
+  line-height: 1.25;
 }
-
+.mobile-cumulative-row:nth-child(even) {
+  background: #fbfcfe;
+}
 .mobile-cumulative-table-head > span,
 .mobile-cumulative-row > span {
   display: flex;
   min-width: 0;
   align-items: center;
   justify-content: center;
-  padding: 6px 3px;
-  border-left: 1px solid #cbd5e1;
+  padding: 7px 2px;
+  border-left: 1px solid #e5ebf2;
 }
-
 .mobile-cumulative-table-head > span:first-child,
 .mobile-cumulative-row > span:first-child {
   border-left: 0;
 }
-
-.mobile-cumulative-row .group-cell {
-  flex-direction: column;
-  color: #5422bd;
-  font-size: clamp(15px, 4.3vw, 20px);
-  font-weight: 900;
-  line-height: 1.05;
-}
-
-.mobile-cumulative-row .group-cell small {
-  margin-top: 3px;
-  color: #6b7280;
-  font-size: .58em;
+.mobile-cumulative-row > span:nth-child(4) {
   font-weight: 800;
 }
-
-.mobile-cumulative-row .rate-cell.green {
-  color: #078e2b;
-  font-weight: 900;
+.mobile-cumulative-row .group-cell {
+  flex-direction: column;
+  gap: 3px;
+  color: #173f63;
+  font-size: clamp(15px, 4vw, 17px);
+  font-weight: 750;
+  line-height: 1.2;
 }
-
-.mobile-cumulative-row .rate-cell.red {
-  color: #e11515;
-  font-weight: 900;
+.mobile-cumulative-row .group-cell small {
+  color: #718096;
+  font-size: 10.5px;
+  font-weight: 550;
 }
-
+.mobile-cumulative-row .rate-cell,
 .mobile-cumulative-row .delta-cell {
-  font-size: clamp(16px, 4.9vw, 23px);
-  font-weight: 950;
+  font-weight: 750;
+  white-space: nowrap;
 }
-
+.mobile-cumulative-row .rate-cell.green,
 .mobile-cumulative-row .delta-cell.green {
-  background: #0b9732;
-  color: #fff;
+  color: #167344;
 }
-
+.mobile-cumulative-row .rate-cell.red,
 .mobile-cumulative-row .delta-cell.red {
-  background: #fff;
-  color: #e11515;
+  color: #b43f48;
 }
-
+.mobile-cumulative-row .delta-cell {
+  background: transparent;
+  font-size: clamp(15px, 4.1vw, 18px);
+}
 .mobile-cumulative-row.total-row {
-  background: #b9cbea;
-  font-weight: 900;
+  border-top: 1px solid #cddcea;
+  background: #eaf1f8;
+  font-weight: 800;
 }
-
 .mobile-cumulative-row.total-row .group-cell {
-  color: #12325a;
+  color: #173f63;
 }
-
 .mobile-cumulative-actions {
   display: grid;
   grid-template-columns: 1fr 1.35fr;
   gap: 10px;
   margin-top: 18px;
 }
-
 .mobile-cumulative-actions button {
   min-height: 48px;
   border: 0;
@@ -194,12 +187,10 @@
   font-size: 15px;
   font-weight: 900;
 }
-
 .mobile-cumulative-reload-btn {
   background: #dde6f1;
   color: #29425e;
 }
-
 .mobile-cumulative-line-btn {
   display: inline-flex;
   align-items: center;
@@ -209,34 +200,17 @@
   color: #fff;
   box-shadow: 0 8px 18px rgba(8, 168, 58, .22);
 }
-
 .mobile-cumulative-actions button:disabled {
   opacity: .55;
 }
-
 @media (max-width: 390px) {
   .mobile-cumulative-page {
     padding-left: 7px;
     padding-right: 7px;
   }
-
-  .mobile-cumulative-header {
-    padding-top: 8px;
-  }
-
-  .mobile-cumulative-month-row {
-    grid-template-columns: 112px 112px;
-    gap: 8px;
-  }
-
-  .mobile-cumulative-table-head,
-  .mobile-cumulative-row {
-    grid-template-columns: minmax(58px, 1.08fr) 54px 40px 43px 50px 48px;
-  }
-
   .mobile-cumulative-table-head > span,
   .mobile-cumulative-row > span {
-    padding-left: 2px;
-    padding-right: 2px;
+    padding-left: 1px;
+    padding-right: 1px;
   }
 }

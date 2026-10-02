@@ -660,3 +660,73 @@ body {
 .mobile-share-fixed-nav #mobileCumulativeHomeBtn {
   min-width: var(--xzds-nav-control-min-width, 76px);
 }
+
+
+/* 20261003：各壇月報只精簡標題、篩選與五張摘要卡；累計頁及明細沿用既有樣式。 */
+body.mobile-share-body:not(.mobile-cumulative-body) .mobile-share-header {
+  padding: 2px 0 12px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) .mobile-share-header h1 {
+  gap: 6px;
+  font-size: clamp(26px, 7vw, 30px);
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) .mobile-share-header h1 small {
+  font-size: 13px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) .mobile-share-control-card {
+  grid-template-columns: 80px 88px minmax(0, 1fr);
+  gap: 6px;
+  padding: 8px;
+  border-radius: 14px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) .mobile-share-control-card select {
+  height: 44px;
+  padding: 0 24px 0 8px;
+  border-radius: 10px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) #mobileShareTargetMonthSelect {
+  font-size: clamp(18px, 4.8vw, 20px);
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) #mobileShareReportSelect {
+  font-size: 14px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) .mobile-share-target-badge {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) #mobileShareReport > .mobile-share-summary {
+  gap: 5px;
+  margin: 14px 0 12px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) #mobileShareReport > .mobile-share-summary > .mobile-share-summary-card {
+  padding: 8px 3px 9px;
+  border-radius: 12px;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) #mobileShareReport > .mobile-share-summary > .mobile-share-summary-card > span {
+  min-height: 28px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+body.mobile-share-body:not(.mobile-cumulative-body) #mobileShareReport > .mobile-share-summary > .mobile-share-summary-card > strong {
+  margin-top: 4px;
+  font-size: clamp(22px, 6.1vw, 26px);
+  font-weight: 800;
+}
