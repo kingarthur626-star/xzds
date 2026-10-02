@@ -19,6 +19,7 @@ let tduMutationRunning = false;
 let tduCanUpdate = false;
 let tduPermissionDenied = false;
 let tduCurrentActive = false;
+let tduRecoveryRunId = '';
 let tduStatusKnown = false;
 let tduManualUnconfirmed = false;
 let tduManualEvidence = null;
@@ -29,9 +30,11 @@ let tduHistoryForceNext = false;
 let tduHistoryHasSnapshot = false;
 let tduSyncRunning = false;
 let tduSyncForceNext = false;
+let tduSyncForceFreshNext = false;
 let tduSyncHasSnapshot = false;
 let tduIssuesRunning = false;
 let tduIssueForceNext = false;
+let tduIssueForceFreshNext = false;
 let tduIssuesHasSnapshot = false;
 let tduIssuePage = 0;
 let tduIssueFilter = 'open';
@@ -43,6 +46,7 @@ let tduIssueChangeVersion = 0;
 let tduIssueItems = new Map();
 const tduIssueBusy = new Set();
 const tduIssueUnconfirmed = new Set();
+const tduIssueUnconfirmedRevisions = new Map();
 const tduIssueMessages = new Map();
 const tduIssueCards = new Map();
 const tduIssueDrafts = new Map();
@@ -103,7 +107,7 @@ function bindTduButtons_() {
   }
 
   if (syncRefreshBtn) {
-    syncRefreshBtn.addEventListener('click', loadTduSyncOverview_);
+    syncRefreshBtn.addEventListener('click', function () { loadTduSyncOverview_(true); });
   }
 
   const issuesRefresh = document.getElementById('tduIssuesRefreshBtn');
@@ -142,6 +146,11 @@ async function checkTduPermissionAndLoad_() {
 
 
 async function loadTduAll_(showMessage) {
+  if (document.hidden) return;
+  if (showMessage) {
+    tduBackgroundStarted = false;
+    tduForceBackgroundOnNextStatus = true;
+  }
   const loaded = await readTduStatus_();
   if (loaded) {
     if (showMessage && !tduManualUnconfirmed) setTduActionMessage_('目前狀態已更新，其他資料各自重新讀取中。', false);
@@ -235,7 +244,7 @@ function refreshTduBackground_(onlyFailed, forceFresh) {
   tduBackgroundStarted = true;
   const reads = [];
   if (!onlyFailed || tduHistoryNeedsRetry) reads.push(loadTduHistoryOnly_());
-  if (!onlyFailed || tduSyncNeedsRetry) reads.push(loadTduSyncOverview_());
+  if (!onlyFailed || tduSyncNeedsRetry) reads.push(loadTduSyncOverview_(forceFresh === true));
   if (!onlyFailed || tduIssuesNeedsRetry) reads.push(loadTduIssues_(forceFresh === true));
   Promise.allSettled(reads);
 }
@@ -280,17 +289,23 @@ async function loadTduHistoryOnly_() {
 }
 
 
-async function loadTduSyncOverview_() {
+async function loadTduSyncOverview_(force) {
   if (document.hidden) { tduBackgroundStarted = false; return; }
   const area = document.getElementById('tduSyncOverview');
   if (!area || !tduCanUpdate) return;
-  if (tduSyncRunning) { tduSyncForceNext = true; return; }
+  if (tduSyncRunning) {
+    tduSyncForceNext = true;
+    tduSyncForceFreshNext = tduSyncForceFreshNext || force === true;
+    return;
+  }
+  const forceRead = force === true || tduSyncForceFreshNext;
+  tduSyncForceFreshNext = false;
   tduSyncRunning = true;
   const refresh = document.getElementById('tduSyncRefreshBtn');
   if (refresh) refresh.disabled = true;
   if (!tduSyncHasSnapshot) area.replaceChildren(makeTduEmpty_('讀取同步總覽中…'));
   try {
-    const result = await callApi({ action: 'getSyncOverview' }, TDU_BACKGROUND_OPTIONS);
+    const result = await callApi({ action: 'getSyncOverview', force: forceRead }, TDU_BACKGROUND_OPTIONS);
     if (!result || !result.success || !result.pipeline) throw new Error('同步總覽尚未取得');
     renderTduSyncOverview_(result);
     tduSyncNeedsRetry = false;
@@ -301,9 +316,10 @@ async function loadTduSyncOverview_() {
     if (!tduSyncHasSnapshot) area.replaceChildren(makeTduEmpty_('同步總覽尚未取得，系統會自動重試；這不代表更新作業失敗。'));
     const note = document.getElementById('tduSyncMessage');
     if (note) note.textContent = tduSyncHasSnapshot ? '重新讀取未完成，以下保留前次同步快照。' : '';
+    tduSyncForceFreshNext = tduSyncForceFreshNext || forceRead;
     tduSyncNeedsRetry = true;
     scheduleTduBackgroundRetry_();
-  } finally { tduSyncRunning = false; if (refresh) refresh.disabled = false; if (tduSyncForceNext) { tduSyncForceNext = false; loadTduSyncOverview_(); } }
+  } finally { tduSyncRunning = false; if (refresh) refresh.disabled = false; if (tduSyncForceNext) { tduSyncForceNext = false; loadTduSyncOverview_(tduSyncForceFreshNext); } }
 }
 
 function renderTduSyncOverview_(result) {
@@ -383,7 +399,8 @@ async function loadTduIssues_(force) {
   if (document.hidden) { tduBackgroundStarted = false; return false; }
   if (!tduCanUpdate) return false;
   if (tduIssuesRunning) { if (force === true) tduIssueForceNext = true; return false; }
-  const forceRead = force === true;
+  let forceRead = force === true || tduIssueForceFreshNext;
+  tduIssueForceFreshNext = false;
   tduIssueForceNext = false;
   tduIssuesRunning = true;
   const area = document.getElementById('tduIssueList');
@@ -393,10 +410,20 @@ async function loadTduIssues_(force) {
   let needsRefresh = false;
   updateTduIssueNavigation_();
   try {
-    const result = await callApi({ action: 'taoDailyIssueList', cursor: tduIssueCursors[tduIssuePage] || '', limit: 20, status: tduIssueFilter, force: forceRead }, TDU_BACKGROUND_OPTIONS);
+    let result = await callApi({ action: 'taoDailyIssueList', cursor: tduIssueCursors[tduIssuePage] || '', limit: 20, status: tduIssueFilter, force: forceRead }, TDU_BACKGROUND_OPTIONS);
     if (!result || !result.success) throw new Error(result && result.message || '資料尚未取得');
     if (requestedVersion !== tduIssueChangeVersion) { needsRefresh = true; return false; }
-    renderTduIssues_(result, forceRead && result.cached !== true);
+    let verifiedFresh = forceRead && result.cached !== true;
+    if (Array.isArray(result.issues) && result.issues.length === 0 && Number(result.total) > 0 && tduIssuePage > 0) {
+      // 結案可能清空末頁；重取首頁一次，不能把空的當頁當成全部已處理。
+      forceRead = true;
+      result = await callApi({ action: 'taoDailyIssueList', cursor: '', limit: 20, status: tduIssueFilter, force: true }, TDU_BACKGROUND_OPTIONS);
+      if (!result || !result.success) throw new Error(result && result.message || '首頁資料尚未取得');
+      if (requestedVersion !== tduIssueChangeVersion) { needsRefresh = true; return false; }
+      tduIssuePage = 0; tduIssueCursors = [''];
+      verifiedFresh = result.cached !== true;
+    }
+    renderTduIssues_(result, verifiedFresh);
     setTduIssueListMessage_('');
     tduIssuesNeedsRetry = false;
     clearTduBackgroundRetryIfRecovered_();
@@ -404,6 +431,7 @@ async function loadTduIssues_(force) {
   } catch (error) {
     if (!tduIssuesHasSnapshot && area) area.replaceChildren(makeTduEmpty_('待處理資料尚未取得，系統會自動重試。'));
     setTduIssueListMessage_(tduIssuesHasSnapshot ? '重新讀取未完成，保留前次清單；請稍後重新整理。' : '');
+    tduIssueForceFreshNext = tduIssueForceFreshNext || forceRead;
     tduIssuesNeedsRetry = true;
     scheduleTduBackgroundRetry_();
     return false;
@@ -424,8 +452,11 @@ function renderTduIssues_(result, verifiedFresh) {
   tduIssuesHasSnapshot = true;
   issues.forEach(function (item) {
     const id = String(item.issueId);
-    if (verifiedFresh === true && tduIssueUnconfirmed.has(id) && !tduIssueBusy.has(id)) {
+    const oldRevision = tduIssueUnconfirmedRevisions.get(id);
+    const revisionChanged = typeof item.revision === 'string' && item.revision && oldRevision && item.revision !== oldRevision;
+    if (verifiedFresh === true && tduIssueUnconfirmed.has(id) && !tduIssueBusy.has(id) && (!tduIssueUnconfirmedRevisions.has(id) || revisionChanged)) {
       tduIssueUnconfirmed.delete(id);
+      tduIssueUnconfirmedRevisions.delete(id);
       tduIssueMessages.set(id, '已重新取得這筆的目前狀態；請依下方結果決定是否操作。');
     }
   });
@@ -438,7 +469,7 @@ function renderTduIssueItems_() {
   if (!list) return;
   list.replaceChildren();
   tduIssueCards.clear();
-  if (!tduIssueItems.size) list.appendChild(makeTduEmpty_(tduIssueFilter === 'closed' ? '目前沒有已處理資料。' : '目前沒有待處理資料。'));
+  if (!tduIssueItems.size) list.appendChild(makeTduEmpty_(tduIssueTotal > 0 ? '清單尚未確認，仍有 ' + numberText_(tduIssueTotal) + ' 筆資料；請重新整理。' : tduIssueFilter === 'closed' ? '目前沒有已處理資料。' : '目前沒有待處理資料。'));
   tduIssueItems.forEach(function (item) {
     const card = makeTduIssueCard_(item);
     tduIssueCards.set(String(item.issueId), card);
@@ -567,8 +598,10 @@ async function runTduIssueAction_(issueId, action, reason, reasonCode) {
       const code = String(result && result.code || '');
       tduIssueMessages.set(id, result && result.message || '目前無法處理，這筆仍保留在清單。');
       if (['CONFLICT', 'NOT_FOUND', 'BUSY', 'WRITE_FAILED'].includes(code)) { tduIssueUnconfirmed.add(id); refreshAfter = true; }
+      if (code === 'WRITE_FAILED') tduIssueUnconfirmedRevisions.set(id, String(item.revision || ''));
     } else if (!result.issue || !['resolved', 'unresolved', 'closed'].includes(result.outcome)) {
       tduIssueUnconfirmed.add(id);
+      tduIssueUnconfirmedRevisions.set(id, String(item.revision || ''));
       tduIssueMessages.set(id, '處理回應未確認，原資料仍保留；請先重新確認這筆狀態。');
     } else {
       if (tduIssueItems.has(id)) tduIssueItems.set(id, result.issue);
@@ -578,6 +611,7 @@ async function runTduIssueAction_(issueId, action, reason, reasonCode) {
     }
   } catch (error) {
     tduIssueUnconfirmed.add(id);
+    tduIssueUnconfirmedRevisions.set(id, String(item.revision || ''));
     tduIssueMessages.set(id, '處理回應未確認，可能仍在執行；原資料保留，請先重新確認這筆狀態。');
   } finally {
     tduIssueBusy.delete(id); tduIssueChangeVersion++; updateTduIssueCard_(id);
@@ -585,7 +619,7 @@ async function runTduIssueAction_(issueId, action, reason, reasonCode) {
       setTduIssueListMessage_('這筆狀態已有變動，正在重新確認清單。');
       loadTduIssues_(true);
     }
-    if (completed) window.setTimeout(function () { loadTduIssues_(true); }, 1200);
+    if (completed) window.setTimeout(function () { refreshTduBackground_(false, true); }, 1200);
   }
 }
 
@@ -635,7 +669,9 @@ async function runTduManualUpdate_() {
   setTduActionMessage_('正在排入手動更新…', false);
 
   try {
-    const result = await callApi({ action: 'taoDailyUpdateRunManual' }, { timeoutMs: 30000, maxAttempts: 1, retryOnTransport: false });
+    const payload = { action: 'taoDailyUpdateRunManual' };
+    if (tduRecoveryRunId) payload.recoverRunId = tduRecoveryRunId;
+    const result = await callApi(payload, { timeoutMs: 30000, maxAttempts: 1, retryOnTransport: false });
 
     if (!result || !result.success) {
       tduManualEvidence = null;
@@ -648,7 +684,7 @@ async function runTduManualUpdate_() {
     tduCurrentActive = true;
     tduManualEvidence.expectedId = String(result.requestId || '');
     tduManualUnconfirmed = true;
-    setTduActionMessage_('手動更新已排入背景執行，頁面可關閉。', false);
+    setTduActionMessage_(result.recovering === true ? '中斷的更新已排入同一輪接續，原待辦與紀錄保留。' : '手動更新已排入背景執行，頁面可關閉。', false);
     updateTduPolling_(true);
   } catch (error) {
     tduManualUnconfirmed = true;
@@ -682,6 +718,7 @@ function renderTduStatus_(result) {
   const current = result.current || {};
   const status = String(current.status || 'IDLE').toUpperCase();
   tduCurrentActive = !!current.active;
+  tduRecoveryRunId = !tduCurrentActive && (current.recoveryNeeded || current.stale) ? String(current.runId || '').trim() : '';
 
   if (badge) {
     badge.textContent = current.stale || current.recoveryNeeded ? '需重新確認' : tduStatusLabel_(status);
@@ -707,7 +744,7 @@ function refreshTduManualButton_() {
   const btn = document.getElementById('tduManualBtn');
   if (!btn) return;
   btn.disabled = !tduCanUpdate || tduMutationRunning || tduCurrentActive || tduManualUnconfirmed || tduStatusUnconfirmed;
-  btn.textContent = tduMutationRunning ? '排程中…' : tduManualNeedsReview ? '排程未確認・需檢查後端' : tduManualUnconfirmed ? '正在自動確認排程…' : tduStatusUnconfirmed ? (tduStatusKnown ? '正在自動確認狀態…' : '正在確認目前狀態…') : tduProgressStale ? '進度待確認・自動查詢中' : tduCurrentActive ? '更新執行中…' : '手動更新資料';
+  btn.textContent = tduMutationRunning ? '排程中…' : tduManualNeedsReview ? '排程未確認・需檢查後端' : tduManualUnconfirmed ? '正在自動確認排程…' : tduStatusUnconfirmed ? (tduStatusKnown ? '正在自動確認狀態…' : '正在確認目前狀態…') : tduProgressStale ? '進度待確認・自動查詢中' : tduCurrentActive ? '更新執行中…' : tduRecoveryRunId ? '恢復中斷更新' : '手動更新資料';
 }
 
 function renderTduHistory_(result) {
@@ -1001,7 +1038,7 @@ function tduFriendlyCurrentMessage_(current) {
     return '最近一次更新失敗；請到下方更新紀錄查看問題。';
   }
   if (status === 'SUCCESS' || status === 'COMPLETED') {
-    return '最近一次更新已正常完成，無需處理。';
+    return '最近一次更新已完成；目前待辦請查看下方「待處理資料」。';
   }
   if (status === 'IDLE') return '目前沒有資料更新作業。';
   return current.error || current.message || tduStatusDefaultMessage_(status);
