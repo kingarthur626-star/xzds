@@ -315,7 +315,7 @@ function writeMobileShareCache_(reportKey, requestedMonth, report) {
 
 
 /**
- * 功能：月份預設為來源月報月份，未來月份禁止選取。
+ * 功能：依後端可查月份開放選項，舊版回應沿用來源月份上限。
  */
 function syncMobileShareMonthOptions_(report) {
   const select = document.getElementById('mobileShareTargetMonthSelect');
@@ -323,9 +323,16 @@ function syncMobileShareMonthOptions_(report) {
 
   const sourceMonth = Number(report.sourceMonth || report.month || 1);
   const selectedMonth = Number(report.month || sourceMonth);
+  const availableMonths = Array.isArray(report.availableMonths)
+    ? report.availableMonths.map(Number).filter(function (month) {
+        return Number.isInteger(month) && month >= 1 && month <= 12;
+      })
+    : [];
 
   Array.from(select.options).forEach(function (option) {
-    option.disabled = Number(option.value) > sourceMonth;
+    option.disabled = availableMonths.length
+      ? !availableMonths.includes(Number(option.value))
+      : Number(option.value) > sourceMonth;
   });
 
   select.value = String(selectedMonth);

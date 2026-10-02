@@ -8,7 +8,7 @@
    4. Avoid apparent "logged out" jumps caused by offline/cache fallback.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20260929-daily-progress-r1';
+const CACHE_NAME = CACHE_PREFIX + '20261003-mobile-share-months-r1';
 
 const STATIC_ASSETS = [
   './',
