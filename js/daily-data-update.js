@@ -731,6 +731,7 @@ function renderTduStatus_(result) {
     message.textContent = tduFriendlyCurrentMessage_(current) + (result.staleManual ? ' 另有較早的手動更新未確認完成，待處理資料仍保留。' : '');
   }
   renderTduProgress_(result);
+  renderTduRunEvidence_(result);
 
   if (time) {
     const t = current.completedAt || current.updatedAt || current.startedAt || '';
@@ -745,6 +746,31 @@ function refreshTduManualButton_() {
   if (!btn) return;
   btn.disabled = !tduCanUpdate || tduMutationRunning || tduCurrentActive || tduManualUnconfirmed || tduStatusUnconfirmed;
   btn.textContent = tduMutationRunning ? '排程中…' : tduManualNeedsReview ? '排程未確認・需檢查後端' : tduManualUnconfirmed ? '正在自動確認排程…' : tduStatusUnconfirmed ? (tduStatusKnown ? '正在自動確認狀態…' : '正在確認目前狀態…') : tduProgressStale ? '進度待確認・自動查詢中' : tduCurrentActive ? '更新執行中…' : tduRecoveryRunId ? '恢復中斷更新' : '手動更新資料';
+}
+
+function renderTduRunEvidence_(result) {
+  const area = document.getElementById('tduRunEvidence');
+  if (!area) return;
+  const keepOpen = !!area.firstElementChild?.open;
+  area.replaceChildren();
+  const current = result.current || {}, manual = result.manual || {};
+  if (!current.runId && !manual.requestId && !manual.runId) return;
+  const details = document.createElement('details');
+  details.className = 'tdu-tech-details'; details.open = keepOpen;
+  const summary = document.createElement('summary');
+  summary.textContent = '作業核對資料（平常不用看）'; details.appendChild(summary);
+  const rows = document.createElement('div'); rows.className = 'tdu-kv-list tdu-tech-kv';
+  const identifier = value => /^[A-Za-z0-9_-]{1,100}$/.test(String(value || '')) ? String(value) : '尚未取得 Run ID';
+  if (current.runId) addTduKv_(rows, '目前 Run ID', identifier(current.runId));
+  if (result.version) addTduKv_(rows, '後端版本', String(result.version).slice(0,100));
+  if (manual.requestId || manual.runId) {
+    addTduKv_(rows, result.staleManual ? '較早手動作業' : '手動作業', tduStatusLabel_(String(result.staleManual ? 'STALE' : manual.status || '').toUpperCase()));
+    if (manual.requestId) addTduKv_(rows, '原請求 ID', identifier(manual.requestId));
+    addTduKv_(rows, '原 Run ID', identifier(manual.runId));
+    if (manual.requestedAt) addTduKv_(rows, '原請求時間（台灣時間）', String(manual.requestedAt).slice(0,30));
+    if (manual.updatedAt) addTduKv_(rows, '原作業回報（台灣時間）', String(manual.updatedAt).slice(0,30));
+  }
+  details.appendChild(rows); area.appendChild(details);
 }
 
 function renderTduHistory_(result) {
