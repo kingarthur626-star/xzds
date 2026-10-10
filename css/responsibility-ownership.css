@@ -20,25 +20,16 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .responsibility-ownership-header { padding: 8px 0 14px; text-align: center; }
 .responsibility-ownership-header h1 { margin: 0; color: var(--ro-ink); font-size: clamp(17px, 5vw, 24px); line-height: 1.4; letter-spacing: 0; white-space: nowrap; }
 .responsibility-ownership-header p { margin: 6px 0 0; color: var(--ro-muted); font-size: 12px; }
-.responsibility-controls { display: grid; grid-template-columns: 54px minmax(76px, 1fr) auto auto; align-items: center; gap: 5px; margin-bottom: 12px; padding: 9px; border: 1px solid var(--ro-line); border-radius: 14px; background: #fff; box-shadow: 0 4px 14px rgba(27,55,88,.05); }
+.responsibility-controls { display: grid; grid-template-columns: 64px minmax(76px, 1fr) auto; align-items: center; gap: 5px; margin-bottom: 12px; padding: 9px; border: 1px solid var(--ro-line); border-radius: 14px; background: #fff; box-shadow: 0 4px 14px rgba(27,55,88,.05); }
 .responsibility-controls label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .responsibility-controls select { min-width: 0; width: 100%; height: 38px; padding: 0 2px 0 5px; border: 1px solid #c9d5e2; border-radius: 9px; background: #fff; color: var(--ro-ink); font-size: 16px; font-weight: 700; }
 .responsibility-controls button { height: 38px; padding: 0 8px; border: 1px solid #2878d4; border-radius: 9px; background: #eef6ff; color: #246db8; font-size: 12px; font-weight: 700; }
 .responsibility-controls button:disabled { opacity: .5; cursor: wait; }
-#responsibilityBatchExportBtn { background: #2176bc; border-color: #2176bc; color: #fff; white-space: nowrap; }
-.responsibility-share-gallery { display: grid; gap: 18px; }
-.responsibility-share-gallery figure { margin: 0; }
-.responsibility-share-gallery figcaption { margin-bottom: 6px; font-size: 14px; font-weight: 700; }
-.responsibility-share-gallery img { display: block; width: 100%; height: auto; border: 1px solid #e0e7ef; border-radius: 8px; }
-.responsibility-share-gallery a { display: inline-block; margin-top: 6px; color: #24597d; font-size: 13px; }
 .responsibility-message { margin: 16px 0; padding: 16px; border-radius: 14px; background: #fff; color: var(--ro-muted); text-align: center; box-shadow: 0 4px 12px rgba(39,56,82,.04); }
 .responsibility-message.error { border: 1px solid #ffd0d0; background: #fff5f5; color: #b42318; }
 .responsibility-message.warning { border: 1px solid #f0d590; background: #fff9ea; color: #8a620d; font-size: 13px; line-height: 1.55; }
 .responsibility-groups { display: grid; gap: 18px; }
 .responsibility-group { overflow: hidden; border: 1px solid var(--ro-line); border-radius: 20px; background: #fff; box-shadow: 0 8px 22px rgba(27,55,88,.07); }
-.responsibility-group-head { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 2em; padding: 12px 8px 0; color: var(--ro-ink); font-size: 13px; line-height: 1.6; font-weight: 800; text-align: center; }
-.responsibility-group-head span { display: inline-block; }
-.responsibility-group-gap { height: 10px; }
 .responsibility-table-head, .responsibility-metric-row { display: grid; grid-template-columns: minmax(78px, 1.25fr) 35px repeat(4, minmax(38px, .63fr)) minmax(95px, 1.35fr); align-items: center; }
 .responsibility-table-head { min-height: 42px; padding: 0 10px; border-top: 1px solid #dce5ef; border-bottom: 1px solid #dce5ef; background: #edf3fa; color: #305572; font-size: 11px; font-weight: 900; text-align: center; }
 .responsibility-table-head span:first-child { text-align: left; }
@@ -97,3 +88,14 @@ html.responsibility-share-open { overflow: hidden; }
 @media (max-width: 430px) { .responsibility-temple-toggle { grid-template-columns: minmax(70px, 1.2fr) 31px repeat(4, minmax(31px, .55fr)) minmax(88px, 1.25fr); padding-inline: 7px; }.responsibility-temple-name { font-size: 14px; } }
 @media (max-width: 370px) { .responsibility-temple-toggle { grid-template-columns: minmax(62px, 1.12fr) 28px repeat(4, minmax(28px, .48fr)) minmax(82px, 1.15fr); }.responsibility-temple-name { font-size: 13px; } }
 @media (min-width: 371px) and (max-width: 450px) { .responsibility-temple-toggle { grid-template-columns: minmax(62px, 1.1fr) 28px repeat(4, minmax(28px, .55fr)) minmax(104px, 1.4fr); padding-inline: 7px; } }
+
+/* 核准的連續五壇版面：唯一分類列位於第一塊表頭上方。 */
+.responsibility-ownership-header { padding: 2px 0 12px; }
+.responsibility-ownership-header p { margin-top: 0; }
+.responsibility-groups { gap: 12px; }
+.responsibility-classification { padding: 10px 8px; color: var(--ro-ink); font-size: 15px; font-weight: 900; text-align: center; white-space: pre-wrap; }
+.responsibility-group-actions button { min-height: 32px; padding: 4px 12px; }
+@media (max-width: 370px) { .responsibility-ownership-page { padding-inline: 8px; } .responsibility-segments { grid-template-columns: repeat(10, 4px); gap: 1px; } .responsibility-segments b { width: 4px; } }
+
+/* 窄手機保留既有字級，讓四位數之間保有可辨識間距。 */
+@media (max-width: 370px) { .responsibility-table-head, .responsibility-temple-toggle { grid-template-columns: minmax(54px, 1.12fr) 28px repeat(4, minmax(32px, .48fr)) minmax(82px, 1.15fr); padding-inline: 4px; } }

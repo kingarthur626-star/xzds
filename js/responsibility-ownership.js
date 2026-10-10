@@ -26,17 +26,6 @@ function bindResponsibilityActions_() {
   const monthSelect = document.getElementById('responsibilityMonthSelect');
   const groupSelect = document.getElementById('responsibilityGroupSelect');
   const groups = document.getElementById('responsibilityGroups');
-  const batchButton = document.getElementById('responsibilityBatchExportBtn');
-
-  if (batchButton) {
-    batchButton.addEventListener('click', function () {
-      if (!responsibilityCurrentData_) return;
-      const selectedGroups = getResponsibilityVisibleGroups_(responsibilityCurrentData_);
-      if (selectedGroups.length && window.ResponsibilityShare) {
-        window.ResponsibilityShare.openAll(selectedGroups, responsibilityCurrentData_, getResponsibilitySelectedGroup_(), batchButton);
-      }
-    });
-  }
 
   if (logoutButton) {
     logoutButton.addEventListener('click', function () { logout(); });
@@ -62,8 +51,8 @@ function bindResponsibilityActions_() {
     groups.addEventListener('click', function (event) {
       const exportButton = event.target.closest('[data-responsibility-export]');
       if (exportButton && groups.contains(exportButton)) {
-        const selectedGroups = getResponsibilityVisibleGroups_(responsibilityCurrentData_);
-        const group = selectedGroups[Number(exportButton.dataset.responsibilityExport)];
+        const model = getResponsibilityChunkModel_(responsibilityCurrentData_);
+        const group = model.chunks[Number(exportButton.dataset.responsibilityExport)];
         if (group && window.ResponsibilityShare) {
           window.ResponsibilityShare.open(group, responsibilityCurrentData_, getResponsibilitySelectedGroup_(), exportButton);
         }
@@ -81,7 +70,7 @@ function bindResponsibilityActions_() {
     groupSelect.addEventListener('change', function () {
       if (window.ResponsibilityShare) window.ResponsibilityShare.close();
       responsibilityExpandedTempleKey_ = '';
-      syncResponsibilityBatchButton_();
+
       if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
     });
   }
@@ -168,42 +157,45 @@ async function loadResponsibilityOwnership_(requestedMonth) {
 }
 
 function renderResponsibilityOwnership_(data) {
-  syncResponsibilityBatchButton_();
   const area = document.getElementById('responsibilityGroups');
   const subtitle = document.getElementById('responsibilitySubtitle');
   if (!area) return;
-
-  const groups = getResponsibilityVisibleGroups_(data);
+  const model = getResponsibilityChunkModel_(data);
   const month = Number(data && data.month || 0);
-
-  if (subtitle) {
-    subtitle.textContent = (data && data.year ? data.year + ' 年 ' : '') +
-      (month ? month + ' 月資料' : '年度資料') +
-      '｜' + getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_()) + '・' + groups.length + ' 個責任區塊';
-  }
-
-  if (!groups.length) {
+  if (subtitle) subtitle.textContent = (data && data.year ? data.year + ' 年 ' : '') +
+    (month ? month + ' 月資料' : '年度資料');
+  if (!model.chunks.length) {
     area.innerHTML = '<div class="responsibility-message">目前沒有可顯示的責任公壇資料。</div>';
     return;
   }
-
-  area.innerHTML = groups.map(function (group, index) {
-    return buildResponsibilityGroupHtml_(group, month, index);
+  area.innerHTML = model.chunks.map(function (chunk, index) {
+    return buildResponsibilityGroupHtml_(chunk, month, index);
   }).join('');
+}
+
+function getResponsibilityChunkModel_(data) {
+  // 畫面與圖片共用篩選後的來源順序；僅建立新陣列，不改動後端資料。
+  const temples = getResponsibilityVisibleGroups_(data).reduce(function (all, group) {
+    return all.concat(group.temples);
+  }, []);
+  const totalTemples = temples.length;
+  const chunks = [];
+  for (let start = 0; start < totalTemples; start += 5) {
+    chunks.push({
+      temples: temples.slice(start, start + 5),
+      caption: start === 0 ? '依  ' + getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_()) + '｜共' + totalTemples + '壇' : '',
+      index: chunks.length,
+      start: start + 1,
+      end: Math.min(start + 5, totalTemples),
+      totalTemples: totalTemples
+    });
+  }
+  return { chunks: chunks, totalTemples: totalTemples };
 }
 
 function getResponsibilitySelectedGroup_() {
   const select = document.getElementById('responsibilityGroupSelect');
   return select && /^(?:[123]|virtue-[義禮智信])$/.test(select.value) ? select.value : '1';
-}
-
-function syncResponsibilityBatchButton_() {
-  const button = document.getElementById('responsibilityBatchExportBtn');
-  if (!button) return;
-  const label = getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_());
-  button.textContent = label + '圖片';
-  button.setAttribute('aria-label', '產生' + label + '全部分享圖片');
-  button.disabled = !responsibilityCurrentData_ || !getResponsibilityVisibleGroups_(responsibilityCurrentData_).length;
 }
 
 function getResponsibilityGroupLabel_(value) {
@@ -233,16 +225,11 @@ function buildResponsibilityGroupHtml_(group, month, index) {
   const temples = Array.isArray(group && group.temples) ? group.temples : [];
   return (
     '<section class="responsibility-group">' +
-      '<div class="responsibility-group-head">' +
-        '<span>責任點傳師：' + escapeResponsibilityHtml_(group.responsibleTransmitter || '—') + '</span>' +
-        '<span>責任忠字班：' + escapeResponsibilityHtml_(group.responsibleZhongZiClass || '—') + '</span>' +
-      '</div>' +
-      '<div class="responsibility-group-gap" aria-hidden="true"></div>' +
+      (group.caption ? '<div class="responsibility-classification">' + escapeResponsibilityHtml_(group.caption) + '</div>' : '') +
       buildResponsibilityTableHeadHtml_(month) +
       temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple, month); }).join('') +
       '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
-        '" aria-label="產生' + escapeResponsibilityAttribute_(group.responsibleZhongZiClass || '此責任區塊') +
-        '的分享圖片">圖片分享／下載</button></div>' +
+        '" aria-label="分享第 ' + group.start + ' 至 ' + group.end + ' 壇的圖片">圖片分享</button></div>' +
     '</section>'
   );
 }
@@ -361,7 +348,7 @@ function buildResponsibilityWarning_(data) {
 }
 
 function setResponsibilityLoading_(loading) {
-  syncResponsibilityBatchButton_();
+
   const area = document.getElementById('responsibilityLoading');
   if (!area) return;
   area.hidden = !loading;

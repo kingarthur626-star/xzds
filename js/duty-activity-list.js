@@ -251,7 +251,6 @@ async function loadDutyActivityList_(forceRefresh) {
     const activities = result.activities || [];
     writeDutyActivityListSessionCache_(activities);
     applyDutyActivityListResult_(activities);
-    showActivityListMessage_('', '');
 
   } catch (err) {
     if (area) {
@@ -309,6 +308,14 @@ function renderDutyActivityList_() {
 
   if (!area) return;
 
+  const unconfirmedCount = visibleDutyActivities.filter(function(item) {
+    return item.countStatus === 'unconfirmed';
+  }).length;
+  const message = document.getElementById('activityListMessage');
+  if (!message || !message.classList.contains('error')) {
+    showActivityListMessage_(unconfirmedCount ? '有' + unconfirmedCount + '筆活動人數尚未確認年度明細' : '', unconfirmedCount ? 'warning' : '');
+  }
+
   if (stats) {
     stats.textContent = '共 ' + visibleDutyActivities.length + ' 筆活動' + (selectedDutyActivityYear ? '｜' + selectedDutyActivityYear : '');
   }
@@ -332,7 +339,12 @@ function createActivityListCardHtml_(item, index) {
   const title = escapeActivityListHtml_(item.activityName || '');
   const dateStart = escapeActivityListHtml_(formatActivityListDateShort_(item.dateStart || ''));
   const dateRange = escapeActivityListHtml_(formatActivityListDateRange_(item.dateStart, item.dateEnd));
-  const peopleCount = escapeActivityListHtml_(item.peopleCount || '—');
+  const savedCount = item.storedPeopleCount;
+  const countDescription = '年度明細尚未確認；先前儲存人數：' +
+    (savedCount === null || savedCount === undefined || savedCount === '' ? '未提供' : String(savedCount)) + '。此數字並非最新人數。';
+  const peopleCount = item.countStatus === 'unconfirmed'
+    ? '<span title="' + escapeActivityListHtml_(countDescription) + '">未確認</span>'
+    : escapeActivityListHtml_(item.peopleCount === null || item.peopleCount === undefined || item.peopleCount === '' ? '—' : String(item.peopleCount));
   const location = escapeActivityListHtml_(item.location || '');
   const planning = escapeActivityListHtml_(item.planning || '—');
   const note = escapeActivityListHtml_(item.note || '');
@@ -2914,7 +2926,7 @@ function showActivityListMessage_(text, type) {
     return;
   }
 
-  el.classList.add(type === 'success' ? 'success' : 'error');
+  el.classList.add(type === 'success' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
   el.style.display = 'block';
 }
 
