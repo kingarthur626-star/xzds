@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link rel="dns-prefetch" href="//script.google.com">
   <link rel="dns-prefetch" href="//script.googleusercontent.com">
-  <meta name="xzds-ui-version" content="20260914-responsibility-ownership-r9">
+  <meta name="xzds-ui-version" content="20261010-responsibility-virtue-r1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -31,7 +31,7 @@
       <p id="responsibilitySubtitle">讀取責任公壇資料中…</p>
     </header>
 
-    <section class="responsibility-controls" aria-label="月份與組別選擇">
+    <section class="responsibility-controls" aria-label="月份、組別與五常德選擇">
       <label for="responsibilityMonthSelect">月份</label>
       <select id="responsibilityMonthSelect" aria-label="檢視月份">
         <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
@@ -40,8 +40,10 @@
         <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
       </select>
       <label for="responsibilityGroupSelect">組別</label>
-      <select id="responsibilityGroupSelect" aria-label="組別">
+      <select id="responsibilityGroupSelect" aria-label="組別與五常德">
         <option value="1">第一組</option><option value="2">第二組</option><option value="3">第三組</option>
+        <option value="virtue-義">義字壇</option><option value="virtue-禮">禮字壇</option>
+        <option value="virtue-智">智字壇</option><option value="virtue-信">信字壇</option>
       </select>
       <button id="responsibilityBatchExportBtn" type="button" aria-label="產生第一組全部分享圖片" disabled>第一組圖片</button>
       <button id="responsibilityReloadBtn" type="button" aria-label="重新讀取資料">重讀</button>
@@ -73,7 +75,7 @@
   <script src="./js/common.js?v=20260623-04"></script>
   <script src="./js/responsibility-zip.js?v=20260914-r9"></script>
   <script src="./js/responsibility-share.js?v=20260914-r9"></script>
-  <script src="./js/responsibility-ownership.js?v=20260914-r9"></script>
+  <script src="./js/responsibility-ownership.js?v=20261010-virtue-r1"></script>
   <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
 </body>
 </html>

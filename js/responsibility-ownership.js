@@ -194,7 +194,7 @@ function renderResponsibilityOwnership_(data) {
 
 function getResponsibilitySelectedGroup_() {
   const select = document.getElementById('responsibilityGroupSelect');
-  return select && /^[123]$/.test(select.value) ? select.value : '1';
+  return select && /^(?:[123]|virtue-[義禮智信])$/.test(select.value) ? select.value : '1';
 }
 
 function syncResponsibilityBatchButton_() {
@@ -207,13 +207,20 @@ function syncResponsibilityBatchButton_() {
 }
 
 function getResponsibilityGroupLabel_(value) {
-  return ({ '1': '第一組', '2': '第二組', '3': '第三組' })[value] || '第一組';
+  return ({
+    '1': '第一組', '2': '第二組', '3': '第三組',
+    'virtue-義': '義字壇', 'virtue-禮': '禮字壇',
+    'virtue-智': '智字壇', 'virtue-信': '信字壇'
+  })[value] || '第一組';
 }
 
 function getResponsibilityVisibleGroups_(data) {
   const selected = getResponsibilitySelectedGroup_();
+  const virtue = selected.indexOf('virtue-') === 0 ? selected.slice(7) : '';
   return (Array.isArray(data && data.groups) ? data.groups : []).map(function (group) {
     const temples = (Array.isArray(group.temples) ? group.temples : []).filter(function (temple) {
+      // 五常德選項依既有欄位跨組篩選，保留責任歸屬與來源順序。
+      if (virtue) return String(temple.virtue || '').trim() === virtue;
       // 只依正式名稱的數字組別篩選，不猜測姓名或別名，也不修改後端資料。
       const match = /^([123])[A-Z]_/.exec(String(temple.formalTempleName || '').trim());
       return match && match[1] === selected;
