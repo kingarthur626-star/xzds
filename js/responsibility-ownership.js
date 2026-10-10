@@ -26,6 +26,16 @@ function bindResponsibilityActions_() {
   const monthSelect = document.getElementById('responsibilityMonthSelect');
   const groupSelect = document.getElementById('responsibilityGroupSelect');
   const groups = document.getElementById('responsibilityGroups');
+  const batchButton = document.getElementById('responsibilityBatchExportBtn');
+  if (batchButton) {
+    batchButton.addEventListener('click', function () {
+      if (!responsibilityCurrentData_ || isResponsibilityCompactMode_()) return;
+      const selectedGroups = getResponsibilityVisibleGroups_(responsibilityCurrentData_);
+      if (selectedGroups.length && window.ResponsibilityShare) {
+        window.ResponsibilityShare.openAll(selectedGroups, responsibilityCurrentData_, getResponsibilitySelectedGroup_(), batchButton);
+      }
+    });
+  }
 
   if (logoutButton) {
     logoutButton.addEventListener('click', function () { logout(); });
@@ -70,6 +80,7 @@ function bindResponsibilityActions_() {
     groupSelect.addEventListener('change', function () {
       if (window.ResponsibilityShare) window.ResponsibilityShare.close();
       responsibilityExpandedTempleKey_ = '';
+      syncResponsibilityMode_();
 
       if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
     });
@@ -157,23 +168,30 @@ async function loadResponsibilityOwnership_(requestedMonth) {
 }
 
 function renderResponsibilityOwnership_(data) {
+  syncResponsibilityMode_();
   const area = document.getElementById('responsibilityGroups');
   const subtitle = document.getElementById('responsibilitySubtitle');
   if (!area) return;
   const model = getResponsibilityChunkModel_(data);
   const month = Number(data && data.month || 0);
   if (subtitle) subtitle.textContent = (data && data.year ? data.year + ' 年 ' : '') +
-    (month ? month + ' 月資料' : '年度資料');
+    (month ? month + ' 月資料' : '年度資料') +
+    (isResponsibilityCompactMode_() ? '' : '｜' + getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_()) + '・' + model.chunks.length + ' 個責任區塊');
   if (!model.chunks.length) {
     area.innerHTML = '<div class="responsibility-message">目前沒有可顯示的責任公壇資料。</div>';
     return;
   }
   area.innerHTML = model.chunks.map(function (chunk, index) {
-    return buildResponsibilityGroupHtml_(chunk, month, index);
+    return isResponsibilityCompactMode_() ? buildResponsibilityGroupHtml_(chunk, month, index) : buildResponsibilityLegacyGroupHtml_(chunk, month, index);
   }).join('');
 }
 
 function getResponsibilityChunkModel_(data) {
+  // 三大組完整保留責任分區；只有四種五常德選項使用五壇集中版面。
+  if (!isResponsibilityCompactMode_()) {
+    const groups = getResponsibilityVisibleGroups_(data);
+    return { chunks: groups, totalTemples: groups.reduce(function (count, group) { return count + group.temples.length; }, 0) };
+  }
   // 畫面與圖片共用篩選後的來源順序；僅建立新陣列，不改動後端資料。
   const temples = getResponsibilityVisibleGroups_(data).reduce(function (all, group) {
     return all.concat(group.temples);
@@ -196,6 +214,32 @@ function getResponsibilityChunkModel_(data) {
 function getResponsibilitySelectedGroup_() {
   const select = document.getElementById('responsibilityGroupSelect');
   return select && /^(?:[123]|virtue-[義禮智信])$/.test(select.value) ? select.value : '1';
+}
+
+function isResponsibilityCompactMode_() {
+  return /^virtue-[義禮智信]$/.test(getResponsibilitySelectedGroup_());
+}
+
+function syncResponsibilityMode_() {
+  const compact = isResponsibilityCompactMode_();
+  if (document.body) document.body.classList.toggle('responsibility-compact-mode', compact);
+  const heading = document.getElementById('responsibilityLegacyTitle');
+  const hint = document.getElementById('responsibilityShareHint');
+  if (heading) heading.hidden = compact;
+  if (hint) hint.textContent = '分享選單可選 LINE；找不到 LINE 時，請下載後自行傳送。' + (compact ? '' : '圖片含責任歸屬資料，請確認接收對象。');
+  document.title = compact ? '責任公壇檢視｜新莊區道務檢視' : '責任點傳師 忠字班道務歸屬｜新莊區道務檢視';
+  syncResponsibilityBatchButton_();
+}
+
+function syncResponsibilityBatchButton_() {
+  const button = document.getElementById('responsibilityBatchExportBtn');
+  if (!button) return;
+  const compact = isResponsibilityCompactMode_();
+  button.hidden = compact;
+  const label = getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_());
+  button.textContent = label + '圖片';
+  button.setAttribute('aria-label', '產生' + label + '全部分享圖片');
+  button.disabled = compact || !responsibilityCurrentData_ || !getResponsibilityVisibleGroups_(responsibilityCurrentData_).length;
 }
 
 function getResponsibilityGroupLabel_(value) {
@@ -230,6 +274,24 @@ function buildResponsibilityGroupHtml_(group, month, index) {
       temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple, month); }).join('') +
       '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
         '" aria-label="分享第 ' + group.start + ' 至 ' + group.end + ' 壇的圖片">圖片分享</button></div>' +
+    '</section>'
+  );
+}
+
+function buildResponsibilityLegacyGroupHtml_(group, month, index) {
+  const temples = Array.isArray(group && group.temples) ? group.temples : [];
+  return (
+    '<section class="responsibility-group">' +
+      '<div class="responsibility-group-head">' +
+        '<span>責任點傳師：' + escapeResponsibilityHtml_(group.responsibleTransmitter || '—') + '</span>' +
+        '<span>責任忠字班：' + escapeResponsibilityHtml_(group.responsibleZhongZiClass || '—') + '</span>' +
+      '</div>' +
+      '<div class="responsibility-group-gap" aria-hidden="true"></div>' +
+      buildResponsibilityTableHeadHtml_(month) +
+      temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple, month); }).join('') +
+      '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
+        '" aria-label="產生' + escapeResponsibilityAttribute_(group.responsibleZhongZiClass || '此責任區塊') +
+        '的分享圖片">圖片分享／下載</button></div>' +
     '</section>'
   );
 }
@@ -348,6 +410,7 @@ function buildResponsibilityWarning_(data) {
 }
 
 function setResponsibilityLoading_(loading) {
+  syncResponsibilityMode_();
 
   const area = document.getElementById('responsibilityLoading');
   if (!area) return;
