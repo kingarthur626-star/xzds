@@ -10,6 +10,8 @@
 let responsibilityCurrentData_ = null;
 let responsibilityExpandedTempleKey_ = '';
 let responsibilityRequestSerial_ = 0;
+let responsibilityContributionMode_ = '';
+let responsibilityContributionLandscape_ = null;
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -27,6 +29,23 @@ function bindResponsibilityActions_() {
   const groupSelect = document.getElementById('responsibilityGroupSelect');
   const groups = document.getElementById('responsibilityGroups');
   const batchButton = document.getElementById('responsibilityBatchExportBtn');
+  document.querySelectorAll('[data-responsibility-contribution-mode]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const mode = button.dataset.responsibilityContributionMode;
+      responsibilityContributionMode_ = responsibilityContributionMode_ === mode ? '' : mode;
+      syncResponsibilityContributionMode_();
+      if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
+    });
+  });
+  if (window.matchMedia) {
+    responsibilityContributionLandscape_ = window.matchMedia('(orientation: landscape) and (min-width: 480px)');
+    if (responsibilityContributionLandscape_.addEventListener) {
+      responsibilityContributionLandscape_.addEventListener('change', syncResponsibilityContributionAccessibility_);
+    } else if (responsibilityContributionLandscape_.addListener) {
+      responsibilityContributionLandscape_.addListener(syncResponsibilityContributionAccessibility_);
+    }
+  }
+  syncResponsibilityContributionMode_();
   if (batchButton) {
     batchButton.addEventListener('click', function () {
       if (!responsibilityCurrentData_ || isResponsibilityCompactMode_()) return;
@@ -169,6 +188,7 @@ async function loadResponsibilityOwnership_(requestedMonth) {
 
 function renderResponsibilityOwnership_(data) {
   syncResponsibilityMode_();
+  syncResponsibilityContributionMode_();
   const area = document.getElementById('responsibilityGroups');
   const subtitle = document.getElementById('responsibilitySubtitle');
   if (!area) return;
@@ -313,25 +333,81 @@ function buildResponsibilityTempleHtml_(temple, month) {
   const qiu = metrics[0] || {};
   const fahui = metrics[1] || {};
   const templeName = escapeResponsibilityHtml_(temple && temple.formalTempleName || '—');
+  const contribution = getResponsibilityContribution_(temple, responsibilityContributionMode_);
+  const baseLabel = '展開 ' + String(temple && temple.formalTempleName || '—') + ' 的責任資料；五常德 ' + String(temple && temple.virtue || '—') +
+    '；講師 ' + formatResponsibilityNumber_(temple && temple.lecturers) + ' 人，在職壇主 ' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) +
+    ' 人，在職副壇主 ' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + ' 人';
+  const contributionLabel = contribution ? '；' + contribution.label + '貢獻度：求道 ' + contribution.qiu + '，法會 ' + contribution.fahui : '';
+  const ariaLabel = baseLabel + (responsibilityContributionLandscape_ && responsibilityContributionLandscape_.matches ? contributionLabel : '');
 
   return (
     '<article class="responsibility-temple' + (expanded ? ' is-expanded' : '') + '">' +
       '<button class="responsibility-temple-toggle" type="button" data-responsibility-temple-key="' +
         escapeResponsibilityAttribute_(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') +
-        '" aria-label="展開 ' + templeName + ' 的責任資料；五常德 ' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '；講師 ' + formatResponsibilityNumber_(temple && temple.lecturers) +
-        ' 人，在職壇主 ' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) +
-        ' 人，在職副壇主 ' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + ' 人">' +
+        '" data-responsibility-base-label="' + escapeResponsibilityAttribute_(baseLabel) +
+        '" data-responsibility-contribution-label="' + escapeResponsibilityAttribute_(contributionLabel) +
+        '" aria-label="' + escapeResponsibilityAttribute_(ariaLabel) + '">' +
         '<span class="responsibility-temple-name"><span>' + templeName + '</span><b class="responsibility-chevron" aria-hidden="true">⌄</b></span>' +
         buildResponsibilityMetricRowHtml_(qiu, month) +
         buildResponsibilityMetricRowHtml_(fahui, month) +
         '<span class="responsibility-staff-count responsibility-staff-virtue">' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '</span>' +
-        '<span class="responsibility-staff-count responsibility-staff-lecturers">' + formatResponsibilityNumber_(temple && temple.lecturers) + '</span>' +
-        '<span class="responsibility-staff-count responsibility-staff-masters">' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) + '</span>' +
+        buildResponsibilityStaffCountHtml_('lecturers', temple && temple.lecturers, responsibilityContributionMode_ === 'lecturers' ? contribution : null) +
+        buildResponsibilityStaffCountHtml_('masters', temple && temple.activeAltarMasters, responsibilityContributionMode_ === 'combined' ? contribution : null) +
         '<span class="responsibility-staff-count responsibility-staff-vice-masters">' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + '</span>' +
       '</button>' +
       (expanded ? buildResponsibilityDetailHtml_(temple) : '') +
     '</article>'
   );
+}
+
+function syncResponsibilityContributionMode_() {
+  if (document.body) {
+    document.body.classList.toggle('responsibility-contribution-on', Boolean(responsibilityContributionMode_));
+    document.body.classList.toggle('responsibility-contribution-lecturers', responsibilityContributionMode_ === 'lecturers');
+    document.body.classList.toggle('responsibility-contribution-combined', responsibilityContributionMode_ === 'combined');
+  }
+  document.querySelectorAll('[data-responsibility-contribution-mode]').forEach(function (button) {
+    const selected = button.dataset.responsibilityContributionMode === responsibilityContributionMode_;
+    button.setAttribute('aria-pressed', String(selected));
+    button.classList.toggle('is-active', selected);
+  });
+}
+
+function syncResponsibilityContributionAccessibility_() {
+  const visible = responsibilityContributionLandscape_ && responsibilityContributionLandscape_.matches;
+  document.querySelectorAll('[data-responsibility-base-label]').forEach(function (button) {
+    button.setAttribute('aria-label', button.dataset.responsibilityBaseLabel + (visible ? button.dataset.responsibilityContributionLabel : ''));
+  });
+}
+
+function getResponsibilityContributionNumber_(value) {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'string' && !/^\d+(?:\.\d+)?$/.test(value.trim())) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function getResponsibilityContribution_(temple, mode) {
+  if (mode !== 'lecturers' && mode !== 'combined') return null;
+  const lecturers = getResponsibilityContributionNumber_(temple && temple.lecturers);
+  const masters = getResponsibilityContributionNumber_(temple && temple.activeAltarMasters);
+  const denominator = mode === 'lecturers' ? lecturers : lecturers === null || masters === null ? null : lecturers + masters;
+  const metrics = Array.isArray(temple && temple.metrics) ? temple.metrics : [];
+  function contributionFor(category) {
+    const matched = metrics.filter(function (metric) { return metric && String(metric.category || '').trim() === category; });
+    const numerator = matched.length === 1 ? getResponsibilityContributionNumber_(matched[0].cumulative) : null;
+    if (numerator === null || denominator === null || denominator <= 0) return '—';
+    const value = numerator / denominator;
+    return Number.isFinite(value) ? value.toLocaleString('zh-TW', { useGrouping: false, maximumFractionDigits: 2 }) : '—';
+  }
+  return { label: mode === 'lecturers' ? '講師' : '講師＋在職壇主', qiu: contributionFor('求道'), fahui: contributionFor('法會') };
+}
+
+function buildResponsibilityStaffCountHtml_(kind, value, contribution) {
+  return '<span class="responsibility-staff-count responsibility-staff-' + kind + (contribution ? ' is-contribution-target' : '') + '">' +
+    '<span class="responsibility-staff-number">' + formatResponsibilityNumber_(value) + '</span>' +
+    (contribution ? '<span class="responsibility-contribution-values" aria-hidden="true"><span class="responsibility-contribution-qiu">' +
+      escapeResponsibilityHtml_(contribution.qiu) + '</span><span class="responsibility-contribution-fahui">' + escapeResponsibilityHtml_(contribution.fahui) + '</span></span>' : '') + '</span>';
 }
 
 function buildResponsibilityMetricRowHtml_(metric, month) {

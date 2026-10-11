@@ -176,3 +176,39 @@ html.responsibility-share-open { overflow: hidden; }
     padding-right: max(8px, env(safe-area-inset-right, 0px));
   }
 }
+
+/* 貢獻度只在橫式出現；切換計算方式保留原人數與直式明細。 */
+.responsibility-contribution-controls, .responsibility-contribution-values { display: none; }
+@media (orientation: landscape) and (min-width: 480px) {
+  .responsibility-controls { grid-template-columns: 54px minmax(76px, 1fr) auto auto auto; }
+  .responsibility-compact-mode .responsibility-controls { grid-template-columns: 64px minmax(76px, 1fr) auto auto; }
+  .responsibility-contribution-controls { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; color: var(--ro-muted); font-size: 12px; }
+  .responsibility-contribution-controls button { white-space: nowrap; }
+  .responsibility-contribution-controls button.is-active { background: #2176bc; border-color: #2176bc; color: #fff; }
+  .responsibility-contribution-controls button:focus-visible { outline: 2px solid #2878d4; outline-offset: 2px; }
+  .responsibility-contribution-on .responsibility-table-head, .responsibility-contribution-on .responsibility-temple-toggle {
+    grid-template-columns: minmax(50px, 1.15fr) 28px repeat(4, minmax(30px, .63fr)) minmax(123px, 1.5fr) 36px minmax(var(--ro-contribution-lecturers, 44px), .75fr) minmax(var(--ro-contribution-masters, 44px), .75fr) minmax(44px, .75fr);
+  }
+  .responsibility-contribution-lecturers { --ro-contribution-lecturers: 70px; }
+  .responsibility-contribution-combined { --ro-contribution-masters: 70px; }
+  .responsibility-staff-count.is-contribution-target { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 3px; align-self: stretch; align-items: center; }
+  .is-contribution-target .responsibility-staff-number { grid-column: 1; grid-row: 1 / 3; }
+  .responsibility-contribution-values { display: grid; grid-column: 2; grid-row: 1 / 3; grid-template-rows: 1fr 1fr; align-self: stretch; align-items: center; color: #246db8; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+}
+@media (orientation: landscape) and (min-width: 480px) and (max-width: 640px) {
+  .responsibility-controls { grid-template-columns: 54px minmax(76px, 1fr) auto auto; }
+  .responsibility-compact-mode .responsibility-controls { grid-template-columns: 64px minmax(76px, 1fr) auto; }
+  .responsibility-contribution-controls { grid-column: 1 / -1; justify-self: end; }
+}
+@media (orientation: landscape) and (min-width: 480px) and (max-width: 750px) {
+  .responsibility-contribution-on .responsibility-table-head, .responsibility-contribution-on .responsibility-temple-toggle {
+    grid-template-columns: minmax(44px, 1.1fr) 24px repeat(4, minmax(29px, .6fr)) minmax(94px, 1.4fr) 32px minmax(var(--ro-contribution-lecturers, 32px), .7fr) minmax(var(--ro-contribution-masters, 32px), .7fr) minmax(32px, .7fr);
+  }
+  .responsibility-contribution-on .responsibility-metric-row { font-size: 11px; }
+  .responsibility-contribution-on .responsibility-staff-count { font-size: 11px; }
+  .responsibility-contribution-on .responsibility-contribution-values { font-size: 10.5px; }
+  .responsibility-contribution-on .responsibility-segments { grid-template-columns: repeat(10, 5px); gap: 1px; }
+  .responsibility-contribution-on .responsibility-segments b { width: 5px; height: 9px; }
+  .responsibility-contribution-on .responsibility-rate { gap: 3px; }
+  .responsibility-contribution-on .responsibility-rate strong { min-width: 27px; font-size: 11px; }
+}

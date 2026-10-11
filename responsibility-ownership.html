@@ -47,6 +47,11 @@
       </select>
       <button id="responsibilityBatchExportBtn" type="button" aria-label="產生第一組全部分享圖片" disabled>第一組圖片</button>
       <button id="responsibilityReloadBtn" type="button" aria-label="重新讀取資料">重讀</button>
+      <div id="responsibilityContributionControls" class="responsibility-contribution-controls" role="group" aria-label="貢獻度計算方式">
+        <span>貢獻度：</span>
+        <button id="responsibilityContributionLecturersBtn" type="button" aria-pressed="false" data-responsibility-contribution-mode="lecturers">講師</button>
+        <button id="responsibilityContributionCombinedBtn" type="button" aria-pressed="false" data-responsibility-contribution-mode="combined">講師＋在職壇主</button>
+      </div>
     </section>
 
     <section id="responsibilityLoading" class="responsibility-message">讀取責任公壇資料中…</section>
