@@ -162,7 +162,9 @@ function getStatValue(item, key) {
     return '';
   }
 
-  return formatZeroAsBlank_(item[key]);
+  return key === 'achievementRate'
+    ? formatAchievementRate_(item[key])
+    : formatZeroAsBlank_(item[key]);
 }
 
 /* =========================
@@ -250,4 +252,18 @@ function updateAnnualLastUpdateText_(text) {
 ========================= */
 function getAnnualDisplayYear_() {
   return new Date().getFullYear();
+}
+
+
+// 達成率僅在畫面四捨五入為整數百分比，保留原始統計與空白。
+function formatAchievementRate_(value) {
+  const text = formatZeroAsBlank_(value);
+  if (!text) return '';
+
+  const normalized = text.replace(/,/g, '').replace(/\s/g, '');
+  const match = normalized.match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))%?$/);
+  if (!match) return text;
+
+  const percent = Number(match[1]);
+  return Number.isFinite(percent) ? Math.round(percent) + '%' : text;
 }

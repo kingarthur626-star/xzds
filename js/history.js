@@ -312,7 +312,7 @@ function renderRecentDutyStats(result) {
         <td>${escapeHtml(row.year)}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.qiudao.target))}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.qiudao.total))}</td>
-        <td>${escapeHtml(formatZeroAsBlank(row.qiudao.achievementRate))}</td>
+        <td>${escapeHtml(formatAchievementRate_(row.qiudao.achievementRate))}</td>
       </tr>
     `;
   }).join('');
@@ -323,7 +323,7 @@ function renderRecentDutyStats(result) {
         <td>${escapeHtml(row.year)}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.fahui.target))}</td>
         <td>${escapeHtml(formatZeroAsBlank(row.fahui.total))}</td>
-        <td>${escapeHtml(formatZeroAsBlank(row.fahui.achievementRate))}</td>
+        <td>${escapeHtml(formatAchievementRate_(row.fahui.achievementRate))}</td>
       </tr>
     `;
   }).join('');
@@ -632,4 +632,18 @@ function setHistoryDistrictMode_(active) {
 
   districtBtn.classList.toggle('is-active', Boolean(active));
   districtBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+}
+
+
+// 達成率僅在畫面四捨五入為整數百分比，保留原始統計與空白。
+function formatAchievementRate_(value) {
+  const text = formatZeroAsBlank(value);
+  if (!text) return '';
+
+  const normalized = text.replace(/,/g, '').replace(/\s/g, '');
+  const match = normalized.match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))%?$/);
+  if (!match) return text;
+
+  const percent = Number(match[1]);
+  return Number.isFinite(percent) ? Math.round(percent) + '%' : text;
 }
