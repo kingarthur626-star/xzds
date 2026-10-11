@@ -50,6 +50,7 @@
   }
 
   function open(group, data, majorGroup, trigger) {
+    if (group && group.ranking) return openRanking(group, data, trigger);
     if (/^virtue-[義禮智信]$/.test(majorGroup)) return openCompact(group, data, trigger);
     return openMany([group], data, majorGroup, trigger, false);
   }
@@ -331,6 +332,100 @@
         text(formatResponsibilityNumber_(rate)+(rate==null?'':'%'),rateStart+85,cy,29,rate==null?'#66788e':color,'right',87,700);
         const active = getResponsibilityProgressSegments_(rate);
         for(let i=0;i<10;i+=1){ctx.fillStyle=i<active?color:'#e1e7ef';ctx.fillRect(rateStart+96+i*17,cy-9,14,18);}
+      });
+      ctx.strokeStyle='#dce5ef';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(32,y+templeHeight);ctx.lineTo(1168,y+templeHeight);ctx.stroke();
+    });
+    return canvas;
+  }
+
+
+  async function openRanking(chunk, data, trigger) {
+    bind();
+    clearImage();
+    opener = trigger;
+    const token = sequence, dialog = element('Dialog');
+    const category = chunk.category === '法會' ? '法會' : '求道';
+    element('Title').textContent = category + '貢獻度排名・圖片預覽';
+    element('Send').textContent = '分享圖片';
+    element('Download').textContent = '下載 PNG';
+    message('正在產生高解析圖片…');
+    if (!dialog.open) dialog.showModal();
+    document.documentElement.classList.add('responsibility-share-open');
+    try {
+      // 固定排名六欄的純量快照，不複製責任人、人員資料或整個佛堂物件。
+      const snapshot = {
+        year:data.year, month:data.month, category:category,
+        denominatorLabel:chunk.contributionMode === 'combined' ? '講師＋在職壇主' : '講師',
+        caption:String(chunk.caption || ''), start:chunk.start, end:chunk.end,
+        entries:(Array.isArray(chunk.entries) ? chunk.entries : []).map(function (entry) {
+          const temple = entry.temple || {};
+          return {
+            rank:entry.rank, formalTempleName:String(temple.formalTempleName || '—'),
+            virtue:String(temple.virtue || '—'), numerator:entry.numerator,
+            denominator:entry.denominator, displayScore:String(entry.displayScore == null || entry.displayScore === '' ? '—' : entry.displayScore)
+          };
+        })
+      };
+      if (!snapshot.entries.length || snapshot.entries.length > 10) throw new Error('此區塊沒有可分享的佛堂。');
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      if (token !== sequence || !dialog.open) return;
+      const canvas = drawRankingReport(snapshot), dimensions = canvas.width + ' × ' + canvas.height;
+      let blob;
+      try {
+        blob = await new Promise(function (resolve, reject) {
+          canvas.toBlob(function (value) { if (value) resolve(value); else reject(new Error('圖片產生失敗，請重試。')); }, 'image/png');
+        });
+      } finally { canvas.width = 0; canvas.height = 0; }
+      if (token !== sequence || !dialog.open) return;
+      const name = (snapshot.year + '-' + String(snapshot.month).padStart(2,'0') + '_' + category + '貢獻度排名_' +
+        String(snapshot.start).padStart(2,'0') + '-' + String(snapshot.end).padStart(2,'0'))
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g,'_') + '.png';
+      files = [new File([blob], name, {type:'image/png'})];
+      imageUrls = [URL.createObjectURL(files[0])];
+      downloadUrl = imageUrls[0];
+      downloadName = name;
+      element('Image').src = imageUrls[0];
+      element('Image').alt = category + '貢獻度排名第 ' + snapshot.start + ' 至 ' + snapshot.end + ' 壇預覽';
+      element('Image').hidden = false;
+      element('Send').disabled = false;
+      element('Download').disabled = false;
+      message(dimensions + ' 像素 PNG，適合 LINE 或 PPT。');
+    } catch (error) {
+      if (token === sequence) { clearImage(); message('無法產生圖片：' + (error.message || '請稍後重試。')); }
+    }
+  }
+
+  function drawRankingReport(snapshot) {
+    const width = 1200, top = snapshot.caption ? 92 : 40, headerHeight = 64, templeHeight = 58;
+    const height = top + headerHeight + snapshot.entries.length * templeHeight + 24;
+    const canvas = document.createElement('canvas');
+    canvas.width = width * 2; canvas.height = height * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('此瀏覽器無法繪製圖片。');
+    ctx.scale(2,2); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,width,height); ctx.textBaseline = 'middle';
+    const ink = '#153f64', font = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif';
+    function text(value,x,y,size,color,align,maxWidth,weight) {
+      ctx.fillStyle = color || ink; ctx.textAlign = align || 'center';
+      let actual = size; const label = String(value == null || value === '' ? '—' : value);
+      do { ctx.font = (weight || 500) + ' ' + actual + 'px ' + font; if (!maxWidth || ctx.measureText(label).width <= maxWidth) break; actual -= 1; } while (actual > 12);
+      ctx.fillText(label,x,y,maxWidth);
+    }
+    text(snapshot.year + ' 年 ' + (snapshot.month ? snapshot.month + ' 月資料' : '年度資料'),width/2,20,20,ink,'center',1136,500);
+    if (snapshot.caption) {
+      ctx.fillStyle = '#e1f2e8'; ctx.fillRect(32,40,1136,48);
+      text(snapshot.caption,width/2,64,30,'#25634b','center',1136,700);
+    }
+    const columns = [80,272,94,220,270,200], starts = [];
+    let cursor = 32; columns.forEach(function (size) { starts.push(cursor); cursor += size; });
+    ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,1136,headerHeight);
+    ['名次','佛堂','五常德','本年'+snapshot.category+'累計',snapshot.denominatorLabel+'人數','貢獻度'].forEach(function (label,i) {
+      text(label,starts[i]+columns[i]/2,top+headerHeight/2,26,'#305572','center',columns[i]-10,700);
+    });
+    snapshot.entries.forEach(function (entry,index) {
+      const y = top + headerHeight + index * templeHeight, cy = y + templeHeight/2;
+      if (index % 2) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(32,y,1136,templeHeight); }
+      [entry.rank,entry.formalTempleName,entry.virtue,entry.numerator,entry.denominator,entry.displayScore].forEach(function (value,i) {
+        text(value,starts[i]+columns[i]/2,cy,29,i === 5 ? '#2176b5' : ink,'center',columns[i]-20,i === 1 || i === 5 ? 700 : 500);
       });
       ctx.strokeStyle='#dce5ef';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(32,y+templeHeight);ctx.lineTo(1168,y+templeHeight);ctx.stroke();
     });

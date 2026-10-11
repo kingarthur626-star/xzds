@@ -212,3 +212,31 @@ html.responsibility-share-open { overflow: hidden; }
   .responsibility-contribution-on .responsibility-rate { gap: 3px; }
   .responsibility-contribution-on .responsibility-rate strong { min-width: 27px; font-size: 11px; }
 }
+
+/* 全區貢獻度排名按所選分母計算，每十壇連續排列。 */
+.responsibility-ranking-caption { padding: 11px 8px; background: #e1f2e8; color: #25634b; font-size: 15px; font-weight: 900; text-align: center; }
+.responsibility-ranking-row { display: grid; grid-template-columns: 40px minmax(100px, 1.7fr) 50px minmax(66px, .8fr) minmax(98px, 1.2fr) minmax(64px, .8fr); align-items: center; gap: 6px; padding: 11px 10px; border-bottom: 1px solid #e7edf3; font-size: 14px; text-align: center; font-variant-numeric: tabular-nums; }
+.responsibility-ranking-row:last-child { border-bottom: 0; }
+.responsibility-ranking-head { padding-block: 8px; border-block: 1px solid #dce5ef; background: #edf3fa; color: #305572; font-size: 12px; font-weight: 900; }
+.responsibility-ranking-temple { color: var(--ro-ink); font-weight: 900; text-align: left; overflow-wrap: anywhere; }
+.responsibility-ranking-rank { font-weight: 800; }
+.responsibility-ranking-score { color: #246db8; }
+.responsibility-ranking-mode .responsibility-ownership-header { padding: 2px 0 12px; }
+.responsibility-ranking-mode .responsibility-ownership-header p { margin-top: 0; }
+.responsibility-ranking-mode .responsibility-groups { gap: 12px; }
+.responsibility-ranking-mode .responsibility-controls { grid-template-columns: 64px minmax(76px, 1fr) auto; }
+.responsibility-ranking-mode .responsibility-contribution-controls { display: flex; grid-column: 1 / -1; justify-self: end; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 5px; color: var(--ro-muted); font-size: 12px; }
+.responsibility-ranking-mode .responsibility-contribution-controls button.is-active { background: #2176bc; border-color: #2176bc; color: #fff; }
+@media (orientation: landscape) and (min-width: 480px) {
+  .responsibility-controls { grid-template-columns: 54px minmax(76px, 1fr) auto auto; }
+  .responsibility-compact-mode .responsibility-controls, .responsibility-ranking-mode .responsibility-controls { grid-template-columns: 64px minmax(76px, 1fr) auto; }
+  .responsibility-contribution-controls { grid-column: 1 / -1; justify-self: end; max-width: 100%; flex-wrap: wrap; justify-content: flex-end; }
+}
+@media (max-width: 600px) {
+  .responsibility-ranking-row { grid-template-columns: 28px minmax(60px, 1.5fr) 36px minmax(44px, .8fr) minmax(64px, 1.1fr) minmax(44px, .8fr); gap: 3px; padding: 9px 7px; font-size: 12px; }
+  .responsibility-ranking-head { font-size: 10px; }
+}
+@media (max-width: 370px) {
+  .responsibility-ranking-row { grid-template-columns: 24px minmax(50px, 1.3fr) 30px minmax(39px, .8fr) minmax(58px, 1.1fr) minmax(39px, .8fr); gap: 2px; padding-inline: 5px; font-size: 11px; }
+  .responsibility-ranking-head { font-size: 9px; }
+}

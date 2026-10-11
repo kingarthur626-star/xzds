@@ -12,6 +12,7 @@ let responsibilityExpandedTempleKey_ = '';
 let responsibilityRequestSerial_ = 0;
 let responsibilityContributionMode_ = '';
 let responsibilityContributionLandscape_ = null;
+let responsibilityRankingCategory_ = '';
 
 document.addEventListener('DOMContentLoaded', function () {
   const user = requireLogin();
@@ -32,7 +33,20 @@ function bindResponsibilityActions_() {
   document.querySelectorAll('[data-responsibility-contribution-mode]').forEach(function (button) {
     button.addEventListener('click', function () {
       const mode = button.dataset.responsibilityContributionMode;
-      responsibilityContributionMode_ = responsibilityContributionMode_ === mode ? '' : mode;
+      if (window.ResponsibilityShare) window.ResponsibilityShare.close();
+      responsibilityContributionMode_ = responsibilityRankingCategory_ ? mode : responsibilityContributionMode_ === mode ? '' : mode;
+      syncResponsibilityContributionMode_();
+      if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
+    });
+  });
+  document.querySelectorAll('[data-responsibility-ranking-category]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (window.ResponsibilityShare) window.ResponsibilityShare.close();
+      const category = button.dataset.responsibilityRankingCategory;
+      responsibilityRankingCategory_ = responsibilityRankingCategory_ === category ? '' : category;
+      if (responsibilityRankingCategory_ && !responsibilityContributionMode_) responsibilityContributionMode_ = 'lecturers';
+      responsibilityExpandedTempleKey_ = '';
+      syncResponsibilityMode_();
       syncResponsibilityContributionMode_();
       if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
     });
@@ -48,7 +62,7 @@ function bindResponsibilityActions_() {
   syncResponsibilityContributionMode_();
   if (batchButton) {
     batchButton.addEventListener('click', function () {
-      if (!responsibilityCurrentData_ || isResponsibilityCompactMode_()) return;
+      if (!responsibilityCurrentData_ || isResponsibilityCompactMode_() || responsibilityRankingCategory_) return;
       const selectedGroups = getResponsibilityVisibleGroups_(responsibilityCurrentData_);
       if (selectedGroups.length && window.ResponsibilityShare) {
         window.ResponsibilityShare.openAll(selectedGroups, responsibilityCurrentData_, getResponsibilitySelectedGroup_(), batchButton);
@@ -99,6 +113,7 @@ function bindResponsibilityActions_() {
     groupSelect.addEventListener('change', function () {
       if (window.ResponsibilityShare) window.ResponsibilityShare.close();
       responsibilityExpandedTempleKey_ = '';
+      responsibilityRankingCategory_ = '';
       syncResponsibilityMode_();
 
       if (responsibilityCurrentData_) renderResponsibilityOwnership_(responsibilityCurrentData_);
@@ -196,17 +211,18 @@ function renderResponsibilityOwnership_(data) {
   const month = Number(data && data.month || 0);
   if (subtitle) subtitle.textContent = (data && data.year ? data.year + ' 年 ' : '') +
     (month ? month + ' 月資料' : '年度資料') +
-    (isResponsibilityCompactMode_() ? '' : '｜' + getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_()) + '・' + model.chunks.length + ' 個責任區塊');
+    (responsibilityRankingCategory_ ? '｜全區・共' + model.totalTemples + '壇・分母：' + getResponsibilityContributionModeLabel_(responsibilityContributionMode_) : isResponsibilityCompactMode_() ? '' : '｜' + getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_()) + '・' + model.chunks.length + ' 個責任區塊');
   if (!model.chunks.length) {
-    area.innerHTML = '<div class="responsibility-message">目前沒有可顯示的責任公壇資料。</div>';
+    area.innerHTML = '<div class="responsibility-message">' + (responsibilityRankingCategory_ ? '目前沒有可排名的佛堂資料。' : '目前沒有可顯示的責任公壇資料。') + '</div>';
     return;
   }
   area.innerHTML = model.chunks.map(function (chunk, index) {
-    return isResponsibilityCompactMode_() ? buildResponsibilityGroupHtml_(chunk, month, index) : buildResponsibilityLegacyGroupHtml_(chunk, month, index);
+    return chunk.ranking ? buildResponsibilityRankingGroupHtml_(chunk, index) : isResponsibilityCompactMode_() ? buildResponsibilityGroupHtml_(chunk, month, index) : buildResponsibilityLegacyGroupHtml_(chunk, month, index);
   }).join('');
 }
 
 function getResponsibilityChunkModel_(data) {
+  if (responsibilityRankingCategory_) return getResponsibilityRankingModel_(data, responsibilityRankingCategory_, responsibilityContributionMode_);
   // 三大組完整保留責任分區；只有四種五常德選項使用五壇集中版面。
   if (!isResponsibilityCompactMode_()) {
     const groups = getResponsibilityVisibleGroups_(data);
@@ -242,12 +258,16 @@ function isResponsibilityCompactMode_() {
 
 function syncResponsibilityMode_() {
   const compact = isResponsibilityCompactMode_();
-  if (document.body) document.body.classList.toggle('responsibility-compact-mode', compact);
+  const ranking = Boolean(responsibilityRankingCategory_);
+  if (document.body) {
+    document.body.classList.toggle('responsibility-compact-mode', compact && !ranking);
+    document.body.classList.toggle('responsibility-ranking-mode', ranking);
+  }
   const heading = document.getElementById('responsibilityLegacyTitle');
   const hint = document.getElementById('responsibilityShareHint');
-  if (heading) heading.hidden = compact;
-  if (hint) hint.textContent = '分享選單可選 LINE；找不到 LINE 時，請下載後自行傳送。' + (compact ? '' : '圖片含責任歸屬資料，請確認接收對象。');
-  document.title = compact ? '責任公壇檢視｜新莊區道務檢視' : '責任點傳師 忠字班道務歸屬｜新莊區道務檢視';
+  if (heading) heading.hidden = compact || ranking;
+  if (hint) hint.textContent = '分享選單可選 LINE；找不到 LINE 時，請下載後自行傳送。' + (compact || ranking ? '' : '圖片含責任歸屬資料，請確認接收對象。');
+  document.title = ranking ? responsibilityRankingCategory_ + '貢獻度排名｜新莊區道務檢視' : compact ? '責任公壇檢視｜新莊區道務檢視' : '責任點傳師 忠字班道務歸屬｜新莊區道務檢視';
   syncResponsibilityBatchButton_();
 }
 
@@ -255,11 +275,11 @@ function syncResponsibilityBatchButton_() {
   const button = document.getElementById('responsibilityBatchExportBtn');
   if (!button) return;
   const compact = isResponsibilityCompactMode_();
-  button.hidden = compact;
+  button.hidden = compact || Boolean(responsibilityRankingCategory_);
   const label = getResponsibilityGroupLabel_(getResponsibilitySelectedGroup_());
   button.textContent = label + '圖片';
   button.setAttribute('aria-label', '產生' + label + '全部分享圖片');
-  button.disabled = compact || !responsibilityCurrentData_ || !getResponsibilityVisibleGroups_(responsibilityCurrentData_).length;
+  button.disabled = compact || Boolean(responsibilityRankingCategory_) || !responsibilityCurrentData_ || !getResponsibilityVisibleGroups_(responsibilityCurrentData_).length;
 }
 
 function getResponsibilityGroupLabel_(value) {
@@ -361,6 +381,11 @@ function buildResponsibilityTempleHtml_(temple, month) {
 }
 
 function syncResponsibilityContributionMode_() {
+  document.querySelectorAll('[data-responsibility-ranking-category]').forEach(function (button) {
+    const selected = button.dataset.responsibilityRankingCategory === responsibilityRankingCategory_;
+    button.setAttribute('aria-pressed', String(selected));
+    button.classList.toggle('is-active', selected);
+  });
   if (document.body) {
     document.body.classList.toggle('responsibility-contribution-on', Boolean(responsibilityContributionMode_));
     document.body.classList.toggle('responsibility-contribution-lecturers', responsibilityContributionMode_ === 'lecturers');
@@ -387,20 +412,100 @@ function getResponsibilityContributionNumber_(value) {
   return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
-function getResponsibilityContribution_(temple, mode) {
-  if (mode !== 'lecturers' && mode !== 'combined') return null;
+function getResponsibilityContributionModeLabel_(mode) {
+  return mode === 'combined' ? '講師＋在職壇主' : '講師';
+}
+
+function getResponsibilityContributionValues_(temple, mode, category) {
   const lecturers = getResponsibilityContributionNumber_(temple && temple.lecturers);
   const masters = getResponsibilityContributionNumber_(temple && temple.activeAltarMasters);
-  const denominator = mode === 'lecturers' ? lecturers : lecturers === null || masters === null ? null : lecturers + masters;
+  const denominator = mode === 'lecturers' ? lecturers : mode === 'combined' && lecturers !== null && masters !== null ? lecturers + masters : null;
   const metrics = Array.isArray(temple && temple.metrics) ? temple.metrics : [];
-  function contributionFor(category) {
-    const matched = metrics.filter(function (metric) { return metric && String(metric.category || '').trim() === category; });
-    const numerator = matched.length === 1 ? getResponsibilityContributionNumber_(matched[0].cumulative) : null;
-    if (numerator === null || denominator === null || denominator <= 0) return '—';
-    const value = numerator / denominator;
-    return Number.isFinite(value) ? value.toLocaleString('zh-TW', { useGrouping: false, maximumFractionDigits: 2 }) : '—';
+  const matched = metrics.filter(function (metric) { return metric && String(metric.category || '').trim() === category; });
+  const numerator = matched.length === 1 ? getResponsibilityContributionNumber_(matched[0].cumulative) : null;
+  const rawScore = numerator === null || denominator === null || denominator <= 0 ? null : numerator / denominator;
+  return { numerator: numerator, denominator: denominator, rawScore: Number.isFinite(rawScore) ? rawScore : null };
+}
+
+function formatResponsibilityContributionScore_(value) {
+  return value === null || !Number.isFinite(value) ? '—' : value.toLocaleString('zh-TW', { useGrouping: false, maximumFractionDigits: 2 });
+}
+
+function getResponsibilityContribution_(temple, mode) {
+  if (mode !== 'lecturers' && mode !== 'combined') return null;
+  return {
+    label: getResponsibilityContributionModeLabel_(mode),
+    qiu: formatResponsibilityContributionScore_(getResponsibilityContributionValues_(temple, mode, '求道').rawScore),
+    fahui: formatResponsibilityContributionScore_(getResponsibilityContributionValues_(temple, mode, '法會').rawScore)
+  };
+}
+
+function getResponsibilityRankingModel_(data, category, mode) {
+  if ((category !== '求道' && category !== '法會') || (mode !== 'lecturers' && mode !== 'combined')) return { chunks: [], totalTemples: 0 };
+  const seen = new Set();
+  const entries = [];
+  (Array.isArray(data && data.groups) ? data.groups : []).forEach(function (group) {
+    (Array.isArray(group && group.temples) ? group.temples : []).forEach(function (temple) {
+      if (!temple) return;
+      // 只去除相同正式鍵，不以名稱、別名或責任姓名推測合併。
+      const key = String(temple.templeKey || '');
+      if (key && seen.has(key)) return;
+      if (key) seen.add(key);
+      const values = getResponsibilityContributionValues_(temple, mode, category);
+      entries.push({
+        temple: temple, numerator: values.numerator, denominator: values.denominator,
+        rawScore: values.rawScore, displayScore: formatResponsibilityContributionScore_(values.rawScore),
+        rank: null, sourceIndex: entries.length
+      });
+    });
+  });
+  entries.sort(function (left, right) {
+    if (left.rawScore === null) return right.rawScore === null ? left.sourceIndex - right.sourceIndex : 1;
+    if (right.rawScore === null) return -1;
+    return right.rawScore - left.rawScore || left.sourceIndex - right.sourceIndex;
+  });
+  entries.forEach(function (entry, index) {
+    if (entry.rawScore !== null) entry.rank = index > 0 && entries[index - 1].rawScore === entry.rawScore ? entries[index - 1].rank : index + 1;
+  });
+  const totalTemples = entries.length;
+  const chunks = [];
+  for (let start = 0; start < totalTemples; start += 10) {
+    const part = entries.slice(start, start + 10);
+    chunks.push({
+      ranking: true, category: category, contributionMode: mode,
+      denominatorLabel: getResponsibilityContributionModeLabel_(mode),
+      caption: start === 0 ? '全區' + category + '貢獻度排名｜共' + totalTemples + '壇' : '',
+      entries: part, temples: part.map(function (entry) { return entry.temple; }),
+      index: chunks.length, start: start + 1, end: Math.min(start + 10, totalTemples), totalTemples: totalTemples
+    });
   }
-  return { label: mode === 'lecturers' ? '講師' : '講師＋在職壇主', qiu: contributionFor('求道'), fahui: contributionFor('法會') };
+  return { chunks: chunks, totalTemples: totalTemples };
+}
+
+function buildResponsibilityRankingGroupHtml_(chunk, index) {
+  return '<section class="responsibility-group responsibility-ranking-group">' +
+    (chunk.caption ? '<div class="responsibility-ranking-caption">' + escapeResponsibilityHtml_(chunk.caption) + '</div>' : '') +
+    '<div class="responsibility-ranking-table" role="table" aria-label="' + escapeResponsibilityAttribute_(chunk.category + '貢獻度，第' + chunk.start + '至' + chunk.end + '壇；分母：' + chunk.denominatorLabel) + '">' +
+      '<div class="responsibility-ranking-row responsibility-ranking-head" role="row">' +
+        '<span role="columnheader">名次</span><span role="columnheader">佛堂</span><span role="columnheader">五常德</span>' +
+        '<span role="columnheader">' + escapeResponsibilityHtml_(chunk.category) + '<br>本年累計</span>' +
+        '<span role="columnheader">' + escapeResponsibilityHtml_(chunk.denominatorLabel) + '<br>人數</span>' +
+        '<span role="columnheader">貢獻度</span>' +
+      '</div>' +
+      chunk.entries.map(function (entry) {
+        return '<div class="responsibility-ranking-row" role="row">' +
+          '<span class="responsibility-ranking-rank" role="cell">' + (entry.rank === null ? '—' : entry.rank) + '</span>' +
+          '<span class="responsibility-ranking-temple" role="cell">' + escapeResponsibilityHtml_(entry.temple.formalTempleName || '—') + '</span>' +
+          '<span role="cell">' + escapeResponsibilityHtml_(entry.temple.virtue || '—') + '</span>' +
+          '<span role="cell">' + formatResponsibilityNumber_(entry.numerator) + '</span>' +
+          '<span role="cell">' + formatResponsibilityNumber_(entry.denominator) + '</span>' +
+          '<strong class="responsibility-ranking-score" role="cell">' + escapeResponsibilityHtml_(entry.displayScore) + '</strong>' +
+        '</div>';
+      }).join('') +
+    '</div>' +
+    '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
+      '" aria-label="分享' + escapeResponsibilityAttribute_(chunk.category) + '貢獻度第' + chunk.start + '至' + chunk.end + '壇圖片">圖片分享</button></div>' +
+  '</section>';
 }
 
 function buildResponsibilityStaffCountHtml_(kind, value, contribution) {
