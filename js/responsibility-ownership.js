@@ -262,6 +262,8 @@ function syncResponsibilityMode_() {
   if (document.body) {
     document.body.classList.toggle('responsibility-compact-mode', compact && !ranking);
     document.body.classList.toggle('responsibility-ranking-mode', ranking);
+    document.body.classList.toggle('responsibility-ranking-qiu', responsibilityRankingCategory_ === '求道');
+    document.body.classList.toggle('responsibility-ranking-fahui', responsibilityRankingCategory_ === '法會');
   }
   const heading = document.getElementById('responsibilityLegacyTitle');
   const hint = document.getElementById('responsibilityShareHint');
@@ -507,7 +509,7 @@ function buildResponsibilityStaffCountHtml_(kind, value, contribution) {
 function buildResponsibilityMetricRowHtml_(metric, month) {
   const tone = getResponsibilityTone_(metric && metric.ratePercent, month);
   return (
-    '<div class="responsibility-metric-row">' +
+    '<div class="responsibility-metric-row' + (responsibilityRankingCategory_ && String(metric && metric.category || '').trim() !== responsibilityRankingCategory_ ? ' is-ranking-muted' : '') + '">' +
       '<span class="temple" aria-hidden="true"></span>' +
       '<span class="category">' + escapeResponsibilityHtml_(metric && metric.category || '—') + '</span>' +
       '<span class="number">' + formatResponsibilityNumber_(metric && metric.previousActual) + '</span>' +

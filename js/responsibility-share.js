@@ -444,17 +444,18 @@
       text(entry.formalTempleName,starts[0]+columns[0]-12,y+54,29,ink,'right',columns[0]-84,700);
       entry.metrics.forEach(function (metric,row) {
         const cy = y + 30 + row * 48;
+        const muted = String(metric.category || '').trim() !== snapshot.category;
         const values = [metric.category,metric.previousActual,metric.annualTarget,metric.monthValue,metric.cumulative];
         values.forEach(function (value,i) {
           const label = i === 3 ? formatResponsibilityMonthValue_(value) : (i ? formatResponsibilityNumber_(value) : value);
-          text(label,starts[i+1]+columns[i+1]/2,cy,31,i ? '#243b50' : '#66788e','center',columns[i+1]-10,i ? 500 : 700);
+          text(label,starts[i+1]+columns[i+1]/2,cy,31,muted ? '#7c8896' : i ? '#243b50' : '#66788e','center',columns[i+1]-10,i ? 500 : 700);
         });
         const rate = metric.ratePercent, tone = getResponsibilityTone_(rate,snapshot.month);
-        const color = ({green:'#0b9a45',yellow:'#e59a00',red:'#df2424'})[tone];
+        const color = muted ? '#7c8896' : ({green:'#0b9a45',yellow:'#e59a00',red:'#df2424'})[tone];
         const rateStart = starts[6] + (columns[6]-263)/2;
-        text(formatResponsibilityNumber_(rate)+(rate==null?'':'%'),rateStart+85,cy,29,rate==null?'#66788e':color,'right',87,700);
+        text(formatResponsibilityNumber_(rate)+(rate==null?'':'%'),rateStart+85,cy,29,muted?'#7c8896':rate==null?'#66788e':color,'right',87,700);
         const active = getResponsibilityProgressSegments_(rate);
-        for (let i=0;i<10;i+=1) { ctx.fillStyle=i<active?color:'#e1e7ef'; ctx.fillRect(rateStart+96+i*17,cy-9,14,18); }
+        for (let i=0;i<10;i+=1) { ctx.fillStyle=i<active?(muted?'#bbc3ce':color):(muted?'#e7ebf0':'#e1e7ef'); ctx.fillRect(rateStart+96+i*17,cy-9,14,18); }
       });
       text(entry.virtue,starts[7]+columns[7]/2,y+54,29,ink,'center',columns[7]-10,700);
       [entry.lecturers,entry.activeAltarMasters,entry.activeViceAltarMasters].forEach(function (count,i) {
@@ -462,8 +463,8 @@
         const selected = i === 0 ? snapshot.contributionMode === 'lecturers' : i === 1 && snapshot.contributionMode === 'combined';
         text(formatResponsibilityNumber_(count),starts[col]+(selected ? columns[col]*0.28 : columns[col]/2),y+54,29,ink,'center',selected ? columns[col]*0.43 : columns[col]-10,700);
         if (selected) {
-          text(entry.contribution.qiu,starts[col]+columns[col]*0.74,y+30,25,'#2176b5','center',columns[col]*0.47,700);
-          text(entry.contribution.fahui,starts[col]+columns[col]*0.74,y+78,25,'#2176b5','center',columns[col]*0.47,700);
+          text(entry.contribution.qiu,starts[col]+columns[col]*0.74,y+30,25,snapshot.category === '求道' ? '#2176b5' : '#7c8896','center',columns[col]*0.47,700);
+          text(entry.contribution.fahui,starts[col]+columns[col]*0.74,y+78,25,snapshot.category === '法會' ? '#2176b5' : '#7c8896','center',columns[col]*0.47,700);
         }
       });
       ctx.strokeStyle='#dce5ef';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(32,y+templeHeight);ctx.lineTo(width-32,y+templeHeight);ctx.stroke();

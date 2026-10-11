@@ -253,3 +253,12 @@ html.responsibility-share-open { overflow: hidden; }
   .responsibility-ranking-mode .is-contribution-target .responsibility-staff-number { grid-column: 1; grid-row: 1 / 3; }
   .responsibility-ranking-mode .responsibility-contribution-values { display: grid; grid-column: 2; grid-row: 1 / 3; grid-template-rows: 1fr 1fr; align-self: stretch; align-items: center; color: #246db8; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 }
+
+/* 排名保留雙列資料，以灰色降低非選中類別的視覺強度。 */
+.responsibility-ranking-group .is-ranking-muted .category,
+.responsibility-ranking-group .is-ranking-muted .number,
+.responsibility-ranking-group .is-ranking-muted .responsibility-rate strong { color: #7c8896; }
+.responsibility-ranking-group .is-ranking-muted .responsibility-segments b { background-color: #e7ebf0; }
+.responsibility-ranking-group .is-ranking-muted .responsibility-segments b.active { background-color: #bbc3ce; }
+.responsibility-ranking-qiu .responsibility-ranking-group .responsibility-contribution-fahui,
+.responsibility-ranking-fahui .responsibility-ranking-group .responsibility-contribution-qiu { color: #7c8896; }
