@@ -213,30 +213,43 @@ html.responsibility-share-open { overflow: hidden; }
   .responsibility-contribution-on .responsibility-rate strong { min-width: 27px; font-size: 11px; }
 }
 
-/* 全區貢獻度排名按所選分母計算，每十壇連續排列。 */
+/* 全區排名沿用原十一欄與求道、法會雙列，只增加佛堂名次。 */
 .responsibility-ranking-caption { padding: 11px 8px; background: #e1f2e8; color: #25634b; font-size: 15px; font-weight: 900; text-align: center; }
-.responsibility-ranking-row { display: grid; grid-template-columns: 40px minmax(100px, 1.7fr) 50px minmax(66px, .8fr) minmax(98px, 1.2fr) minmax(64px, .8fr); align-items: center; gap: 6px; padding: 11px 10px; border-bottom: 1px solid #e7edf3; font-size: 14px; text-align: center; font-variant-numeric: tabular-nums; }
-.responsibility-ranking-row:last-child { border-bottom: 0; }
-.responsibility-ranking-head { padding-block: 8px; border-block: 1px solid #dce5ef; background: #edf3fa; color: #305572; font-size: 12px; font-weight: 900; }
-.responsibility-ranking-temple { color: var(--ro-ink); font-weight: 900; text-align: left; overflow-wrap: anywhere; }
-.responsibility-ranking-rank { font-weight: 800; }
-.responsibility-ranking-score { color: #246db8; }
 .responsibility-ranking-mode .responsibility-ownership-header { padding: 2px 0 12px; }
 .responsibility-ranking-mode .responsibility-ownership-header p { margin-top: 0; }
 .responsibility-ranking-mode .responsibility-groups { gap: 12px; }
 .responsibility-ranking-mode .responsibility-controls { grid-template-columns: 64px minmax(76px, 1fr) auto; }
 .responsibility-ranking-mode .responsibility-contribution-controls { display: flex; grid-column: 1 / -1; justify-self: end; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 5px; color: var(--ro-muted); font-size: 12px; }
 .responsibility-ranking-mode .responsibility-contribution-controls button.is-active { background: #2176bc; border-color: #2176bc; color: #fff; }
+.responsibility-ranking-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.responsibility-ranking-scroll:focus-visible { outline: 2px solid #2878d4; outline-offset: -2px; }
+.responsibility-ranking-badge { flex: 0 0 auto; margin-right: 4px; min-width: 18px; padding: 2px 3px; border-radius: 5px; background: #eef6ff; color: #246db8; font-size: 10px; line-height: 1.2; font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; }
+.responsibility-ranking-temple .responsibility-temple-name { flex-wrap: wrap; gap: 2px 0; }
+
+/* 橫式縮短組別選單；控制列空間不足時自然換行。 */
 @media (orientation: landscape) and (min-width: 480px) {
-  .responsibility-controls { grid-template-columns: 54px minmax(76px, 1fr) auto auto; }
-  .responsibility-compact-mode .responsibility-controls, .responsibility-ranking-mode .responsibility-controls { grid-template-columns: 64px minmax(76px, 1fr) auto; }
-  .responsibility-contribution-controls { grid-column: 1 / -1; justify-self: end; max-width: 100%; flex-wrap: wrap; justify-content: flex-end; }
+  .responsibility-controls, .responsibility-compact-mode .responsibility-controls, .responsibility-ranking-mode .responsibility-controls { display: flex; flex-wrap: wrap; }
+  #responsibilityMonthSelect { width: 54px; flex: 0 0 54px; }
+  #responsibilityGroupSelect { width: 120px; max-width: 140px; flex: 0 0 120px; }
+  .responsibility-contribution-controls { flex: 0 1 auto; grid-column: auto; justify-self: auto; max-width: 100%; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .responsibility-ranking-table { min-width: 710px; }
 }
-@media (max-width: 600px) {
-  .responsibility-ranking-row { grid-template-columns: 28px minmax(60px, 1.5fr) 36px minmax(44px, .8fr) minmax(64px, 1.1fr) minmax(44px, .8fr); gap: 3px; padding: 9px 7px; font-size: 12px; }
-  .responsibility-ranking-head { font-size: 10px; }
-}
-@media (max-width: 370px) {
-  .responsibility-ranking-row { grid-template-columns: 24px minmax(50px, 1.3fr) 30px minmax(39px, .8fr) minmax(58px, 1.1fr) minmax(39px, .8fr); gap: 2px; padding-inline: 5px; font-size: 11px; }
-  .responsibility-ranking-head { font-size: 9px; }
+/* 轉回直式仍可查看完整排名；表格在卡片內橫捲而不遮掉欄位。 */
+@media (orientation: portrait), (max-width: 479px) {
+  .responsibility-ranking-mode .responsibility-ranking-table { min-width: 710px; }
+  .responsibility-ranking-mode .responsibility-table-head, .responsibility-ranking-mode .responsibility-temple-toggle {
+    grid-template-columns: minmax(78px, 1.25fr) 35px repeat(4, minmax(38px, .63fr)) minmax(123px, 1.5fr) 40px minmax(var(--ro-contribution-lecturers, 44px), .75fr) minmax(var(--ro-contribution-masters, 44px), .75fr) minmax(44px, .75fr);
+    padding-inline: 7px;
+  }
+  .responsibility-ranking-mode.responsibility-contribution-lecturers { --ro-contribution-lecturers: 70px; }
+  .responsibility-ranking-mode.responsibility-contribution-combined { --ro-contribution-masters: 70px; }
+  .responsibility-ranking-mode .responsibility-staff-header { display: block; }
+  .responsibility-ranking-mode .responsibility-staff-count { display: block; grid-row: 1 / 3; align-self: center; z-index: 1; color: var(--ro-ink); font-size: 13px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+  .responsibility-ranking-mode .responsibility-staff-virtue { grid-column: 8; }
+  .responsibility-ranking-mode .responsibility-staff-lecturers { grid-column: 9; }
+  .responsibility-ranking-mode .responsibility-staff-masters { grid-column: 10; }
+  .responsibility-ranking-mode .responsibility-staff-vice-masters { grid-column: 11; }
+  .responsibility-ranking-mode .responsibility-staff-count.is-contribution-target { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 3px; align-self: stretch; align-items: center; }
+  .responsibility-ranking-mode .is-contribution-target .responsibility-staff-number { grid-column: 1; grid-row: 1 / 3; }
+  .responsibility-ranking-mode .responsibility-contribution-values { display: grid; grid-column: 2; grid-row: 1 / 3; grid-template-rows: 1fr 1fr; align-self: stretch; align-items: center; color: #246db8; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 }

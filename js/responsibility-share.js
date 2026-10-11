@@ -352,17 +352,29 @@
     if (!dialog.open) dialog.showModal();
     document.documentElement.classList.add('responsibility-share-open');
     try {
-      // 固定排名六欄的純量快照，不複製責任人、人員資料或整個佛堂物件。
+      // 僅固定完整報表所需的純量欄位與兩筆統計，不複製責任人或佛堂 metadata。
+      function scalar(value) { return typeof value === 'string' || typeof value === 'number' && Number.isFinite(value) ? value : null; }
+      const mode = chunk.contributionMode === 'combined' ? 'combined' : 'lecturers';
       const snapshot = {
-        year:data.year, month:data.month, category:category,
-        denominatorLabel:chunk.contributionMode === 'combined' ? '講師＋在職壇主' : '講師',
+        year:data.year, month:data.month, category:category, contributionMode:mode,
         caption:String(chunk.caption || ''), start:chunk.start, end:chunk.end,
         entries:(Array.isArray(chunk.entries) ? chunk.entries : []).map(function (entry) {
-          const temple = entry.temple || {};
+          const temple = entry.temple || {}, metrics = Array.isArray(temple.metrics) ? temple.metrics : [];
+          const contribution = getResponsibilityContribution_(temple, mode) || {qiu:'—', fahui:'—'};
           return {
-            rank:entry.rank, formalTempleName:String(temple.formalTempleName || '—'),
-            virtue:String(temple.virtue || '—'), numerator:entry.numerator,
-            denominator:entry.denominator, displayScore:String(entry.displayScore == null || entry.displayScore === '' ? '—' : entry.displayScore)
+            rank:scalar(entry.rank), formalTempleName:String(temple.formalTempleName || '—'),
+            virtue:String(temple.virtue || '—'), lecturers:scalar(temple.lecturers),
+            activeAltarMasters:scalar(temple.activeAltarMasters), activeViceAltarMasters:scalar(temple.activeViceAltarMasters),
+            contribution:{qiu:String(contribution.qiu), fahui:String(contribution.fahui)},
+            metrics:[0,1].map(function (row) {
+              const metric = metrics[row] || {};
+              return {
+                category:String(metric.category || (row ? '法會' : '求道')),
+                previousActual:scalar(metric.previousActual), annualTarget:scalar(metric.annualTarget),
+                monthValue:scalar(metric.monthValue), cumulative:scalar(metric.cumulative),
+                ratePercent:scalar(metric.ratePercent)
+              };
+            })
           };
         })
       };
@@ -396,7 +408,8 @@
   }
 
   function drawRankingReport(snapshot) {
-    const width = 1200, top = snapshot.caption ? 92 : 40, headerHeight = 64, templeHeight = 58;
+    const width = 1800, contentWidth = width - 64;
+    const top = snapshot.caption ? 92 : 40, headerHeight = 64, templeHeight = 108;
     const height = top + headerHeight + snapshot.entries.length * templeHeight + 24;
     const canvas = document.createElement('canvas');
     canvas.width = width * 2; canvas.height = height * 2;
@@ -406,28 +419,54 @@
     const ink = '#153f64', font = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif';
     function text(value,x,y,size,color,align,maxWidth,weight) {
       ctx.fillStyle = color || ink; ctx.textAlign = align || 'center';
-      let actual = size; const label = String(value == null || value === '' ? '—' : value);
+      let actual = size; const label = String(value == null ? '—' : value);
       do { ctx.font = (weight || 500) + ' ' + actual + 'px ' + font; if (!maxWidth || ctx.measureText(label).width <= maxWidth) break; actual -= 1; } while (actual > 12);
       ctx.fillText(label,x,y,maxWidth);
     }
-    text(snapshot.year + ' 年 ' + (snapshot.month ? snapshot.month + ' 月資料' : '年度資料'),width/2,20,20,ink,'center',1136,500);
+    text(snapshot.year + ' 年 ' + (snapshot.month ? snapshot.month + ' 月資料' : '年度資料'),width/2,20,20,ink,'center',contentWidth,500);
     if (snapshot.caption) {
-      ctx.fillStyle = '#e1f2e8'; ctx.fillRect(32,40,1136,48);
-      text(snapshot.caption,width/2,64,30,'#25634b','center',1136,700);
+      ctx.fillStyle = '#e1f2e8'; ctx.fillRect(32,40,contentWidth,48);
+      text(snapshot.caption,width/2,64,30,'#25634b','center',contentWidth,700);
     }
-    const columns = [80,272,94,220,270,200], starts = [];
+    const columns = [240,85,130,130,90,130,390,90,160,145,146], starts = [];
     let cursor = 32; columns.forEach(function (size) { starts.push(cursor); cursor += size; });
-    ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,1136,headerHeight);
-    ['名次','佛堂','五常德','本年'+snapshot.category+'累計',snapshot.denominatorLabel+'人數','貢獻度'].forEach(function (label,i) {
+    ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,contentWidth,headerHeight);
+    ['佛堂','類別','去年實績','年度目標',snapshot.month ? snapshot.month+'月' : '本月','本年累計',
+      getResponsibilityRateLabel_(snapshot.month),'五常德','講師','在職壇主','在職副壇主'].forEach(function (label,i) {
       text(label,starts[i]+columns[i]/2,top+headerHeight/2,26,'#305572','center',columns[i]-10,700);
     });
     snapshot.entries.forEach(function (entry,index) {
-      const y = top + headerHeight + index * templeHeight, cy = y + templeHeight/2;
-      if (index % 2) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(32,y,1136,templeHeight); }
-      [entry.rank,entry.formalTempleName,entry.virtue,entry.numerator,entry.denominator,entry.displayScore].forEach(function (value,i) {
-        text(value,starts[i]+columns[i]/2,cy,29,i === 5 ? '#2176b5' : ink,'center',columns[i]-20,i === 1 || i === 5 ? 700 : 500);
+      const y = top + headerHeight + index * templeHeight;
+      if (index % 2) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(32,y,contentWidth,templeHeight); }
+      // 排名附於佛堂欄，保留其餘原有十一欄與每壇求道、法會兩列。
+      ctx.fillStyle = '#e1f2e8'; ctx.fillRect(starts[0]+8,y+34,54,40);
+      text(entry.rank,starts[0]+35,y+54,25,'#25634b','center',44,700);
+      text(entry.formalTempleName,starts[0]+columns[0]-12,y+54,29,ink,'right',columns[0]-84,700);
+      entry.metrics.forEach(function (metric,row) {
+        const cy = y + 30 + row * 48;
+        const values = [metric.category,metric.previousActual,metric.annualTarget,metric.monthValue,metric.cumulative];
+        values.forEach(function (value,i) {
+          const label = i === 3 ? formatResponsibilityMonthValue_(value) : (i ? formatResponsibilityNumber_(value) : value);
+          text(label,starts[i+1]+columns[i+1]/2,cy,31,i ? '#243b50' : '#66788e','center',columns[i+1]-10,i ? 500 : 700);
+        });
+        const rate = metric.ratePercent, tone = getResponsibilityTone_(rate,snapshot.month);
+        const color = ({green:'#0b9a45',yellow:'#e59a00',red:'#df2424'})[tone];
+        const rateStart = starts[6] + (columns[6]-263)/2;
+        text(formatResponsibilityNumber_(rate)+(rate==null?'':'%'),rateStart+85,cy,29,rate==null?'#66788e':color,'right',87,700);
+        const active = getResponsibilityProgressSegments_(rate);
+        for (let i=0;i<10;i+=1) { ctx.fillStyle=i<active?color:'#e1e7ef'; ctx.fillRect(rateStart+96+i*17,cy-9,14,18); }
       });
-      ctx.strokeStyle='#dce5ef';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(32,y+templeHeight);ctx.lineTo(1168,y+templeHeight);ctx.stroke();
+      text(entry.virtue,starts[7]+columns[7]/2,y+54,29,ink,'center',columns[7]-10,700);
+      [entry.lecturers,entry.activeAltarMasters,entry.activeViceAltarMasters].forEach(function (count,i) {
+        const col = i+8;
+        const selected = i === 0 ? snapshot.contributionMode === 'lecturers' : i === 1 && snapshot.contributionMode === 'combined';
+        text(formatResponsibilityNumber_(count),starts[col]+(selected ? columns[col]*0.28 : columns[col]/2),y+54,29,ink,'center',selected ? columns[col]*0.43 : columns[col]-10,700);
+        if (selected) {
+          text(entry.contribution.qiu,starts[col]+columns[col]*0.74,y+30,25,'#2176b5','center',columns[col]*0.47,700);
+          text(entry.contribution.fahui,starts[col]+columns[col]*0.74,y+78,25,'#2176b5','center',columns[col]*0.47,700);
+        }
+      });
+      ctx.strokeStyle='#dce5ef';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(32,y+templeHeight);ctx.lineTo(width-32,y+templeHeight);ctx.stroke();
     });
     return canvas;
   }

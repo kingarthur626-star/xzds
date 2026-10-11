@@ -217,7 +217,7 @@ function renderResponsibilityOwnership_(data) {
     return;
   }
   area.innerHTML = model.chunks.map(function (chunk, index) {
-    return chunk.ranking ? buildResponsibilityRankingGroupHtml_(chunk, index) : isResponsibilityCompactMode_() ? buildResponsibilityGroupHtml_(chunk, month, index) : buildResponsibilityLegacyGroupHtml_(chunk, month, index);
+    return chunk.ranking ? buildResponsibilityRankingGroupHtml_(chunk, index, month) : isResponsibilityCompactMode_() ? buildResponsibilityGroupHtml_(chunk, month, index) : buildResponsibilityLegacyGroupHtml_(chunk, month, index);
   }).join('');
 }
 
@@ -346,7 +346,7 @@ function buildResponsibilityTableHeadHtml_(month) {
   );
 }
 
-function buildResponsibilityTempleHtml_(temple, month) {
+function buildResponsibilityTempleHtml_(temple, month, rankingEntry) {
   const key = String(temple && temple.templeKey || '');
   const expanded = key && key === responsibilityExpandedTempleKey_;
   const metrics = Array.isArray(temple && temple.metrics) ? temple.metrics : [];
@@ -354,20 +354,21 @@ function buildResponsibilityTempleHtml_(temple, month) {
   const fahui = metrics[1] || {};
   const templeName = escapeResponsibilityHtml_(temple && temple.formalTempleName || '—');
   const contribution = getResponsibilityContribution_(temple, responsibilityContributionMode_);
-  const baseLabel = '展開 ' + String(temple && temple.formalTempleName || '—') + ' 的責任資料；五常德 ' + String(temple && temple.virtue || '—') +
+  const rankLabel = rankingEntry ? (rankingEntry.rank === null ? '貢獻度尚待確認；' : '第' + rankingEntry.rank + '名；') : '';
+  const baseLabel = rankLabel + '展開 ' + String(temple && temple.formalTempleName || '—') + (rankingEntry ? ' 的人數資料；五常德 ' : ' 的責任資料；五常德 ') + String(temple && temple.virtue || '—') +
     '；講師 ' + formatResponsibilityNumber_(temple && temple.lecturers) + ' 人，在職壇主 ' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) +
     ' 人，在職副壇主 ' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + ' 人';
   const contributionLabel = contribution ? '；' + contribution.label + '貢獻度：求道 ' + contribution.qiu + '，法會 ' + contribution.fahui : '';
   const ariaLabel = baseLabel + (responsibilityContributionLandscape_ && responsibilityContributionLandscape_.matches ? contributionLabel : '');
 
   return (
-    '<article class="responsibility-temple' + (expanded ? ' is-expanded' : '') + '">' +
+    '<article class="responsibility-temple' + (rankingEntry ? ' responsibility-ranking-temple' : '') + (expanded ? ' is-expanded' : '') + '">' +
       '<button class="responsibility-temple-toggle" type="button" data-responsibility-temple-key="' +
         escapeResponsibilityAttribute_(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') +
         '" data-responsibility-base-label="' + escapeResponsibilityAttribute_(baseLabel) +
         '" data-responsibility-contribution-label="' + escapeResponsibilityAttribute_(contributionLabel) +
         '" aria-label="' + escapeResponsibilityAttribute_(ariaLabel) + '">' +
-        '<span class="responsibility-temple-name"><span>' + templeName + '</span><b class="responsibility-chevron" aria-hidden="true">⌄</b></span>' +
+        '<span class="responsibility-temple-name">' + (rankingEntry ? '<small class="responsibility-ranking-badge" aria-hidden="true">' + (rankingEntry.rank === null ? '—' : rankingEntry.rank) + '</small>' : '') + '<span>' + templeName + '</span><b class="responsibility-chevron" aria-hidden="true">⌄</b></span>' +
         buildResponsibilityMetricRowHtml_(qiu, month) +
         buildResponsibilityMetricRowHtml_(fahui, month) +
         '<span class="responsibility-staff-count responsibility-staff-virtue">' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '</span>' +
@@ -482,26 +483,14 @@ function getResponsibilityRankingModel_(data, category, mode) {
   return { chunks: chunks, totalTemples: totalTemples };
 }
 
-function buildResponsibilityRankingGroupHtml_(chunk, index) {
+function buildResponsibilityRankingGroupHtml_(chunk, index, month) {
   return '<section class="responsibility-group responsibility-ranking-group">' +
     (chunk.caption ? '<div class="responsibility-ranking-caption">' + escapeResponsibilityHtml_(chunk.caption) + '</div>' : '') +
-    '<div class="responsibility-ranking-table" role="table" aria-label="' + escapeResponsibilityAttribute_(chunk.category + '貢獻度，第' + chunk.start + '至' + chunk.end + '壇；分母：' + chunk.denominatorLabel) + '">' +
-      '<div class="responsibility-ranking-row responsibility-ranking-head" role="row">' +
-        '<span role="columnheader">名次</span><span role="columnheader">佛堂</span><span role="columnheader">五常德</span>' +
-        '<span role="columnheader">' + escapeResponsibilityHtml_(chunk.category) + '<br>本年累計</span>' +
-        '<span role="columnheader">' + escapeResponsibilityHtml_(chunk.denominatorLabel) + '<br>人數</span>' +
-        '<span role="columnheader">貢獻度</span>' +
+    '<div class="responsibility-ranking-scroll" role="region" tabindex="0" aria-label="' + escapeResponsibilityAttribute_(chunk.category + '貢獻度，第' + chunk.start + '至' + chunk.end + '壇；分母：' + chunk.denominatorLabel) + '">' +
+      '<div class="responsibility-ranking-table">' +
+        buildResponsibilityTableHeadHtml_(month) +
+        chunk.entries.map(function (entry) { return buildResponsibilityTempleHtml_(entry.temple, month, entry); }).join('') +
       '</div>' +
-      chunk.entries.map(function (entry) {
-        return '<div class="responsibility-ranking-row" role="row">' +
-          '<span class="responsibility-ranking-rank" role="cell">' + (entry.rank === null ? '—' : entry.rank) + '</span>' +
-          '<span class="responsibility-ranking-temple" role="cell">' + escapeResponsibilityHtml_(entry.temple.formalTempleName || '—') + '</span>' +
-          '<span role="cell">' + escapeResponsibilityHtml_(entry.temple.virtue || '—') + '</span>' +
-          '<span role="cell">' + formatResponsibilityNumber_(entry.numerator) + '</span>' +
-          '<span role="cell">' + formatResponsibilityNumber_(entry.denominator) + '</span>' +
-          '<strong class="responsibility-ranking-score" role="cell">' + escapeResponsibilityHtml_(entry.displayScore) + '</strong>' +
-        '</div>';
-      }).join('') +
     '</div>' +
     '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
       '" aria-label="分享' + escapeResponsibilityAttribute_(chunk.category) + '貢獻度第' + chunk.start + '至' + chunk.end + '壇圖片">圖片分享</button></div>' +
