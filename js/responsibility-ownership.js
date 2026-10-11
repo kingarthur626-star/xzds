@@ -301,6 +301,7 @@ function buildResponsibilityTableHeadHtml_(month) {
     '<div class="responsibility-table-head">' +
       '<span>佛堂</span><span>類別</span><span>去年<br>實績</span><span>年度<br>目標</span>' +
       '<span>' + escapeResponsibilityHtml_(month ? month + '月' : '本月') + '</span><span>本年<br>累計</span><span>' + getResponsibilityRateLabel_(month) + '</span>' +
+      '<span class="responsibility-staff-header">講師</span><span class="responsibility-staff-header">在職<br>壇主</span><span class="responsibility-staff-header">在職<br>副壇主</span>' +
     '</div>'
   );
 }
@@ -317,10 +318,15 @@ function buildResponsibilityTempleHtml_(temple, month) {
     '<article class="responsibility-temple' + (expanded ? ' is-expanded' : '') + '">' +
       '<button class="responsibility-temple-toggle" type="button" data-responsibility-temple-key="' +
         escapeResponsibilityAttribute_(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') +
-        '" aria-label="展開 ' + templeName + ' 的責任資料">' +
+        '" aria-label="展開 ' + templeName + ' 的責任資料；講師 ' + formatResponsibilityNumber_(temple && temple.lecturers) +
+        ' 人，在職壇主 ' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) +
+        ' 人，在職副壇主 ' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + ' 人">' +
         '<span class="responsibility-temple-name"><span>' + templeName + '</span><b class="responsibility-chevron" aria-hidden="true">⌄</b></span>' +
         buildResponsibilityMetricRowHtml_(qiu, month) +
         buildResponsibilityMetricRowHtml_(fahui, month) +
+        '<span class="responsibility-staff-count responsibility-staff-lecturers">' + formatResponsibilityNumber_(temple && temple.lecturers) + '</span>' +
+        '<span class="responsibility-staff-count responsibility-staff-masters">' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) + '</span>' +
+        '<span class="responsibility-staff-count responsibility-staff-vice-masters">' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + '</span>' +
       '</button>' +
       (expanded ? buildResponsibilityDetailHtml_(temple) : '') +
     '</article>'

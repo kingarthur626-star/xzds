@@ -115,3 +115,42 @@ html.responsibility-share-open { overflow: hidden; }
 .responsibility-ownership-body:not(.responsibility-compact-mode) .responsibility-group-head { background-color: #fff0d6; color: #6f4c16; }
 .responsibility-ownership-body:not(.responsibility-compact-mode) .responsibility-group-gap { background-color: #fff0d6; }
 .responsibility-compact-mode .responsibility-classification { background-color: #e1f2e8; color: #25634b; }
+
+/* 直式保留原明細；橫式直接顯示同一份資料中的三項人數。 */
+.responsibility-staff-header, .responsibility-staff-count { display: none; }
+@media (orientation: landscape) and (min-width: 480px) {
+  .responsibility-ownership-page {
+    width: min(100%, 1040px);
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+  }
+  .responsibility-table-head, .responsibility-temple-toggle {
+    grid-template-columns: minmax(58px, 1.25fr) 28px repeat(4, minmax(30px, .63fr)) minmax(94px, 1.5fr) repeat(3, minmax(44px, .75fr));
+    padding-inline: 7px;
+  }
+  .responsibility-staff-header { display: block; }
+  .responsibility-staff-count {
+    display: block;
+    grid-row: 1 / 3;
+    align-self: center;
+    z-index: 1;
+    color: var(--ro-ink);
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .responsibility-staff-lecturers { grid-column: 8; }
+  .responsibility-staff-masters { grid-column: 9; }
+  .responsibility-staff-vice-masters { grid-column: 10; }
+  .responsibility-detail { grid-template-columns: minmax(0, 1fr); }
+  .responsibility-detail span:not(:first-child) { display: none; }
+}
+@media (orientation: landscape) and (min-width: 480px) and (max-width: 650px) {
+  .responsibility-table-head { font-size: 10px; }
+  .responsibility-temple-name { font-size: 13px; }
+  .responsibility-metric-row, .responsibility-staff-count { font-size: 12px; }
+  .responsibility-segments { grid-template-columns: repeat(10, 5px); gap: 1px; }
+  .responsibility-segments b { width: 5px; height: 9px; }
+  .responsibility-rate { gap: 3px; }
+}
