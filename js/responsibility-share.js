@@ -196,10 +196,11 @@
       do { ctx.font = (weight || 500) + ' ' + actual + 'px ' + font; if (!maxWidth || ctx.measureText(label).width <= maxWidth) break; actual -= 1; } while (actual > 12);
       ctx.fillText(label,x,y,maxWidth);
     }
+    ctx.fillStyle = '#fff0d6'; ctx.fillRect(32,12,1136,64);
     // 年月、組別與責任人整行一起量測，確保同字型、同字級、不溢出。
     text(snapshot.year + ' 年 ' + snapshot.month + ' 月｜' + getResponsibilityGroupLabel_(snapshot.majorGroup) +
       '　　責任點傳師：' + (snapshot.group.responsibleTransmitter || '—') + '　　責任忠字班：' +
-      (snapshot.group.responsibleZhongZiClass || '—'),width/2,44,30,ink,'center',1136,700);
+      (snapshot.group.responsibleZhongZiClass || '—'),width/2,44,30,'#6f4c16','center',1136,700);
     const columns = [220,85,130,130,90,130,351];
     const starts = []; let cursor = 32;
     columns.forEach(function (size) { starts.push(cursor); cursor += size; });
@@ -303,7 +304,10 @@
       ctx.fillText(label,x,y,maxWidth);
     }
     text(snapshot.year + ' 年 ' + (snapshot.month ? snapshot.month + ' 月資料' : '年度資料'),width/2,20,20,ink,'center',1136,500);
-    if (snapshot.caption) text(snapshot.caption,width/2,64,30,ink,'center',1136,700);
+    if (snapshot.caption) {
+      ctx.fillStyle = '#e1f2e8'; ctx.fillRect(32,40,1136,48);
+      text(snapshot.caption,width/2,64,30,'#25634b','center',1136,700);
+    }
     const columns = [220,85,130,130,90,130,351], starts = [];
     let cursor = 32; columns.forEach(function (size) { starts.push(cursor); cursor += size; });
     ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,1136,headerHeight);
