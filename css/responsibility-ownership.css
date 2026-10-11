@@ -125,7 +125,7 @@ html.responsibility-share-open { overflow: hidden; }
     padding-right: max(12px, env(safe-area-inset-right, 0px));
   }
   .responsibility-table-head, .responsibility-temple-toggle {
-    grid-template-columns: minmax(58px, 1.25fr) 28px repeat(4, minmax(30px, .63fr)) minmax(94px, 1.5fr) repeat(3, minmax(44px, .75fr));
+    grid-template-columns: minmax(58px, 1.25fr) 28px repeat(4, minmax(30px, .63fr)) minmax(123px, 1.5fr) 40px repeat(3, minmax(44px, .75fr));
     padding-inline: 7px;
   }
   .responsibility-staff-header { display: block; }
@@ -140,9 +140,10 @@ html.responsibility-share-open { overflow: hidden; }
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
-  .responsibility-staff-lecturers { grid-column: 8; }
-  .responsibility-staff-masters { grid-column: 9; }
-  .responsibility-staff-vice-masters { grid-column: 10; }
+  .responsibility-staff-virtue { grid-column: 8; }
+  .responsibility-staff-lecturers { grid-column: 9; }
+  .responsibility-staff-masters { grid-column: 10; }
+  .responsibility-staff-vice-masters { grid-column: 11; }
   .responsibility-detail { grid-template-columns: minmax(0, 1fr); }
   .responsibility-detail span:not(:first-child) { display: none; }
 }
@@ -153,4 +154,25 @@ html.responsibility-share-open { overflow: hidden; }
   .responsibility-segments { grid-template-columns: repeat(10, 5px); gap: 1px; }
   .responsibility-segments b { width: 5px; height: 9px; }
   .responsibility-rate { gap: 3px; }
+}
+
+/* 五常德三字排一行；窄橫式保留十一欄的完整對齊。 */
+.responsibility-virtue-header { white-space: nowrap; }
+@media (orientation: landscape) and (min-width: 480px) and (max-width: 650px) {
+  .responsibility-table-head, .responsibility-temple-toggle {
+    grid-template-columns: minmax(50px, 1.1fr) 24px repeat(4, minmax(29px, .6fr)) minmax(90px, 1.4fr) 32px repeat(3, minmax(38px, .7fr));
+  }
+  .responsibility-rate strong { min-width: 27px; font-size: 11px; }
+}
+
+/* 最窄橫式的四位數保留足夠字距。 */
+@media (orientation: landscape) and (min-width: 480px) and (max-width: 540px) {
+  .responsibility-metric-row { font-size: 11px; }
+}
+
+@media (orientation: landscape) and (min-width: 480px) and (max-width: 540px) {
+  .responsibility-ownership-page {
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
+  }
 }
