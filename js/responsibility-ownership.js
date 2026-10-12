@@ -44,7 +44,7 @@ function bindResponsibilityActions_() {
       if (window.ResponsibilityShare) window.ResponsibilityShare.close();
       const category = button.dataset.responsibilityRankingCategory;
       responsibilityRankingCategory_ = responsibilityRankingCategory_ === category ? '' : category;
-      if (responsibilityRankingCategory_ && !responsibilityContributionMode_) responsibilityContributionMode_ = 'lecturers';
+      if (responsibilityRankingCategory_ && !responsibilityContributionMode_) responsibilityContributionMode_ = 'combined';
       responsibilityExpandedTempleKey_ = '';
       syncResponsibilityMode_();
       syncResponsibilityContributionMode_();
@@ -360,7 +360,7 @@ function buildResponsibilityTempleHtml_(temple, month, rankingEntry) {
   const baseLabel = rankLabel + '展開 ' + String(temple && temple.formalTempleName || '—') + (rankingEntry ? ' 的人數資料；五常德 ' : ' 的責任資料；五常德 ') + String(temple && temple.virtue || '—') +
     '；講師 ' + formatResponsibilityNumber_(temple && temple.lecturers) + ' 人，在職壇主 ' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) +
     ' 人，在職副壇主 ' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + ' 人';
-  const contributionLabel = contribution ? '；' + contribution.label + '貢獻度：求道 ' + contribution.qiu + '，法會 ' + contribution.fahui : '';
+  const contributionLabel = contribution ? '；' + contribution.label + '合計 ' + formatResponsibilityNumber_(contribution.denominator) + ' 人；貢獻度：求道 ' + contribution.qiu + '，法會 ' + contribution.fahui : '';
   const ariaLabel = baseLabel + (responsibilityContributionLandscape_ && responsibilityContributionLandscape_.matches ? contributionLabel : '');
 
   return (
@@ -374,7 +374,7 @@ function buildResponsibilityTempleHtml_(temple, month, rankingEntry) {
         buildResponsibilityMetricRowHtml_(qiu, month) +
         buildResponsibilityMetricRowHtml_(fahui, month) +
         '<span class="responsibility-staff-count responsibility-staff-virtue">' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '</span>' +
-        buildResponsibilityStaffCountHtml_('lecturers', temple && temple.lecturers, responsibilityContributionMode_ === 'lecturers' ? contribution : null) +
+        buildResponsibilityStaffCountHtml_('lecturers', temple && temple.lecturers, null) +
         buildResponsibilityStaffCountHtml_('masters', temple && temple.activeAltarMasters, responsibilityContributionMode_ === 'combined' ? contribution : null) +
         '<span class="responsibility-staff-count responsibility-staff-vice-masters">' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + '</span>' +
       '</button>' +
@@ -391,7 +391,6 @@ function syncResponsibilityContributionMode_() {
   });
   if (document.body) {
     document.body.classList.toggle('responsibility-contribution-on', Boolean(responsibilityContributionMode_));
-    document.body.classList.toggle('responsibility-contribution-lecturers', responsibilityContributionMode_ === 'lecturers');
     document.body.classList.toggle('responsibility-contribution-combined', responsibilityContributionMode_ === 'combined');
   }
   document.querySelectorAll('[data-responsibility-contribution-mode]').forEach(function (button) {
@@ -416,13 +415,13 @@ function getResponsibilityContributionNumber_(value) {
 }
 
 function getResponsibilityContributionModeLabel_(mode) {
-  return mode === 'combined' ? '講師＋在職壇主' : '講師';
+  return mode === 'combined' ? '在職壇主＋在職副壇主' : '';
 }
 
 function getResponsibilityContributionValues_(temple, mode, category) {
-  const lecturers = getResponsibilityContributionNumber_(temple && temple.lecturers);
   const masters = getResponsibilityContributionNumber_(temple && temple.activeAltarMasters);
-  const denominator = mode === 'lecturers' ? lecturers : mode === 'combined' && lecturers !== null && masters !== null ? lecturers + masters : null;
+  const viceMasters = getResponsibilityContributionNumber_(temple && temple.activeViceAltarMasters);
+  const denominator = mode === 'combined' && masters !== null && viceMasters !== null ? masters + viceMasters : null;
   const metrics = Array.isArray(temple && temple.metrics) ? temple.metrics : [];
   const matched = metrics.filter(function (metric) { return metric && String(metric.category || '').trim() === category; });
   const numerator = matched.length === 1 ? getResponsibilityContributionNumber_(matched[0].cumulative) : null;
@@ -435,16 +434,17 @@ function formatResponsibilityContributionScore_(value) {
 }
 
 function getResponsibilityContribution_(temple, mode) {
-  if (mode !== 'lecturers' && mode !== 'combined') return null;
+  if (mode !== 'combined') return null;
   return {
     label: getResponsibilityContributionModeLabel_(mode),
+    denominator: getResponsibilityContributionValues_(temple, mode, '求道').denominator,
     qiu: formatResponsibilityContributionScore_(getResponsibilityContributionValues_(temple, mode, '求道').rawScore),
     fahui: formatResponsibilityContributionScore_(getResponsibilityContributionValues_(temple, mode, '法會').rawScore)
   };
 }
 
 function getResponsibilityRankingModel_(data, category, mode) {
-  if ((category !== '求道' && category !== '法會') || (mode !== 'lecturers' && mode !== 'combined')) return { chunks: [], totalTemples: 0 };
+  if ((category !== '求道' && category !== '法會') || mode !== 'combined') return { chunks: [], totalTemples: 0 };
   const seen = new Set();
   const entries = [];
   (Array.isArray(data && data.groups) ? data.groups : []).forEach(function (group) {
@@ -501,7 +501,8 @@ function buildResponsibilityRankingGroupHtml_(chunk, index, month) {
 
 function buildResponsibilityStaffCountHtml_(kind, value, contribution) {
   return '<span class="responsibility-staff-count responsibility-staff-' + kind + (contribution ? ' is-contribution-target' : '') + '">' +
-    '<span class="responsibility-staff-number">' + formatResponsibilityNumber_(value) + '</span>' +
+    '<span class="responsibility-staff-number">' + formatResponsibilityNumber_(value) +
+      (contribution ? '<small class="responsibility-staff-total">合計 ' + formatResponsibilityNumber_(contribution.denominator) + '</small>' : '') + '</span>' +
     (contribution ? '<span class="responsibility-contribution-values" aria-hidden="true"><span class="responsibility-contribution-qiu">' +
       escapeResponsibilityHtml_(contribution.qiu) + '</span><span class="responsibility-contribution-fahui">' + escapeResponsibilityHtml_(contribution.fahui) + '</span></span>' : '') + '</span>';
 }

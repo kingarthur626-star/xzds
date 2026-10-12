@@ -262,3 +262,5 @@ html.responsibility-share-open { overflow: hidden; }
 .responsibility-ranking-group .is-ranking-muted .responsibility-segments b.active { background-color: #e0e5eb; }
 .responsibility-ranking-qiu .responsibility-ranking-group .responsibility-contribution-fahui,
 .responsibility-ranking-fahui .responsibility-ranking-group .responsibility-contribution-qiu { color: #c8cfd8; }
+.responsibility-staff-count.is-contribution-target { position: relative; padding-bottom: 16px; }
+.responsibility-staff-total { display: block; position: absolute; left: 0; right: 0; bottom: 2px; color: var(--ro-muted); font-size: 9px; font-weight: 600; line-height: 1.2; white-space: nowrap; text-align: center; }

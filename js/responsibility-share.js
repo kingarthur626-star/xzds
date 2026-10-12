@@ -354,7 +354,7 @@
     try {
       // 僅固定完整報表所需的純量欄位與兩筆統計，不複製責任人或佛堂 metadata。
       function scalar(value) { return typeof value === 'string' || typeof value === 'number' && Number.isFinite(value) ? value : null; }
-      const mode = chunk.contributionMode === 'combined' ? 'combined' : 'lecturers';
+      const mode = 'combined';
       const snapshot = {
         year:data.year, month:data.month, category:category, contributionMode:mode,
         caption:String(chunk.caption || ''), start:chunk.start, end:chunk.end,
@@ -366,6 +366,7 @@
             virtue:String(temple.virtue || '—'), lecturers:scalar(temple.lecturers),
             activeAltarMasters:scalar(temple.activeAltarMasters), activeViceAltarMasters:scalar(temple.activeViceAltarMasters),
             contribution:{qiu:String(contribution.qiu), fahui:String(contribution.fahui)},
+            denominator:scalar(contribution.denominator),
             metrics:[0,1].map(function (row) {
               const metric = metrics[row] || {};
               return {
@@ -460,9 +461,10 @@
       text(entry.virtue,starts[7]+columns[7]/2,y+54,29,ink,'center',columns[7]-10,700);
       [entry.lecturers,entry.activeAltarMasters,entry.activeViceAltarMasters].forEach(function (count,i) {
         const col = i+8;
-        const selected = i === 0 ? snapshot.contributionMode === 'lecturers' : i === 1 && snapshot.contributionMode === 'combined';
-        text(formatResponsibilityNumber_(count),starts[col]+(selected ? columns[col]*0.28 : columns[col]/2),y+54,29,ink,'center',selected ? columns[col]*0.43 : columns[col]-10,700);
+        const selected = i === 1 && snapshot.contributionMode === 'combined';
+        text(formatResponsibilityNumber_(count),starts[col]+(selected ? columns[col]*0.28 : columns[col]/2),y+(selected ? 36 : 54),29,ink,'center',selected ? columns[col]*0.43 : columns[col]-10,700);
         if (selected) {
+          text('合計 '+formatResponsibilityNumber_(entry.denominator),starts[col]+columns[col]*0.28,y+78,18,ink,'center',columns[col]*0.40,600);
           text(entry.contribution.qiu,starts[col]+columns[col]*0.74,y+30,25,snapshot.category === '求道' ? '#2176b5' : '#c8cfd8','center',columns[col]*0.47,700);
           text(entry.contribution.fahui,starts[col]+columns[col]*0.74,y+78,25,snapshot.category === '法會' ? '#2176b5' : '#c8cfd8','center',columns[col]*0.47,700);
         }
