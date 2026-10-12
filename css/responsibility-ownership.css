@@ -262,5 +262,24 @@ html.responsibility-share-open { overflow: hidden; }
 .responsibility-ranking-group .is-ranking-muted .responsibility-segments b.active { background-color: #e0e5eb; }
 .responsibility-ranking-qiu .responsibility-ranking-group .responsibility-contribution-fahui,
 .responsibility-ranking-fahui .responsibility-ranking-group .responsibility-contribution-qiu { color: #c8cfd8; }
-.responsibility-staff-count.is-contribution-target { position: relative; padding-bottom: 16px; }
-.responsibility-staff-total { display: block; position: absolute; left: 0; right: 0; bottom: 2px; color: var(--ro-muted); font-size: 9px; font-weight: 600; line-height: 1.2; white-space: nowrap; text-align: center; }
+/* 貢獻度與合計各占一欄，保留原有所有人數與統計欄。 */
+.responsibility-report-scroll, .responsibility-report-table { display: contents; }
+.responsibility-report-table > .responsibility-temple:last-child { border-bottom: 1px solid var(--ro-line); }
+.responsibility-contribution-on .responsibility-staff-contribution { grid-column: 10; grid-row: 1 / 3; grid-template-rows: 1fr 1fr; align-self: stretch; align-items: center; justify-items: center; text-align: center; }
+.responsibility-contribution-on .responsibility-staff-masters { grid-column: 11; }
+.responsibility-contribution-on .responsibility-staff-vice-masters { grid-column: 12; }
+.responsibility-contribution-on .responsibility-staff-total { grid-column: 13; position: static; padding: 0; margin: 0; text-align: center; }
+.responsibility-staff-total { font-size: 13px; font-weight: 800; line-height: normal; white-space: nowrap; }
+@media (orientation: landscape) and (min-width: 480px) {
+  .responsibility-contribution-on .responsibility-report-scroll { display: block; max-width: 100%; overflow-x: auto; }
+  .responsibility-contribution-on .responsibility-report-table, .responsibility-contribution-on .responsibility-ranking-table { display: block; min-width: 805px; }
+  .responsibility-contribution-on .responsibility-table-head, .responsibility-contribution-on .responsibility-temple-toggle {
+    grid-template-columns: minmax(78px, 1.25fr) 35px repeat(4, minmax(38px, .63fr)) minmax(123px, 1.5fr) 40px minmax(44px, .75fr) minmax(50px, .75fr) minmax(44px, .75fr) minmax(44px, .75fr) minmax(50px, .75fr);
+  }
+}
+@media (orientation: portrait), (max-width: 479px) {
+  .responsibility-ranking-mode .responsibility-ranking-table { min-width: 805px; }
+  .responsibility-ranking-mode .responsibility-table-head, .responsibility-ranking-mode .responsibility-temple-toggle {
+    grid-template-columns: minmax(78px, 1.25fr) 35px repeat(4, minmax(38px, .63fr)) minmax(123px, 1.5fr) 40px minmax(44px, .75fr) minmax(50px, .75fr) minmax(44px, .75fr) minmax(44px, .75fr) minmax(50px, .75fr);
+  }
+}

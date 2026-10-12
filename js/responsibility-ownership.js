@@ -312,8 +312,10 @@ function buildResponsibilityGroupHtml_(group, month, index) {
   return (
     '<section class="responsibility-group">' +
       (group.caption ? '<div class="responsibility-classification">' + escapeResponsibilityHtml_(group.caption) + '</div>' : '') +
+      (responsibilityContributionMode_ === 'combined' ? '<div class="responsibility-report-scroll"><div class="responsibility-report-table">' : '') +
       buildResponsibilityTableHeadHtml_(month) +
       temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple, month); }).join('') +
+      (responsibilityContributionMode_ === 'combined' ? '</div></div>' : '') +
       '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
         '" aria-label="分享第 ' + group.start + ' 至 ' + group.end + ' 壇的圖片">圖片分享</button></div>' +
     '</section>'
@@ -329,8 +331,10 @@ function buildResponsibilityLegacyGroupHtml_(group, month, index) {
         '<span>責任忠字班：' + escapeResponsibilityHtml_(group.responsibleZhongZiClass || '—') + '</span>' +
       '</div>' +
       '<div class="responsibility-group-gap" aria-hidden="true"></div>' +
+      (responsibilityContributionMode_ === 'combined' ? '<div class="responsibility-report-scroll"><div class="responsibility-report-table">' : '') +
       buildResponsibilityTableHeadHtml_(month) +
       temples.map(function (temple) { return buildResponsibilityTempleHtml_(temple, month); }).join('') +
+      (responsibilityContributionMode_ === 'combined' ? '</div></div>' : '') +
       '<div class="responsibility-group-actions"><button type="button" data-responsibility-export="' + index +
         '" aria-label="產生' + escapeResponsibilityAttribute_(group.responsibleZhongZiClass || '此責任區塊') +
         '的分享圖片">圖片分享／下載</button></div>' +
@@ -343,7 +347,10 @@ function buildResponsibilityTableHeadHtml_(month) {
     '<div class="responsibility-table-head">' +
       '<span>佛堂</span><span>類別</span><span>去年<br>實績</span><span>年度<br>目標</span>' +
       '<span>' + escapeResponsibilityHtml_(month ? month + '月' : '本月') + '</span><span>本年<br>累計</span><span>' + getResponsibilityRateLabel_(month) + '</span>' +
-      '<span class="responsibility-staff-header responsibility-virtue-header">五常德</span><span class="responsibility-staff-header">講師</span><span class="responsibility-staff-header">在職<br>壇主</span><span class="responsibility-staff-header">在職<br>副壇主</span>' +
+      '<span class="responsibility-staff-header responsibility-virtue-header">五常德</span><span class="responsibility-staff-header">講師</span>' +
+      (responsibilityContributionMode_ === 'combined' ? '<span class="responsibility-staff-header">貢獻度</span>' : '') +
+      '<span class="responsibility-staff-header">在職<br>壇主</span><span class="responsibility-staff-header">在職<br>副壇主</span>' +
+      (responsibilityContributionMode_ === 'combined' ? '<span class="responsibility-staff-header">合計</span>' : '') +
     '</div>'
   );
 }
@@ -375,8 +382,11 @@ function buildResponsibilityTempleHtml_(temple, month, rankingEntry) {
         buildResponsibilityMetricRowHtml_(fahui, month) +
         '<span class="responsibility-staff-count responsibility-staff-virtue">' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '</span>' +
         buildResponsibilityStaffCountHtml_('lecturers', temple && temple.lecturers, null) +
-        buildResponsibilityStaffCountHtml_('masters', temple && temple.activeAltarMasters, responsibilityContributionMode_ === 'combined' ? contribution : null) +
+        (contribution ? '<span class="responsibility-contribution-values responsibility-staff-contribution" aria-hidden="true"><span class="responsibility-contribution-qiu">' +
+          escapeResponsibilityHtml_(contribution.qiu) + '</span><span class="responsibility-contribution-fahui">' + escapeResponsibilityHtml_(contribution.fahui) + '</span></span>' : '') +
+        buildResponsibilityStaffCountHtml_('masters', temple && temple.activeAltarMasters, null) +
         '<span class="responsibility-staff-count responsibility-staff-vice-masters">' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + '</span>' +
+        (contribution ? '<span class="responsibility-staff-count responsibility-staff-total">' + formatResponsibilityNumber_(contribution.denominator) + '</span>' : '') +
       '</button>' +
       (expanded ? buildResponsibilityDetailHtml_(temple) : '') +
     '</article>'
@@ -499,12 +509,9 @@ function buildResponsibilityRankingGroupHtml_(chunk, index, month) {
   '</section>';
 }
 
-function buildResponsibilityStaffCountHtml_(kind, value, contribution) {
-  return '<span class="responsibility-staff-count responsibility-staff-' + kind + (contribution ? ' is-contribution-target' : '') + '">' +
-    '<span class="responsibility-staff-number">' + formatResponsibilityNumber_(value) +
-      (contribution ? '<small class="responsibility-staff-total">合計 ' + formatResponsibilityNumber_(contribution.denominator) + '</small>' : '') + '</span>' +
-    (contribution ? '<span class="responsibility-contribution-values" aria-hidden="true"><span class="responsibility-contribution-qiu">' +
-      escapeResponsibilityHtml_(contribution.qiu) + '</span><span class="responsibility-contribution-fahui">' + escapeResponsibilityHtml_(contribution.fahui) + '</span></span>' : '') + '</span>';
+function buildResponsibilityStaffCountHtml_(kind, value) {
+  return '<span class="responsibility-staff-count responsibility-staff-' + kind + '">' +
+    '<span class="responsibility-staff-number">' + formatResponsibilityNumber_(value) + '</span></span>';
 }
 
 function buildResponsibilityMetricRowHtml_(metric, month) {

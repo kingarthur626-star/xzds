@@ -409,7 +409,7 @@
   }
 
   function drawRankingReport(snapshot) {
-    const width = 1800, contentWidth = width - 64;
+    const width = 2080, contentWidth = width - 64;
     const top = snapshot.caption ? 92 : 40, headerHeight = 64, templeHeight = 108;
     const height = top + headerHeight + snapshot.entries.length * templeHeight + 24;
     const canvas = document.createElement('canvas');
@@ -429,11 +429,11 @@
       ctx.fillStyle = '#e1f2e8'; ctx.fillRect(32,40,contentWidth,48);
       text(snapshot.caption,width/2,64,30,'#25634b','center',contentWidth,700);
     }
-    const columns = [240,85,130,130,90,130,390,90,160,145,146], starts = [];
+    const columns = [240,85,130,130,90,130,390,90,160,140,145,146,140], starts = [];
     let cursor = 32; columns.forEach(function (size) { starts.push(cursor); cursor += size; });
     ctx.fillStyle = '#edf3fa'; ctx.fillRect(32,top,contentWidth,headerHeight);
     ['佛堂','類別','去年實績','年度目標',snapshot.month ? snapshot.month+'月' : '本月','本年累計',
-      getResponsibilityRateLabel_(snapshot.month),'五常德','講師','在職壇主','在職副壇主'].forEach(function (label,i) {
+      getResponsibilityRateLabel_(snapshot.month),'五常德','講師','貢獻度','在職壇主','在職副壇主','合計'].forEach(function (label,i) {
       text(label,starts[i]+columns[i]/2,top+headerHeight/2,26,'#305572','center',columns[i]-10,700);
     });
     snapshot.entries.forEach(function (entry,index) {
@@ -459,16 +459,12 @@
         for (let i=0;i<10;i+=1) { ctx.fillStyle=i<active?(muted?'#e0e5eb':color):(muted?'#f4f6f8':'#e1e7ef'); ctx.fillRect(rateStart+96+i*17,cy-9,14,18); }
       });
       text(entry.virtue,starts[7]+columns[7]/2,y+54,29,ink,'center',columns[7]-10,700);
-      [entry.lecturers,entry.activeAltarMasters,entry.activeViceAltarMasters].forEach(function (count,i) {
-        const col = i+8;
-        const selected = i === 1 && snapshot.contributionMode === 'combined';
-        text(formatResponsibilityNumber_(count),starts[col]+(selected ? columns[col]*0.28 : columns[col]/2),y+(selected ? 36 : 54),29,ink,'center',selected ? columns[col]*0.43 : columns[col]-10,700);
-        if (selected) {
-          text('合計 '+formatResponsibilityNumber_(entry.denominator),starts[col]+columns[col]*0.28,y+78,18,ink,'center',columns[col]*0.40,600);
-          text(entry.contribution.qiu,starts[col]+columns[col]*0.74,y+30,25,snapshot.category === '求道' ? '#2176b5' : '#c8cfd8','center',columns[col]*0.47,700);
-          text(entry.contribution.fahui,starts[col]+columns[col]*0.74,y+78,25,snapshot.category === '法會' ? '#2176b5' : '#c8cfd8','center',columns[col]*0.47,700);
-        }
+      [entry.lecturers,entry.activeAltarMasters,entry.activeViceAltarMasters,entry.denominator].forEach(function (count,i) {
+        const col = i === 0 ? 8 : i+9;
+        text(formatResponsibilityNumber_(count),starts[col]+columns[col]/2,y+54,29,ink,'center',columns[col]-10,700);
       });
+      text(entry.contribution.qiu,starts[9]+columns[9]/2,y+30,25,snapshot.category === '求道' ? '#2176b5' : '#c8cfd8','center',columns[9]-10,700);
+      text(entry.contribution.fahui,starts[9]+columns[9]/2,y+78,25,snapshot.category === '法會' ? '#2176b5' : '#c8cfd8','center',columns[9]-10,700);
       ctx.strokeStyle='#dce5ef';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(32,y+templeHeight);ctx.lineTo(width-32,y+templeHeight);ctx.stroke();
     });
     return canvas;
