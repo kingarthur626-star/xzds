@@ -257,8 +257,8 @@ html.responsibility-share-open { overflow: hidden; }
 /* 排名保留雙列資料，以灰色降低非選中類別的視覺強度。 */
 .responsibility-ranking-group .is-ranking-muted .category,
 .responsibility-ranking-group .is-ranking-muted .number,
-.responsibility-ranking-group .is-ranking-muted .responsibility-rate strong { color: #7c8896; }
-.responsibility-ranking-group .is-ranking-muted .responsibility-segments b { background-color: #e7ebf0; }
-.responsibility-ranking-group .is-ranking-muted .responsibility-segments b.active { background-color: #bbc3ce; }
+.responsibility-ranking-group .is-ranking-muted .responsibility-rate strong { color: #b5bdc7; }
+.responsibility-ranking-group .is-ranking-muted .responsibility-segments b { background-color: #eef1f5; }
+.responsibility-ranking-group .is-ranking-muted .responsibility-segments b.active { background-color: #d3d9e1; }
 .responsibility-ranking-qiu .responsibility-ranking-group .responsibility-contribution-fahui,
-.responsibility-ranking-fahui .responsibility-ranking-group .responsibility-contribution-qiu { color: #7c8896; }
+.responsibility-ranking-fahui .responsibility-ranking-group .responsibility-contribution-qiu { color: #b5bdc7; }
