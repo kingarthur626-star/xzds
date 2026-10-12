@@ -1,0 +1,32 @@
+.duc-page { width: 100%; max-width: 840px; margin: 0 auto; padding: 20px 16px 36px; }
+.duc-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #64748b; font-size: 14px; margin-bottom: 24px; }
+.duc-nav a { color: #164568; text-decoration: none; font-weight: 700; padding: 10px 0; }
+.duc-header h1 { text-align: left; margin: 0 0 8px; font-size: 28px; }
+.duc-header p { color: #64748b; margin: 0 0 16px; line-height: 1.7; }
+.duc-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; margin-top: 16px; box-shadow: 0 3px 12px rgba(28, 68, 102, .04); }
+.duc-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.duc-card h2 { text-align: left; font-size: 21px; line-height: 1.5; margin: 10px 0; overflow-wrap: anywhere; }
+.duc-card p { color: #526175; font-size: 15px; line-height: 1.7; margin: 8px 0 16px; overflow-wrap: anywhere; }
+.duc-badge { display: inline-block; background: #edf3fa; color: #305572; border-radius: 999px; padding: 5px 11px; font-size: 13px; font-weight: 700; }
+.duc-badge-green { background: #e7f5ee; color: #187b59; }
+.duc-badge-amber { background: #fff4df; color: #9a6118; }
+.duc-year { font-size: 14px; font-weight: 700; white-space: nowrap; padding-top: 5px; color: #526175; }
+.duc-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+.duc-button { border: 1px solid #b8c9dc; border-radius: 9px; background: #fff; color: #164568; padding: 12px 16px; min-height: 46px; font-size: 15px; font-weight: 700; line-height: 1.45; cursor: pointer; }
+.duc-button-primary { color: #fff; border-color: #216b98; background: #216b98; }
+.duc-button-text { background: #f7f9fc; border-color: #e2e8f0; }
+.duc-button:hover:not(:disabled) { filter: brightness(1.04); }
+.duc-button:disabled { opacity: .48; cursor: default; }
+.duc-button:focus-visible, .duc-nav a:focus-visible { outline: 3px solid #4a90e2; outline-offset: 3px; }
+.duc-message { line-height: 1.7; font-size: 14px; color: #526175; margin-top: 12px; overflow-wrap: anywhere; }
+.duc-message:empty, .duc-summary:empty { display: none; }
+.duc-message[data-state="error"] { color: #b42318; background: #fff4f2; border-radius: 8px; padding: 10px 12px; }
+.duc-summary { margin-top: 18px; padding-top: 14px; border-top: 1px solid #e5ebf2; }
+.duc-summary h3 { margin: 0 0 8px; font-size: 16px; color: #173b5c; }
+.duc-summary .duc-summary-meta { font-size: 13px; margin: 4px 0 10px; }
+.duc-table-wrap { width: 100%; overflow-x: auto; }
+.duc-totals-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; }
+.duc-totals-table th, .duc-totals-table td { border-bottom: 1px solid #e5ebf2; padding: 10px 5px; text-align: center; overflow-wrap: anywhere; }
+.duc-totals-table thead th { background: #f0f5fa; color: #305572; font-size: 13px; }
+.duc-totals-table tbody th { text-align: left; font-size: 13px; color: #526175; }
+@media (max-width: 480px) { .duc-page { padding: 12px 12px 28px; } .duc-nav { margin-bottom: 16px; font-size: 13px; } .duc-header h1 { font-size: 25px; } .duc-card { padding: 18px 14px; border-radius: 12px; } .duc-card h2 { font-size: 19px; } .duc-card-heading { gap: 8px; } .duc-actions { gap: 8px; } .duc-button { padding: 11px 12px; font-size: 14px; } .duc-year { font-size: 13px; } }

@@ -363,8 +363,8 @@
           const contribution = getResponsibilityContribution_(temple, mode) || {qiu:'—', fahui:'—'};
           return {
             rank:scalar(entry.rank), formalTempleName:String(temple.formalTempleName || '—'),
-            virtue:String(temple.virtue || '—'), lecturers:scalar(temple.lecturers),
-            activeAltarMasters:scalar(temple.activeAltarMasters), activeViceAltarMasters:scalar(temple.activeViceAltarMasters),
+            virtue:String(temple.virtue || '—'), lecturers:scalar(getResponsibilityStaffDisplayValue_(temple, 'lecturers')),
+            activeAltarMasters:scalar(getResponsibilityStaffDisplayValue_(temple, 'activeAltarMasters')), activeViceAltarMasters:scalar(getResponsibilityStaffDisplayValue_(temple, 'activeViceAltarMasters')),
             contribution:{qiu:String(contribution.qiu), fahui:String(contribution.fahui)},
             denominator:scalar(contribution.denominator),
             metrics:[0,1].map(function (row) {
@@ -461,7 +461,7 @@
       text(entry.virtue,starts[7]+columns[7]/2,y+54,29,ink,'center',columns[7]-10,700);
       [entry.lecturers,entry.activeAltarMasters,entry.activeViceAltarMasters,entry.denominator].forEach(function (count,i) {
         const col = i === 0 ? 8 : i+9;
-        text(formatResponsibilityNumber_(count),starts[col]+columns[col]/2,y+54,29,ink,'center',columns[col]-10,700);
+        text(i < 3 ? formatResponsibilityStaffValue_(count) : formatResponsibilityNumber_(count),starts[col]+columns[col]/2,y+54,29,ink,'center',columns[col]-10,700);
       });
       text(entry.contribution.qiu,starts[9]+columns[9]/2,y+30,25,snapshot.category === '求道' ? '#2176b5' : '#c8cfd8','center',columns[9]-10,700);
       text(entry.contribution.fahui,starts[9]+columns[9]/2,y+78,25,snapshot.category === '法會' ? '#2176b5' : '#c8cfd8','center',columns[9]-10,700);

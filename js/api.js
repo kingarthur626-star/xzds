@@ -93,7 +93,7 @@ let xzdsApiWarmupPromise_ = null;
 function callApi(payload, options) {
   const basePayload = addTokenToPayload(payload || {});
   // 單筆處理的登入資訊、案件識別與結案備註僅送在 POST 本文。
-  if (['taoDailyIssueRetry', 'taoDailyIssueClose'].indexOf(basePayload.action) !== -1) {
+  if (['taoDailyIssueRetry', 'taoDailyIssueClose', 'taoStaffCurrentUpdate'].indexOf(basePayload.action) !== -1) {
     return callDailyIssuePost_(basePayload, options || {});
   }
   const normalizedOptions = normalizeApiOptions_(basePayload, options || {});

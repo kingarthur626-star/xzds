@@ -365,8 +365,8 @@ function buildResponsibilityTempleHtml_(temple, month, rankingEntry) {
   const contribution = getResponsibilityContribution_(temple, responsibilityContributionMode_);
   const rankLabel = rankingEntry ? (rankingEntry.rank === null ? '貢獻度尚待確認；' : '第' + rankingEntry.rank + '名；') : '';
   const baseLabel = rankLabel + '展開 ' + String(temple && temple.formalTempleName || '—') + (rankingEntry ? ' 的人數資料；五常德 ' : ' 的責任資料；五常德 ') + String(temple && temple.virtue || '—') +
-    '；講師 ' + formatResponsibilityNumber_(temple && temple.lecturers) + ' 人，在職壇主 ' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) +
-    ' 人，在職副壇主 ' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + ' 人';
+    '；講師 ' + formatResponsibilityStaffCount_(temple, 'lecturers') + ' 人，在職壇主 ' + formatResponsibilityStaffCount_(temple, 'activeAltarMasters') +
+    ' 人，在職副壇主 ' + formatResponsibilityStaffCount_(temple, 'activeViceAltarMasters') + ' 人';
   const contributionLabel = contribution ? '；' + contribution.label + '合計 ' + formatResponsibilityNumber_(contribution.denominator) + ' 人；貢獻度：求道 ' + contribution.qiu + '，法會 ' + contribution.fahui : '';
   const ariaLabel = baseLabel + (responsibilityContributionLandscape_ && responsibilityContributionLandscape_.matches ? contributionLabel : '');
 
@@ -381,11 +381,11 @@ function buildResponsibilityTempleHtml_(temple, month, rankingEntry) {
         buildResponsibilityMetricRowHtml_(qiu, month) +
         buildResponsibilityMetricRowHtml_(fahui, month) +
         '<span class="responsibility-staff-count responsibility-staff-virtue">' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '</span>' +
-        buildResponsibilityStaffCountHtml_('lecturers', temple && temple.lecturers, null) +
+        buildResponsibilityStaffCountHtml_('lecturers', getResponsibilityStaffDisplayValue_(temple, 'lecturers'), null) +
         (contribution ? '<span class="responsibility-contribution-values responsibility-staff-contribution" aria-hidden="true"><span class="responsibility-contribution-qiu">' +
           escapeResponsibilityHtml_(contribution.qiu) + '</span><span class="responsibility-contribution-fahui">' + escapeResponsibilityHtml_(contribution.fahui) + '</span></span>' : '') +
-        buildResponsibilityStaffCountHtml_('masters', temple && temple.activeAltarMasters, null) +
-        '<span class="responsibility-staff-count responsibility-staff-vice-masters">' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + '</span>' +
+        buildResponsibilityStaffCountHtml_('masters', getResponsibilityStaffDisplayValue_(temple, 'activeAltarMasters'), null) +
+        '<span class="responsibility-staff-count responsibility-staff-vice-masters">' + formatResponsibilityStaffCount_(temple, 'activeViceAltarMasters') + '</span>' +
         (contribution ? '<span class="responsibility-staff-count responsibility-staff-total">' + formatResponsibilityNumber_(contribution.denominator) + '</span>' : '') +
       '</button>' +
       (expanded ? buildResponsibilityDetailHtml_(temple) : '') +
@@ -511,7 +511,7 @@ function buildResponsibilityRankingGroupHtml_(chunk, index, month) {
 
 function buildResponsibilityStaffCountHtml_(kind, value) {
   return '<span class="responsibility-staff-count responsibility-staff-' + kind + '">' +
-    '<span class="responsibility-staff-number">' + formatResponsibilityNumber_(value) + '</span></span>';
+    '<span class="responsibility-staff-number">' + formatResponsibilityStaffValue_(value) + '</span></span>';
 }
 
 function buildResponsibilityMetricRowHtml_(metric, month) {
@@ -536,9 +536,9 @@ function buildResponsibilityDetailHtml_(temple) {
   return (
     '<div class="responsibility-detail">' +
       '<span>五常德：<b>' + escapeResponsibilityHtml_(temple && temple.virtue || '—') + '</b></span>' +
-      '<span>講師：<b>' + formatResponsibilityNumber_(temple && temple.lecturers) + '</b></span>' +
-      '<span>在職壇主：<b>' + formatResponsibilityNumber_(temple && temple.activeAltarMasters) + '</b></span>' +
-      '<span>在職副壇主：<b>' + formatResponsibilityNumber_(temple && temple.activeViceAltarMasters) + '</b></span>' +
+      '<span>講師：<b>' + formatResponsibilityStaffCount_(temple, 'lecturers') + '</b></span>' +
+      '<span>在職壇主：<b>' + formatResponsibilityStaffCount_(temple, 'activeAltarMasters') + '</b></span>' +
+      '<span>在職副壇主：<b>' + formatResponsibilityStaffCount_(temple, 'activeViceAltarMasters') + '</b></span>' +
     '</div>'
   );
 }
@@ -643,6 +643,22 @@ function formatResponsibilityMonthValue_(value) {
   // 只隱藏已知零值；未知值仍顯示「—」，其他數值欄位維持原規則。
   if (value !== null && value !== undefined && Number(value) === 0) return '';
   return formatResponsibilityNumber_(value);
+}
+
+function getResponsibilityStaffDisplayValue_(temple, key) {
+  const raw = temple && temple.staffCountsRaw && temple.staffCountsRaw[key];
+  if (raw === '-' || raw === '－' || raw === '—') return raw;
+  if (typeof raw === 'number' && Number.isSafeInteger(raw) && raw >= 0) return raw;
+  if (typeof raw === 'string' && /^\d+$/.test(raw.trim()) && Number.isSafeInteger(Number(raw))) return Number(raw);
+  return temple && temple[key];
+}
+
+function formatResponsibilityStaffValue_(value) {
+  return value === '-' || value === '－' || value === '—' ? value : formatResponsibilityNumber_(value);
+}
+
+function formatResponsibilityStaffCount_(temple, key) {
+  return formatResponsibilityStaffValue_(getResponsibilityStaffDisplayValue_(temple, key));
 }
 
 function formatResponsibilityNumber_(value) {

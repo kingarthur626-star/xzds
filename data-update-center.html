@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="xzds-ui-version" content="20261012-data-update-center-r1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="./manifest.json?v=20260623-001">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <title>資料更新中心｜新莊區道務檢視</title>
+  <link rel="stylesheet" href="./css/style.css?v=20260821-r20">
+  <link rel="stylesheet" href="./css/data-update-center.css?v=20261012-data-update-center-r1">
+</head>
+<body>
+  <main class="duc-page app-shell">
+    <nav class="duc-nav" aria-label="頁面導覽"><a href="./home.html">← 回首頁</a><span>新莊區道務檢視</span></nav>
+    <header class="duc-header"><h1>資料更新中心</h1><p>選擇要更新的資料，查看來源與處理結果。</p></header>
+    <div id="ducPermissionMessage" class="duc-message" role="status" aria-live="polite">正在確認更新權限…</div>
+    <section class="duc-card" aria-labelledby="ducStaffTitle">
+      <div class="duc-card-heading"><div><span class="duc-badge">只限手動更新</span><h2 id="ducStaffTitle">在職壇主副壇主人數更新</h2></div><span id="ducStaffYear" class="duc-year"></span></div>
+      <p>一併更新講師人數。先預檢來源與合計，確認後再更新各壇在職人數。</p>
+      <div class="duc-actions"><button id="ducStaffPreviewBtn" class="duc-button" type="button" disabled>預檢來源</button><button id="ducStaffUpdateBtn" class="duc-button duc-button-primary" type="button" disabled>更新人數</button><button id="ducStaffRefreshBtn" class="duc-button duc-button-text" type="button" disabled>讀取最新狀態</button></div>
+      <div id="ducStaffMessage" class="duc-message" role="status" aria-live="polite"></div>
+      <div id="ducStaffPreview" class="duc-summary"></div>
+      <div id="ducStaffResult" class="duc-summary"></div>
+    </section>
+    <section class="duc-card" aria-labelledby="ducDailyTitle">
+      <span class="duc-badge duc-badge-green">每日道親資料</span><h2 id="ducDailyTitle">每日道親資料更新</h2>
+      <p>查看每日更新狀態、更新紀錄與待處理項目，也可手動更新。</p>
+      <div class="duc-actions"><button id="ducDailyBtn" class="duc-button duc-button-primary" type="button" disabled>開啟每日道親資料更新</button></div>
+    </section>
+    <section class="duc-card" aria-labelledby="ducReportTitle">
+      <span class="duc-badge duc-badge-amber">求道與法會報表</span><h2 id="ducReportTitle">求道／法會報表同步</h2>
+      <p>同步既有求道與法會報表，完成後顯示筆數與更新時間。</p>
+      <div class="duc-actions"><button id="ducReportBtn" class="duc-button duc-button-primary" type="button" disabled>同步報表</button><button id="ducReportRefreshBtn" class="duc-button duc-button-text" type="button" disabled>讀取最後同步時間</button></div>
+      <div id="ducReportMessage" class="duc-message" role="status" aria-live="polite"></div><div id="ducReportResult" class="duc-summary"></div>
+    </section>
+  </main>
+  <script src="./js/config.js?v=20260619-2"></script>
+  <script src="./js/api.js?v=20261012-data-update-center-r1"></script>
+  <script src="./js/common.js?v=20260623-04"></script>
+  <script src="./js/data-update-center.js?v=20261012-data-update-center-r1"></script>
+  <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
+</body>
+</html>
