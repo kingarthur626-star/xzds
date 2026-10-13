@@ -1,4 +1,7 @@
-.suc-nav.page-action-bar { justify-content: flex-end; }
+.suc-nav.page-action-bar { display: grid; grid-template-columns: minmax(54px, 1fr) auto minmax(54px, 1fr); }
+.suc-nav-spacer { grid-column: 1; }
+.suc-nav .suc-nav-title { grid-column: 2; display: inline-flex; align-items: center; justify-content: center; margin: 0; white-space: nowrap; cursor: default; }
+.suc-nav #homeBtn { grid-column: 3; justify-self: end; }
 .suc-nav .action-pill { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .suc-year { margin: 8px 0 0; text-align: center; color: #607286; font-size: 14px; font-weight: 600; }
 .suc-description { margin: 14px 0 10px; text-align: center; color: #526175; font-size: 15px; line-height: 1.65; }
