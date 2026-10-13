@@ -139,7 +139,7 @@ if (btnDailyDataUpdate) {
 
 if (btnDataUpdateCenter) {
   btnDataUpdateCenter.addEventListener('click', function () {
-    location.href = 'data-update-center.html';
+    location.href = 'staff-current-update.html';
   });
 }
 

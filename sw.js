@@ -8,13 +8,14 @@
    4. Avoid apparent "logged out" jumps caused by offline/cache fallback.
 ========================= */
 const CACHE_PREFIX = 'xzds-pwa-cache-';
-const CACHE_NAME = CACHE_PREFIX + '20261012-data-update-center-r1';
+const CACHE_NAME = CACHE_PREFIX + '20261013-staff-current-single-click-r1';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './home.html',
   './data-update-center.html',
+  './staff-current-update.html',
   './annual.html',
   './history.html',
   './mobile-share.html',
@@ -34,6 +35,7 @@ const STATIC_ASSETS = [
   './css/style.css',
   './css/home-member-search.css',
   './css/data-update-center.css',
+  './css/staff-current-update.css',
   './css/mobile-share.css',
   './css/mobile-share-summary.css',
   './css/responsibility-ownership.css',
@@ -47,6 +49,7 @@ const STATIC_ASSETS = [
   './js/forgot.js',
   './js/home.js',
   './js/data-update-center.js',
+  './js/staff-current-update.js',
   './js/annual.js',
   './js/history.js',
   './js/mobile-share.js',
