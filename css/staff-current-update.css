@@ -1,10 +1,10 @@
 .suc-page { width: 100%; max-width: 640px; margin: 0 auto; padding: 20px 16px 32px; }
-.suc-nav.page-action-bar { position: static; left: auto; top: auto; transform: none; width: 100%; max-width: none; margin: 0 0 18px; padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; border: 0; background: transparent; backdrop-filter: none; }
-.suc-nav nav { flex: 0 0 auto; }
+.suc-nav.page-action-bar { position: static; left: auto; top: auto; transform: none; width: 100%; max-width: none; margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: minmax(76px, 1fr) auto minmax(76px, 1fr); align-items: center; gap: 8px; border: 0; background: transparent; backdrop-filter: none; }
+.suc-nav nav { grid-column: 3; justify-self: end; }
 .suc-nav .action-pill { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .suc-panel { background: #fff; border: 1px solid #e1e7ef; border-radius: 18px; padding: 28px; box-shadow: 0 8px 24px rgba(18, 58, 98, .07); }
-.suc-title-row { min-width: 0; text-align: left; }
-.suc-title-row h1 { margin: 0; text-align: left; white-space: nowrap; font-size: 28px; line-height: 1.35; letter-spacing: .02em; }
+.suc-title-row { grid-column: 2; min-width: 0; text-align: center; }
+.suc-title-row h1 { margin: 0; text-align: center; white-space: nowrap; font-size: 28px; line-height: 1.35; letter-spacing: .02em; }
 .suc-year { margin: 8px 0 0; text-align: center; color: #607286; font-size: 14px; font-weight: 600; }
 .suc-description { margin: 14px 0 10px; text-align: center; color: #526175; font-size: 15px; line-height: 1.65; }
 .suc-source { margin: 0; text-align: center; color: #607286; font-size: 13px; line-height: 1.6; }
@@ -47,4 +47,9 @@
   .suc-description { font-size: 15px; }
   .suc-totals { font-size: 15px; }
   .suc-totals th, .suc-totals td { padding-left: 2px; padding-right: 2px; }
+}
+
+@media (max-width: 375px) {
+  .suc-nav.page-action-bar { gap: 4px; }
+  .suc-title-row h1 { font-size: clamp(18px, calc(10vw - 14px), 25px); }
 }
