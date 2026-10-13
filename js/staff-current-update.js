@@ -44,9 +44,24 @@ function sucText_(tag, text, className) {
   if (className) element.className = className;
   return element;
 }
-function sucRender_(result) {
-  const content = document.createElement('div');
-  content.appendChild(sucText_('p', (result.year !== sucYear_() ? result.year + ' 年｜' : '') + '最後更新：' + result.updatedAt, 'suc-updated-at'));
+function sucComparisonState_(result) {
+  if (result.comparison === undefined) return 'absent';
+  const comparison = result.comparison;
+  if (!comparison || typeof comparison !== 'object') return 'invalid';
+  if (comparison.beforeAvailable === false) {
+    return comparison.before === null && comparison.delta === null &&
+      ['NO_PRIOR_YEAR_DATA', 'INCOMPLETE_PRIOR_DATA'].indexOf(comparison.reason) >= 0 ? 'unavailable' : 'invalid';
+  }
+  const before = comparison.before, delta = comparison.delta;
+  if (comparison.beforeAvailable !== true || !sucValidSummary_(before) || before.year !== result.year || before.templeCount !== result.templeCount || !delta) return 'invalid';
+  const valid = ['totals', 'otherTotals', 'reportTotals'].every(function (group) {
+    return delta[group] && SUC_TOTAL_KEYS.every(function (key) {
+      return Number.isSafeInteger(delta[group][key]) && delta[group][key] === result[group][key] - before[group][key];
+    });
+  });
+  return valid ? 'available' : 'invalid';
+}
+function sucSummaryTable_(result) {
   const table = document.createElement('table'); table.className = 'suc-totals';
   const head = document.createElement('thead'), headings = document.createElement('tr');
   ['範圍', '講師', '壇主', '副壇主'].forEach(function (label) {
@@ -54,14 +69,46 @@ function sucRender_(result) {
   });
   head.appendChild(headings); table.appendChild(head);
   const body = document.createElement('tbody');
-  [['公壇', result.totals], ['其他', result.otherTotals], ['總計', result.reportTotals]].forEach(function (entry, index) {
+  [[result.templeCount + ' 壇', result.totals], ['其他', result.otherTotals], ['總計', result.reportTotals]].forEach(function (entry) {
     const row = document.createElement('tr'), label = sucText_('th', entry[0]); label.setAttribute('scope', 'row');
-    if (index === 0) label.appendChild(sucText_('span', result.templeCount + ' 壇', 'suc-temple-count'));
     row.appendChild(label);
     SUC_TOTAL_KEYS.forEach(function (key) { row.appendChild(sucText_('td', entry[1][key].toLocaleString('zh-TW'))); });
     body.appendChild(row);
   });
-  table.appendChild(body); content.appendChild(table); sucElement_('sucResult').replaceChildren(content);
+  table.appendChild(body); return table;
+}
+function sucComparisonTable_(result, group, label) {
+  const table = document.createElement('table'); table.className = 'suc-comparison-table';
+  table.appendChild(sucText_('caption', label));
+  const head = document.createElement('thead'), headings = document.createElement('tr');
+  ['項目', '更新前', '更新後', '增減'].forEach(function (text) {
+    const th = sucText_('th', text); th.setAttribute('scope', 'col'); headings.appendChild(th);
+  });
+  head.appendChild(headings); table.appendChild(head);
+  const body = document.createElement('tbody');
+  SUC_TOTAL_KEYS.forEach(function (key, index) {
+    const row = document.createElement('tr'), name = sucText_('th', ['講師', '壇主', '副壇主'][index]); name.setAttribute('scope', 'row'); row.appendChild(name);
+    row.appendChild(sucText_('td', result.comparison.before[group][key].toLocaleString('zh-TW')));
+    row.appendChild(sucText_('td', result[group][key].toLocaleString('zh-TW')));
+    const change = result.comparison.delta[group][key];
+    row.appendChild(sucText_('td', change === 0 ? '無變動' : (change > 0 ? '+' : '−') + Math.abs(change).toLocaleString('zh-TW'), change > 0 ? 'suc-change-positive' : change < 0 ? 'suc-change-negative' : 'suc-change-neutral'));
+    body.appendChild(row);
+  });
+  table.appendChild(body); return table;
+}
+function sucRender_(result) {
+  const content = document.createElement('div'), comparisonState = sucComparisonState_(result);
+  if (comparisonState === 'available') {
+    [['totals', result.templeCount + ' 壇'], ['otherTotals', '其他'], ['reportTotals', '總計']].forEach(function (entry) { content.appendChild(sucComparisonTable_(result, entry[0], entry[1])); });
+  } else {
+    content.appendChild(sucSummaryTable_(result));
+    if (comparisonState === 'unavailable') content.appendChild(sucText_('p', '沒有完整的更新前紀錄，僅顯示更新後人數。', 'suc-comparison-notice'));
+    if (comparisonState === 'invalid') {
+      const notice = sucText_('p', '更新前後對照尚未確認，先顯示更新後人數。', 'suc-comparison-notice'); notice.setAttribute('data-state', 'warning'); content.appendChild(notice);
+    }
+  }
+  content.appendChild(sucText_('p', (result.year !== sucYear_() ? result.year + ' 年｜' : '') + '最後更新：' + result.updatedAt, 'suc-updated-at'));
+  sucElement_('sucResult').replaceChildren(content);
 }
 function sucFailureMessage_(result) {
   const messages = {

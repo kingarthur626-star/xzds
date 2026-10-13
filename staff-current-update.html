@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="xzds-ui-version" content="20261013-staff-current-single-click-r1">
+  <meta name="xzds-ui-version" content="20261013-staff-current-comparison-r1">
   <meta name="theme-color" content="#f5f7fb">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,16 +13,17 @@
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <title>在職人數更新｜新莊區道務檢視</title>
   <link rel="stylesheet" href="./css/style.css?v=20260821-r20">
-  <link rel="stylesheet" href="./css/staff-current-update.css?v=20261013-staff-current-single-click-r1">
+  <link rel="stylesheet" href="./css/staff-current-update.css?v=20261013-staff-current-comparison-r1">
 </head>
 <body>
   <main class="suc-page app-shell">
-    <nav class="suc-nav" aria-label="頁面導覽"><a href="./home.html">← 回首頁</a></nav>
+    <nav class="suc-nav page-action-bar" aria-label="頁面導覽"><a class="action-pill" href="./home.html">首頁</a></nav>
     <section class="suc-panel" aria-labelledby="sucTitle">
       <header>
-        <div class="suc-title-row"><h1 id="sucTitle">在職人數更新</h1><span id="sucYear" class="suc-year"></span></div>
+        <div class="suc-title-row"><h1 id="sucTitle">在職人數更新</h1></div>
+        <p id="sucYear" class="suc-year"></p>
         <p class="suc-description">更新各壇講師、在職壇主與副壇主人數。</p>
-        <p class="suc-source">來源：<a href="https://tw.fycdtpe.org/TAO/Taomembers/AreaSummary" target="_blank" rel="noopener noreferrer">道務系統佛堂統計 ↗</a></p>
+        <p class="suc-source">來源：<a class="suc-source-link" href="https://tw.fycdtpe.org/TAO/Taomembers/AreaSummary" target="_blank" rel="noopener noreferrer">道務系統佛堂統計 ↗</a></p>
       </header>
       <button id="sucUpdateBtn" class="suc-update-button" type="button" disabled>更新人數</button>
       <div id="sucMessage" class="suc-message" role="status" aria-live="polite">正在確認更新權限…</div>
@@ -32,7 +33,7 @@
   <script src="./js/config.js?v=20260619-2"></script>
   <script src="./js/api.js?v=20261012-data-update-center-r1"></script>
   <script src="./js/common.js?v=20260623-04"></script>
-  <script src="./js/staff-current-update.js?v=20261013-staff-current-single-click-r1"></script>
+  <script src="./js/staff-current-update.js?v=20261013-staff-current-comparison-r1"></script>
   <script src="./js/pwa.js?v=20260812-api-stability-r2"></script>
 </body>
 </html>
