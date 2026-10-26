@@ -61,7 +61,10 @@ Purpose:
     const peopleMode = escapeR19Html_(peopleModeRaw || '—');
     const peopleCountRaw = normalizeR19Text_(item.peopleCount);
     const peopleCountDisplay = escapeR19Html_(
-      peopleCountRaw || (peopleModeRaw === '手動' ? '—' : '由系統計算')
+      item.countStatus === 'unconfirmed' && peopleModeRaw !== '手動' &&
+      normalizeR19Text_(item.status || '啟用') === '啟用'
+        ? '未確認'
+        : peopleCountRaw || (peopleModeRaw === '手動' ? '—' : '由系統計算')
     );
     const location = escapeR19Html_(item.location || '—');
     const planning = escapeR19Html_(item.planning || '—');
